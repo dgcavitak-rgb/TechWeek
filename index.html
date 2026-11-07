@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cavitak Tech Week</title>
+<meta name="theme-color" content="#C8232C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#C8232C;--red-d:#A51B23;--red-50:#FDF1F2;--ink:#14171A;--ink-2:#3A4149;--muted:#6B7480;--line:#E4E7EB;--line-2:#EEF0F3;
+  --bg:#F5F6F8;--card:#FFFFFF;--green:#16794A;--green-50:#E9F7EF;--amber:#B26A00;--amber-50:#FFF5E1;--blue:#1F5FBF;--blue-50:#EAF1FD;
+  --grey-50:#F1F3F5;--r:12px;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--red)}
+h1,h2,h3{margin:0;line-height:1.25}
+button,input,select,textarea{font:inherit;color:inherit}
+.hide{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grow{flex:1 1 auto;min-width:0}
+.stack>*+*{margin-top:12px}
+.muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px}
+.b{font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;color:var(--ink);min-height:40px}
+.btn:hover{background:var(--grey-50)}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff}.btn.primary:hover{background:var(--red-d)}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:5px 10px;min-height:32px;font-size:13px;border-radius:8px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+.in{width:100%;border:1px solid #D3D8DE;border-radius:10px;padding:10px 12px;background:#fff;min-height:42px}
+.in:focus{outline:2px solid rgba(200,35,44,.25);border-color:var(--red)}
+textarea.in{min-height:84px;resize:vertical}
+.grid{display:grid;gap:12px}
+@media(min-width:640px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;background:var(--grey-50);color:var(--ink-2);white-space:nowrap}
+.chip.pending{background:var(--amber-50);color:var(--amber)}.chip.approved{background:var(--green-50);color:var(--green)}
+.chip.waitlisted{background:var(--blue-50);color:var(--blue)}.chip.rejected,.chip.cancelled{background:#F4F4F5;color:#71717A}
+.chip.open{background:var(--green-50);color:var(--green)}.chip.draft{background:var(--grey-50);color:var(--muted)}.chip.closed{background:#F4F4F5;color:#52525B}
+.chip.in{background:var(--green);color:#fff}
+.bar{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--red);border-radius:99px}
+.kpi{padding:14px 16px}.kpi .v{font-size:26px;font-weight:800;letter-spacing:-.02em}.kpi .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+table.t{width:100%;border-collapse:collapse;font-size:14px}
+table.t th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t td{padding:9px 10px;border-bottom:1px solid var(--line-2);vertical-align:top}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.err{background:#9B1C22}
+.modal-bg{position:fixed;inset:0;background:rgba(15,18,22,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:720px){.modal-bg{align-items:center}}
+.modal{background:#fff;width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px}
+@media(min-width:720px){.modal{border-radius:16px}}
+.modal h3{font-size:18px;margin-bottom:12px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite}
+.spin.dark{border-color:#0002;border-top-color:var(--red)}
+@keyframes s{to{transform:rotate(360deg)}}
+.seg{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* ---------- public pages ---------- */
+.hero{background:linear-gradient(135deg,#C8232C 0%,#8E1219 100%);color:#fff;padding:28px 0 64px}
+.hero .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:6px 0 8px}
+@media(min-width:640px){.hero h1{font-size:36px}}
+.lift{margin-top:-44px}
+.slotday{margin-top:14px}.slotday h4{margin:0 0 8px;font-size:14px;color:var(--ink-2)}
+.slots{display:grid;gap:8px;grid-template-columns:1fr}
+@media(min-width:520px){.slots{grid-template-columns:1fr 1fr}}
+.slot{border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;width:100%}
+.slot:hover{border-color:#C9CED4}
+.slot.sel{border-color:var(--red);background:var(--red-50);box-shadow:0 0 0 3px rgba(200,35,44,.12)}
+.slot.dis{opacity:.45;cursor:not-allowed}
+.slot .tt{font-weight:700}.slot .seats{font-size:12px;font-weight:600;margin-top:4px}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-2);background:var(--grey-50);padding:12px;border-radius:10px}
+.consent input{margin-top:3px;width:18px;height:18px;accent-color:var(--red);flex:none}
+.hp{position:absolute;left:-5000px}
+.qrbox{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:12px;border:1px dashed #CBD1D8}
+.qrbox img,.qrbox canvas{width:220px!important;height:220px!important}
+.foot{padding:26px 0 40px;text-align:center;color:var(--muted);font-size:12px}
+/* ---------- console ---------- */
+.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;height:56px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:-.01em}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--red);display:grid;place-items:center;color:#fff;font-style:normal;font-size:14px}
+.tabs{display:none;gap:4px;margin-left:12px}
+.tabs button{border:0;background:transparent;padding:8px 12px;border-radius:8px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button.on{background:var(--red-50);color:var(--red)}
+@media(min-width:900px){.tabs{display:flex}.bnav{display:none!important}}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.bnav button{flex:1;border:0;background:none;padding:8px 2px 9px;font-size:11px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.bnav button svg{width:22px;height:22px}
+.bnav button.on{color:var(--red)}
+main.console{padding:16px 0 96px}
+@media(min-width:900px){main.console{padding-bottom:40px}}
+.ev{padding:14px 16px}
+.ev h3{font-size:16px}
+.reg{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line-2);align-items:flex-start}
+.reg:last-child{border-bottom:0}
+.reg input[type=checkbox]{width:18px;height:18px;margin-top:3px;accent-color:var(--red);flex:none}
+.reg .nm{font-weight:700}
+.sticky-actions{position:sticky;bottom:72px;z-index:10;margin-top:10px}
+@media(min-width:900px){.sticky-actions{bottom:12px}}
+.scanres{border-radius:14px;padding:16px;color:#fff}
+.scanres.ok{background:var(--green)}.scanres.warn{background:var(--amber)}.scanres.bad{background:#9B1C22}
+.scanres .big{font-size:22px;font-weight:800}
+#reader{width:100%;max-width:420px;margin:0 auto;border-radius:12px;overflow:hidden;background:#000}
+.banner{border-radius:12px;padding:12px 14px;font-size:14px}
+.banner.warn{background:var(--amber-50);color:#6B4200;border:1px solid #F3D9A4}
+.banner.info{background:var(--blue-50);color:#173E7A;border:1px solid #C9DAF6}
+.poster{width:100%;max-width:420px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.poster .ph{background:linear-gradient(135deg,#C8232C,#8E1219);color:#fff;padding:20px}
+.poster .pb{padding:18px;text-align:center}
+.minibars .r{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0}
+.minibars .r span:first-child{width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minibars .r .bar{flex:1}
+@media print{body *{visibility:hidden}.printable,.printable *{visibility:visible}.printable{position:absolute;left:0;top:0;width:100%}}
+</style>
+</head>
+<body>
+<div id="app"><div class="empty"><span class="spin dark"></span></div></div>
+<div id="modal-root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* =============================================================
+   Cavitak Tech Week — registration, approvals, QR check-in
+   Backend: Supabase project "cavitak-tech-week" (all access via
+   secured RPC functions; tables are not directly readable).
+   ============================================================= */
+const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
+const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
+const APP_VERSION = "1.0.0";
+
+/* ---------------- helpers ---------------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const params = new URLSearchParams(location.search);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v) }catch(e){} }
+};
+function toast(msg, err=false){
+  const t=document.createElement("div"); t.className="toast"+(err?" err":""); t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), err?4800:2600);
+}
+async function rpc(fn, args = {}){
+  const res = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method:"POST", headers:{ "apikey":SB_KEY, "Content-Type":"application/json" }, body:JSON.stringify(args)
+  });
+  const txt = await res.text(); let data; try{ data = txt ? JSON.parse(txt) : null }catch(e){ data = txt }
+  if(!res.ok){
+    const msg = (data && (data.message || data.hint)) || ("Request failed ("+res.status+")");
+    if(/not_authenticated/.test(msg)){ S.token=null; store.set("tw_token",null); if(!isPublic) renderLogin("Your session has expired. Please sign in again."); }
+    throw new Error(msg);
+  }
+  return data;
+}
+function fmtDT(iso){ if(!iso) return ""; const d=new Date(iso); return d.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"numeric",minute:"2-digit"}) }
+function fmtD(iso){ if(!iso) return ""; return new Date(iso).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) }
+function baseUrl(){
+  const s = S.settings && S.settings.public_url;
+  if(s) return s.split("#")[0].split("?")[0];
+  return location.origin + location.pathname;
+}
+function regLink(slug, src){ return baseUrl()+"?e="+encodeURIComponent(slug)+(src?"&src="+encodeURIComponent(src):"") }
+function passLink(tok){ return baseUrl()+"?p="+tok }
+function copy(text){
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(()=>toast("Copied")).catch(()=>{
+    const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("Copied") }catch(e){ toast("Copy failed", true) } ta.remove();
+  });
+}
+function loadScript(src){
+  return new Promise((ok, bad)=>{ if($$(`script[src="${src}"]`).length) return ok();
+    const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>bad(new Error("Could not load "+src)); document.head.appendChild(s); });
+}
+function qrInto(el, text, size=220){
+  el.innerHTML=""; new QRCode(el, { text, width:size, height:size, correctLevel: QRCode.CorrectLevel.M });
+}
+function qrDataUrl(text, size=600){
+  const d=document.createElement("div"); new QRCode(d,{text,width:size,height:size,correctLevel:QRCode.CorrectLevel.M});
+  const c=d.querySelector("canvas"); return c ? c.toDataURL("image/png") : (d.querySelector("img")||{}).src;
+}
+function download(name, content, type){
+  const blob = content instanceof Blob ? content : new Blob([content],{type});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove()},500);
+}
+function modal(html, onMount){
+  const root=$("#modal-root");
+  root.innerHTML=`<div class="modal-bg"><div class="modal" role="dialog">${html}</div></div>`;
+  const bg=root.firstElementChild;
+  bg.addEventListener("click", e=>{ if(e.target===bg) closeModal() });
+  $$("[data-close]", bg).forEach(b=>b.onclick=closeModal);
+  onMount && onMount(bg.firstElementChild);
+  return bg.firstElementChild;
+}
+function closeModal(){ $("#modal-root").innerHTML="" }
+function busy(btn, on){ if(!btn) return; if(on){ btn.dataset.t=btn.innerHTML; btn.innerHTML='<span class="spin"></span>'; btn.disabled=true } else { btn.innerHTML=btn.dataset.t||btn.innerHTML; btn.disabled=false } }
+const STATUS_LABEL={pending:"Pending",approved:"Approved",waitlisted:"Waitlisted",rejected:"Rejected",cancelled:"Cancelled"};
+const chip=(s)=>`<span class="chip ${esc(s)}">${esc(STATUS_LABEL[s]||s)}</span>`;
+const PARTNER_TYPES=["System Integrator","AV Consultant","Reseller / Dealer","End customer","Architect / Designer","OEM / Technology partner","Other"];
+
+const isPublic = params.has("e") || params.has("p");
+const S = { token: store.get("tw_token"), user:null, ov:null, settings:{}, tab: store.get("tw_tab") || "dash", regs:[], regsEvent:null };
+
+/* =============================================================
+   PUBLIC — registration page
+   ============================================================= */
+async function renderRegister(){
+  const slug = params.get("e"), src = params.get("src") || params.get("utm_source") || "";
+  const app=$("#app");
+  let d; try{ d = await rpc("tw_public_event",{p_slug:slug}) }catch(e){ d={ok:false,error:e.message} }
+  if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Link not active</h2><p>${esc(d.error)}</p></div>`); return }
+  const ev=d.event, v=d.venue; document.title = ev.title + " — Register";
+  const byDay={}; d.slots.forEach(s=>{ (byDay[s.local_date]=byDay[s.local_date]||{label:s.date_label,items:[]}).items.push(s) });
+  const dates = d.slots.length ? (d.slots[0].date_label.split(",").slice(1).join(",").trim() + (d.slots.length>1 && d.slots[0].local_date!==d.slots[d.slots.length-1].local_date ? " – "+d.slots[d.slots.length-1].date_label.split(",").slice(1).join(",").trim() : "")) : "";
+  const slotsHtml = Object.keys(byDay).sort().map(k=>`<div class="slotday"><h4>${esc(byDay[k].label)}</h4><div class="slots">${
+    byDay[k].items.map(s=>{
+      const full=s.seats_left<=0, dis=s.past;
+      return `<button type="button" class="slot ${dis?"dis":""}" data-id="${s.id}" ${dis?"disabled":""}>
+        <div class="tt">${esc(s.label)}</div><div class="small muted">${esc(s.time_label)}</div>
+        <div class="seats" style="color:${dis?"var(--muted)":full?"var(--blue)":s.seats_left<=2?"var(--amber)":"var(--green)"}">${dis?"Session closed":full?"Full · join waitlist":s.seats_left+" of "+s.capacity+" seats left"}</div></button>`}).join("")
+  }</div></div>`).join("");
+  const venueCard = `<div class="card pad">
+      <div class="small muted b" style="text-transform:uppercase;letter-spacing:.05em">Venue</div>
+      <div class="b" style="font-size:17px;margin-top:2px">${esc(v.name)}${v.room_name?` · <span class="muted" style="font-weight:500">${esc(v.room_name)}</span>`:""}</div>
+      <div class="small" style="margin-top:4px;white-space:pre-line">${esc(v.address)}</div>
+      ${v.map_url?`<a class="btn sm" style="margin-top:10px" href="${esc(v.map_url)}" target="_blank" rel="noopener">Open in Google Maps</a>`:""}
+      ${v.instructions?`<div class="small muted" style="margin-top:10px">${esc(v.instructions)}</div>`:""}
+    </div>`;
+  const formHtml = !d.open ? `<div class="card pad empty"><h3 style="color:var(--ink)">Registrations are closed</h3><p>Please contact your Cavitak representative for upcoming sessions.</p></div>` : `
+  <form id="rf" class="card pad stack" novalidate>
+    <div><h2 style="font-size:20px">Register</h2><div class="small muted">Seats are limited to the room capacity. Every request is reviewed and you'll receive a confirmation email with your entry QR pass.</div></div>
+    <div><label class="f">1. Choose your session</label>${slotsHtml||'<div class="muted">No sessions available.</div>'}</div>
+    <div class="grid g2">
+      <div><label class="f" for="f_name">Full name *</label><input class="in" id="f_name" autocomplete="name" required maxlength="120"></div>
+      <div><label class="f" for="f_desig">Designation *</label><input class="in" id="f_desig" autocomplete="organization-title" required maxlength="120"></div>
+      <div><label class="f" for="f_org">Organisation *</label><input class="in" id="f_org" autocomplete="organization" required maxlength="160"></div>
+      <div><label class="f" for="f_type">Organisation type</label><select class="in" id="f_type"><option value="">Select</option>${PARTNER_TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
+      <div><label class="f" for="f_email">Work email *</label><input class="in" id="f_email" type="email" autocomplete="email" required maxlength="160"></div>
+      <div><label class="f" for="f_phone">Mobile *</label><input class="in" id="f_phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="20" placeholder="+91"></div>
+      <div><label class="f" for="f_city">City</label><input class="in" id="f_city" autocomplete="address-level2" maxlength="80"></div>
+      <div><label class="f" for="f_int">What would you like to learn? <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" id="f_int" maxlength="300" placeholder="e.g. BrightSign players, tvONE processors"></div>
+    </div>
+    <input class="hp" id="f_web" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label class="consent"><input type="checkbox" id="f_consent"><span>I agree that Cavitak Marketing Pvt. Ltd. may use the details above to manage my registration for this training, send me event communication, and record my attendance. My data will not be sold or shared outside Cavitak and its brand partners for this program. I can ask for it to be deleted at any time by replying to any event email.</span></label>
+    <div id="rf_err" class="banner warn hide"></div>
+    <button class="btn primary block" id="rf_go" type="submit" style="min-height:48px;font-size:16px">Submit registration</button>
+  </form>`;
+  app.innerHTML = `
+  <div class="hero"><div class="wrap">
+    <div class="eyebrow">${esc(d.brand||"Cavitak")} · Tech Week · ${esc(v.city)}</div>
+    <h1>${esc(ev.title)}</h1>
+    <div style="opacity:.92">${esc(dates)}${dates?" · ":""}${esc(v.name)}, ${esc(v.city)}</div>
+  </div></div>
+  <div class="wrap lift"><div class="grid" style="grid-template-columns:1fr;gap:14px">
+    ${ev.description||ev.agenda?`<div class="card pad">${ev.description?`<div style="white-space:pre-line">${esc(ev.description)}</div>`:""}${ev.agenda?`<div style="margin-top:${ev.description?12:0}px"><div class="small muted b" style="text-transform:uppercase;letter-spacing:.05em">Agenda</div><div style="white-space:pre-line;margin-top:4px">${esc(ev.agenda)}</div></div>`:""}</div>`:""}
+    ${formHtml}
+    ${venueCard}
+  </div></div>
+  <div class="foot">Cavitak Marketing Pvt. Ltd. · Tech Week partner training</div>`;
+  if(!d.open) return;
+  let slotId=null;
+  $$(".slot",app).forEach(b=>b.onclick=()=>{ if(b.disabled) return; $$(".slot",app).forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); slotId=b.dataset.id });
+  $("#rf").onsubmit=async(e)=>{
+    e.preventDefault(); const err=$("#rf_err"); err.classList.add("hide");
+    const val=id=>$(id).value.trim();
+    const fail=m=>{ err.textContent=m; err.classList.remove("hide"); err.scrollIntoView({behavior:"smooth",block:"center"}) };
+    if(!slotId) return fail("Please choose a session.");
+    if(!val("#f_name")||!val("#f_desig")||!val("#f_org")) return fail("Please fill in your name, designation and organisation.");
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("#f_email"))) return fail("Please enter a valid email address.");
+    if(val("#f_phone").replace(/\D/g,"").length<8) return fail("Please enter a valid mobile number.");
+    if(!$("#f_consent").checked) return fail("Please accept the consent statement to continue.");
+    const btn=$("#rf_go"); busy(btn,true);
+    try{
+      const r = await rpc("tw_register",{p_slug:slug,p_slot_id:slotId,p_data:{
+        full_name:val("#f_name"),designation:val("#f_desig"),organization:val("#f_org"),partner_type:val("#f_type"),
+        email:val("#f_email"),phone:val("#f_phone"),city:val("#f_city"),interests:val("#f_int"),
+        consent:true,source:src,website:$("#f_web").value }});
+      if(!r.ok){ busy(btn,false); return fail(r.error) }
+      const s = d.slots.find(x=>x.id===slotId)||{};
+      const msg = r.duplicate ? {h:"You're already registered",p:r.message}
+        : r.status==="approved" ? {h:"You're confirmed!",p:"Your seat is confirmed. We've emailed your entry QR pass and calendar invite."}
+        : r.status==="waitlisted" ? {h:"You're on the waitlist",p:"This session is currently full. We'll email you as soon as a seat opens."}
+        : {h:"Request received",p:"Thank you! Our team will review your request and email your confirmation with the entry QR pass."};
+      $("#rf").outerHTML=`<div class="card pad" style="text-align:center">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--green-50);color:var(--green);display:grid;place-items:center;margin:0 auto 10px;font-size:28px">✓</div>
+        <h2 style="font-size:22px">${esc(msg.h)}</h2><p class="muted">${esc(msg.p)}</p>
+        ${!r.duplicate?`<div class="card pad" style="text-align:left;background:var(--grey-50);box-shadow:none"><div class="b">${esc(s.date_label||"")}</div><div class="small">${esc(s.label||"")} · ${esc(s.time_label||"")}</div><div class="small muted">${esc(v.name)}, ${esc(v.city)}</div></div>`:""}
+        ${r.token?`<a class="btn primary" style="margin-top:14px" href="?p=${esc(r.token)}">View my ${r.status==="approved"?"pass":"status"}</a>`:""}
+        <p class="tiny muted" style="margin-top:14px">Can't find the email? Please check your spam or promotions folder.</p></div>`;
+      window.scrollTo({top:0,behavior:"smooth"});
+    }catch(ex){ busy(btn,false); fail(ex.message) }
+  };
+}
+function publicShell(inner){ return `<div class="hero"><div class="wrap"><div class="eyebrow">Cavitak · Tech Week</div></div></div><div class="wrap lift">${inner}</div>` }
+
+/* =============================================================
+   PUBLIC — pass page
+   ============================================================= */
+async function renderPass(){
+  const tok=params.get("p"), app=$("#app");
+  let d; try{ d=await rpc("tw_pass",{p_token:tok}) }catch(e){ d={ok:false,error:e.message} }
+  if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Pass not found</h2><p>${esc(d.error)}</p></div>`); return }
+  const p=d.person, s=d.slot, v=d.venue, ev=d.event;
+  document.title="Tech Week pass — "+p.full_name;
+  const stMsg={approved:"Confirmed — show this QR at reception",pending:"Your request is under review",waitlisted:"You're on the waitlist",rejected:"We couldn't accommodate this request",cancelled:"This registration is cancelled"}[d.status]||d.status;
+  app.innerHTML=`
+  <div class="hero" style="padding-bottom:72px"><div class="wrap">
+    <div class="eyebrow">${esc(d.brand||"Cavitak")} · Tech Week pass</div>
+    <h1 style="font-size:24px">${esc(ev.title)}</h1>
+  </div></div>
+  <div class="wrap lift" style="max-width:520px">
+    <div class="card pad stack" style="text-align:center">
+      <div>${d.checked_in_at?'<span class="chip in">✓ Checked in '+esc(fmtDT(d.checked_in_at))+'</span>':chip(d.status)}</div>
+      <div class="b">${esc(stMsg)}</div>
+      ${d.status==="approved"?`<div class="qrbox" id="qr"></div>`:""}
+      <div><div style="font-size:20px;font-weight:800">${esc(p.full_name)}</div><div class="muted">${esc([p.designation,p.organization].filter(Boolean).join(" · "))}</div></div>
+      ${d.reason?`<div class="small muted">${esc(d.reason)}</div>`:""}
+    </div>
+    <div class="card pad stack" style="margin-top:14px">
+      <div><div class="small muted b">DATE</div><div class="b">${esc(s.date_label)}</div></div>
+      <div><div class="small muted b">SLOT</div><div><span class="b">${esc(s.label)}</span> · ${esc(s.time_label)}</div></div>
+      <div><div class="small muted b">VENUE</div><div class="b">${esc(v.name)}${v.room_name?" · "+esc(v.room_name):""}, ${esc(v.city)}</div><div class="small" style="white-space:pre-line">${esc(v.address)}</div></div>
+      ${v.contact_name||v.contact_phone?`<div><div class="small muted b">CONTACT</div><div>${esc([v.contact_name,v.contact_phone].filter(Boolean).join(" · "))}</div></div>`:""}
+      ${v.instructions?`<div class="small muted">${esc(v.instructions)}</div>`:""}
+      <div class="row">${v.map_url?`<a class="btn" href="${esc(v.map_url)}" target="_blank" rel="noopener">Directions</a>`:""}
+        ${d.status==="approved"?`<button class="btn" id="ics">Add to calendar</button>`:""}
+        ${d.can_cancel?`<button class="btn ghost" id="cx" style="color:var(--red)">Cancel registration</button>`:""}</div>
+    </div>
+  </div><div class="foot">Cavitak Marketing Pvt. Ltd.</div>`;
+  if(d.status==="approved") qrInto($("#qr"), location.origin+location.pathname+"?p="+tok, 220);
+  $("#ics") && ($("#ics").onclick=()=>{
+    const f=x=>new Date(x).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+    const e=t=>String(t||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+    const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Cavitak//Tech Week//EN","BEGIN:VEVENT","UID:"+tok+"@techweek.cavitak","DTSTAMP:"+f(new Date()),
+      "DTSTART:"+f(s.starts_at),"DTEND:"+f(s.ends_at),"SUMMARY:"+e(ev.title+" — "+s.label),"LOCATION:"+e([v.name,v.room_name,v.address].filter(Boolean).join(", ")),
+      "DESCRIPTION:"+e((v.map_url?"Map: "+v.map_url+"\n":"")+"Pass: "+location.href),"END:VEVENT","END:VCALENDAR"].join("\r\n");
+    download("tech-week.ics", ics, "text/calendar");
+  });
+  $("#cx") && ($("#cx").onclick=async()=>{
+    if(!confirm("Cancel your registration? Your seat will be released to another partner.")) return;
+    try{ const r=await rpc("tw_cancel",{p_token:tok}); if(!r.ok) return toast(r.error,true); toast("Registration cancelled"); renderPass() }catch(e){ toast(e.message,true) }
+  });
+}
+
+/* =============================================================
+   CONSOLE
+   ============================================================= */
+const ICONS={
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  events:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  approvals:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  checkin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>',
+  reports:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
+  admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
+};
+const TAB_DEF=[
+  {id:"dash",label:"Dashboard",roles:["super","approver","checkin","marketing"]},
+  {id:"events",label:"Events",roles:["super","approver","marketing"]},
+  {id:"approvals",label:"Approvals",roles:["super","approver"]},
+  {id:"checkin",label:"Check-in",roles:["super","approver","checkin"]},
+  {id:"reports",label:"Reports",roles:["super","approver","marketing"]},
+  {id:"admin",label:"Admin",roles:["super","approver"]},
+];
+const can=(...roles)=>S.user && roles.includes(S.user.role);
+
+function renderLogin(msg){
+  $("#app").innerHTML=`
+  <div class="hero" style="padding-bottom:80px"><div class="wrap"><div class="eyebrow">Cavitak</div><h1>Tech Week Console</h1><div style="opacity:.9">Schedule events · approve partners · QR check-in · reports</div></div></div>
+  <div class="wrap lift" style="max-width:420px"><form class="card pad stack" id="lf">
+    ${msg?`<div class="banner warn">${esc(msg)}</div>`:""}
+    <div><label class="f" for="lu">Username</label><input class="in" id="lu" autocomplete="username" autocapitalize="none" required></div>
+    <div><label class="f" for="lp">Password</label><input class="in" id="lp" type="password" autocomplete="current-password" required></div>
+    <button class="btn primary block" id="lb" style="min-height:46px">Sign in</button>
+    <div class="tiny muted" style="text-align:center">Forgot your password? Ask the Tech Week admin to reset it.</div>
+  </form></div>`;
+  $("#lf").onsubmit=async e=>{
+    e.preventDefault(); const b=$("#lb"); busy(b,true);
+    try{
+      const r=await rpc("tw_login",{p_username:$("#lu").value,p_password:$("#lp").value});
+      if(!r.ok){ busy(b,false); return toast(r.error,true) }
+      S.token=r.token; store.set("tw_token",r.token); S.user=r.user;
+      await bootConsole();
+    }catch(ex){ busy(b,false); toast(ex.message,true) }
+  };
+}
+
+async function bootConsole(){
+  if(!S.token) return renderLogin();
+  try{ await loadOverview() }catch(e){ return renderLogin(/not_auth/.test(e.message)?"":e.message) }
+  if(S.user.must_change) return changePassword(true);
+  const allowed=TAB_DEF.filter(t=>t.roles.includes(S.user.role));
+  if(!allowed.find(t=>t.id===S.tab)) S.tab=allowed[0].id;
+  $("#app").innerHTML=`
+  <header class="top"><div class="wrap">
+    <div class="logo"><i>C</i><span>Tech Week</span></div>
+    <nav class="tabs">${allowed.map(t=>`<button data-tab="${t.id}">${t.label}</button>`).join("")}</nav>
+    <div class="grow"></div>
+    <button class="btn ghost sm" id="me" title="Account">${esc(S.user.full_name.split(" ")[0])} <span class="chip">${esc(S.user.role)}</span></button>
+  </div></header>
+  <main class="console"><div class="wrap" id="view"></div></main>
+  <nav class="bnav">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span></button>`).join("")}</nav>`;
+  $$("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab));
+  $("#me").onclick=accountMenu;
+  go(S.tab);
+}
+async function loadOverview(){
+  const ov=await rpc("tw_overview",{p_token:S.token});
+  S.ov=ov; S.user=ov.user; S.settings=ov.settings||{};
+  // first run on a real host: remember the public URL so emails carry working pass links
+  if(S.user.role==="super" && !S.settings.public_url && /^https?:/.test(location.protocol) && !/claude|localhost|127\.0\.0\.1|usercontent/.test(location.host)){
+    rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:location.origin+location.pathname}}).then(()=>{S.settings.public_url=location.origin+location.pathname}).catch(()=>{});
+  }
+}
+function go(tab){
+  S.tab=tab; store.set("tw_tab",tab);
+  $$("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  const v=$("#view"); window.scrollTo(0,0);
+  if(window._scanner){ try{ window._scanner.stop() }catch(e){} window._scanner=null }
+  ({dash:viewDash,events:viewEvents,approvals:viewApprovals,checkin:viewCheckin,reports:viewReports,admin:viewAdmin}[tab])(v);
+}
+function accountMenu(){
+  modal(`<h3>${esc(S.user.full_name)}</h3><div class="muted small" style="margin-top:-8px;margin-bottom:12px">@${esc(S.user.username)} · ${esc(S.user.role)}</div>
+    <div class="stack"><button class="btn block" id="cp">Change password</button><button class="btn block" id="lo">Sign out</button><button class="btn ghost block" data-close>Close</button>
+    <div class="tiny muted" style="text-align:center">Tech Week Console v${APP_VERSION}</div></div>`);
+  $("#cp").onclick=()=>changePassword(false);
+  $("#lo").onclick=async()=>{ try{ await rpc("tw_logout",{p_token:S.token}) }catch(e){} store.set("tw_token",null); S.token=null; closeModal(); renderLogin() };
+}
+function changePassword(forced){
+  modal(`<h3>${forced?"Set your own password":"Change password"}</h3>${forced?'<div class="banner info" style="margin-bottom:12px">You signed in with a temporary password. Please set your own to continue.</div>':""}
+    <form class="stack" id="cpf"><div><label class="f">Current password</label><input class="in" type="password" id="c0" autocomplete="current-password"></div>
+    <div><label class="f">New password (min 8 characters)</label><input class="in" type="password" id="c1" autocomplete="new-password"></div>
+    <div><label class="f">Confirm new password</label><input class="in" type="password" id="c2" autocomplete="new-password"></div>
+    <div class="row"><button class="btn primary" id="cpb">Save password</button>${forced?"":'<button type="button" class="btn" data-close>Cancel</button>'}</div></form>`);
+  $("#cpf").onsubmit=async e=>{
+    e.preventDefault(); if($("#c1").value!==$("#c2").value) return toast("Passwords don't match",true);
+    const b=$("#cpb"); busy(b,true);
+    try{ const r=await rpc("tw_change_password",{p_token:S.token,p_old:$("#c0").value,p_new:$("#c1").value}); busy(b,false);
+      if(!r.ok) return toast(r.error,true); toast("Password updated"); closeModal(); if(forced){ S.user.must_change=false; bootConsole() } }
+    catch(ex){ busy(b,false); toast(ex.message,true) }
+  };
+}
+const evById=id=>(S.ov.events||[]).find(e=>e.id===id);
+function evDates(e){ const sl=(e.slots||[]).filter(s=>s.is_active); if(!sl.length) return "No sessions yet";
+  const a=sl[0], b=sl[sl.length-1]; const f=s=>s.date_label.split(",").slice(1).join(",").trim().replace(/ \d{4}$/,"");
+  return a.local_date===b.local_date?f(a):f(a)+" – "+f(b); }
+
+/* ---------------- Dashboard ---------------- */
+function viewDash(v){
+  const ev=S.ov.events||[], tot={total:0,pending:0,approved:0,waitlisted:0,checked_in:0}, cap=ev.reduce((a,e)=>a+e.capacity,0);
+  ev.forEach(e=>Object.keys(tot).forEach(k=>tot[k]+=e.counts[k]||0));
+  let pastApproved=0, pastIn=0;
+  ev.forEach(e=>e.slots.forEach(s=>{ if(new Date(s.ends_at)<new Date()){ pastApproved+=s.approved; pastIn+=s.checked_in } }));
+  const showRate=pastApproved>0 ? Math.round(pastIn/pastApproved*100)+"%" : "—";
+  const st=S.ov.email_stats||{}, emailWarn = S.user.role==="super" && (st.failed>0 || (!S.settings.email_last_ok && st.queued>0));
+  v.innerHTML=`
+  <div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Dashboard</h2><div class="small muted">All Tech Week events across cities</div></div>
+    ${can("super")?'<button class="btn primary" id="newev">+ New event</button>':""}</div>
+  ${emailWarn?`<div class="banner warn" style="margin-bottom:12px"><b>Emails need attention.</b> ${st.failed||0} failed, ${st.queued||0} waiting. ${S.settings.email_last_error?esc(S.settings.email_last_error):""} <a href="#" id="toemail">Open email log</a></div>`:""}
+  ${!S.settings.public_url&&can("super")?`<div class="banner info" style="margin-bottom:12px">Set the public link of this console in <b>Admin → Settings</b> so emails carry working pass links.</div>`:""}
+  <div class="grid g4" style="grid-template-columns:repeat(2,1fr);margin-bottom:14px">
+    <div class="card kpi"><div class="l">Registrations</div><div class="v">${tot.total}</div><div class="tiny muted">${ev.length} event${ev.length===1?"":"s"}</div></div>
+    <div class="card kpi"><div class="l">Pending approval</div><div class="v" style="color:${tot.pending?"var(--amber)":"inherit"}">${tot.pending}</div><div class="tiny muted">${tot.waitlisted} waitlisted</div></div>
+    <div class="card kpi"><div class="l">Approved seats</div><div class="v">${tot.approved}<span class="muted" style="font-size:15px;font-weight:600"> / ${cap}</span></div><div class="bar" style="margin-top:6px"><i style="width:${cap?Math.min(100,tot.approved/cap*100):0}%"></i></div></div>
+    <div class="card kpi"><div class="l">Checked in</div><div class="v" style="color:var(--green)">${tot.checked_in}</div><div class="tiny muted">Show-up rate ${showRate}</div></div>
+  </div>
+  <div class="stack">${ev.length?ev.map(eventCard).join(""):`<div class="card empty">No events yet.${can("super")?" Create your first Tech Week event.":""}</div>`}</div>`;
+  $("#newev") && ($("#newev").onclick=()=>editEvent(null));
+  $("#toemail") && ($("#toemail").onclick=e=>{ e.preventDefault(); S.adminTab="email"; go("admin") });
+  bindEventCards(v);
+}
+function eventCard(e){
+  const c=e.counts;
+  return `<div class="card ev">
+    <div class="row between" style="align-items:flex-start"><div class="grow">
+      <div class="row" style="gap:6px"><span class="chip ${e.status}">${e.status==="open"?"● Registrations open":e.status==="draft"?"Draft":"Closed"}</span><span class="small muted">${esc(e.city)} · ${esc(e.venue_name)}</span></div>
+      <h3 style="margin-top:6px">${esc(e.title)}</h3><div class="small muted">${esc(evDates(e))} · ${e.slots.filter(s=>s.is_active).length} sessions</div></div></div>
+    <div class="row" style="margin:10px 0 6px;gap:14px;font-size:13px">
+      <span><b>${c.approved}</b>/${e.capacity} approved</span><span style="color:var(--amber)"><b>${c.pending}</b> pending</span>
+      <span style="color:var(--blue)"><b>${c.waitlisted}</b> waitlist</span><span style="color:var(--green)"><b>${c.checked_in}</b> checked in</span></div>
+    <div class="bar"><i style="width:${e.capacity?Math.min(100,c.approved/e.capacity*100):0}%"></i></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn sm primary" data-share="${e.id}">Share link</button>
+      ${can("super","approver")?`<button class="btn sm" data-appr="${e.id}">Approvals${c.pending?` (${c.pending})`:""}</button>`:""}
+      ${can("super","approver","marketing")?`<button class="btn sm" data-sess="${e.id}">Sessions</button>`:""}
+      ${can("super")?`<button class="btn sm" data-edit="${e.id}">Edit</button>`:""}
+    </div></div>`;
+}
+function bindEventCards(root){
+  $$("[data-share]",root).forEach(b=>b.onclick=()=>shareKit(evById(b.dataset.share)));
+  $$("[data-appr]",root).forEach(b=>b.onclick=()=>{ S.apprEvent=b.dataset.appr; S.apprStatus="pending"; go("approvals") });
+  $$("[data-edit]",root).forEach(b=>b.onclick=()=>editEvent(evById(b.dataset.edit)));
+  $$("[data-sess]",root).forEach(b=>b.onclick=()=>sessionsView(evById(b.dataset.sess)));
+}
+function sessionsView(e){
+  modal(`<h3>${esc(e.title)} — sessions</h3><div class="tscroll"><table class="t"><thead><tr><th>Date</th><th>Slot</th><th>Seats</th><th>Pending</th><th>Waitlist</th><th>In</th></tr></thead><tbody>
+    ${e.slots.map(s=>`<tr style="${s.is_active?"":"opacity:.45"}"><td>${esc(s.date_label)}</td><td><b>${esc(s.label)}</b><div class="tiny muted">${esc(s.time_label)}</div></td>
+      <td><b>${s.approved}</b>/${s.capacity}<div class="bar" style="width:70px;margin-top:4px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%"></i></div></td>
+      <td>${s.pending}</td><td>${s.waitlisted}</td><td>${s.checked_in}</td></tr>`).join("")}</tbody></table></div>
+    <div class="row" style="margin-top:12px"><button class="btn" data-close>Close</button></div>`);
+}
+
+/* ---------------- Share kit ---------------- */
+function shareKit(e){
+  const CH=[["","Direct link"],["whatsapp","WhatsApp"],["email","Email campaign"],["linkedin","LinkedIn"],["sales","Sales team"],["oem","OEM / brand team"],["poster","Printed poster / standee"]];
+  const draftWarn = e.status!=="open" ? `<div class="banner warn">This event is <b>${esc(e.status)}</b>. The link will show "not active" until you open registrations.${can("super")?' <a href="#" id="openNow">Open registrations now</a>':""}</div>` : "";
+  modal(`<h3>Share — ${esc(e.title)}</h3><div class="stack">${draftWarn}
+    <div><label class="f">Source tag <span class="muted" style="font-weight:400">(so reports show which channel brought each registration)</span></label>
+      <select class="in" id="sk_ch">${CH.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join("")}<option value="__custom">Custom…</option></select>
+      <input class="in hide" id="sk_custom" placeholder="e.g. mumbai-si-meet" style="margin-top:6px"></div>
+    <div><label class="f">Registration link</label><div class="row"><input class="in grow" id="sk_link" readonly><button class="btn" id="sk_copy">Copy</button></div></div>
+    <div><label class="f">WhatsApp / email message</label><textarea class="in" id="sk_msg" style="min-height:150px"></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn sm" id="sk_cmsg">Copy message</button><a class="btn sm" id="sk_wa" target="_blank" rel="noopener">Send via WhatsApp</a><a class="btn sm" id="sk_mail">Open in email</a></div></div>
+    <div class="poster printable" id="sk_poster"><div class="ph"><div class="tiny" style="letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600">Cavitak · Tech Week · ${esc(e.city)}</div>
+      <div style="font-size:22px;font-weight:800;margin-top:4px">${esc(e.title)}</div><div style="opacity:.9;margin-top:2px">${esc(evDates(e))} · ${esc(e.venue_name)}</div></div>
+      <div class="pb"><div class="qrbox" id="sk_qr" style="border:0"></div><div class="b" style="margin-top:6px">Scan to register</div><div class="tiny muted">Limited seats · approval required</div></div></div>
+    <div class="row"><button class="btn" id="sk_png">Download QR</button><button class="btn" id="sk_print">Print poster</button><button class="btn ghost" data-close>Close</button></div>
+  </div>`, m=>{
+    const upd=()=>{
+      let src=$("#sk_ch").value; $("#sk_custom").classList.toggle("hide",src!=="__custom");
+      if(src==="__custom") src=$("#sk_custom").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-");
+      const link=regLink(e.slug, src); $("#sk_link").value=link;
+      const sess=[...new Set(e.slots.filter(s=>s.is_active).map(s=>s.label+" ("+s.time_label+")"))].join(" / ");
+      const msg=`*${e.title}*\n📍 ${e.venue_name}, ${e.city}\n🗓 ${evDates(e)}\n⏰ ${sess}\n\nHands-on partner training at the Cavitak Experience Center. Seats are limited to ${e.slots[0]?e.slots[0].capacity:""} per session and confirmed on approval.\n\nRegister here: ${link}`;
+      $("#sk_msg").value=msg; $("#sk_wa").href="https://wa.me/?text="+encodeURIComponent(msg);
+      $("#sk_mail").href="mailto:?subject="+encodeURIComponent("Invitation: "+e.title)+"&body="+encodeURIComponent(msg.replace(/\*/g,""));
+      qrInto($("#sk_qr"), link, 200);
+    };
+    $("#sk_ch").onchange=upd; $("#sk_custom").oninput=upd; upd();
+    $("#sk_copy").onclick=()=>copy($("#sk_link").value);
+    $("#sk_cmsg").onclick=()=>copy($("#sk_msg").value);
+    $("#sk_png").onclick=()=>{ const a=document.createElement("a"); a.href=qrDataUrl($("#sk_link").value,900); a.download=e.slug+"-register-qr.png"; a.click() };
+    $("#sk_print").onclick=()=>window.print();
+    $("#openNow") && ($("#openNow").onclick=async ev=>{ ev.preventDefault(); const r=await rpc("tw_set_event_status",{p_token:S.token,p_id:e.id,p_status:"open"}).catch(x=>({ok:false,error:x.message}));
+      if(!r.ok) return toast(r.error,true); toast("Registrations are open"); await loadOverview(); shareKit(evById(e.id)); });
+  });
+}
+
+/* ---------------- Events ---------------- */
+function viewEvents(v){
+  const ev=S.ov.events||[];
+  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Events</h2><div class="small muted">One event per city / experience center. Each has its own room capacity, dates and slots.</div></div>
+    ${can("super")?'<button class="btn primary" id="newev">+ New event</button>':""}</div>
+    <div class="stack">${ev.length?ev.map(eventCard).join(""):'<div class="card empty">No events yet.</div>'}</div>`;
+  $("#newev") && ($("#newev").onclick=()=>editEvent(null));
+  bindEventCards(v);
+}
+function editEvent(e){
+  if(!(S.ov.venues||[]).length){ toast("Add a venue first (Admin → Venues)"); return editVenue(null, ()=>editEvent(e)) }
+  const isNew=!e; e=e||{status:"draft",auto_approve:false,slots:[],program_id:(S.ov.programs[0]||{}).id,venue_id:(S.ov.venues[0]||{}).id};
+  let slots=(e.slots||[]).map(s=>({id:s.id,date:s.local_date,label:s.label,start:s.local_start,end:s.local_end,capacity:s.capacity,approved:s.approved||0,is_active:s.is_active}));
+  const venueCap=()=>((S.ov.venues.find(x=>x.id===$("#e_venue").value)||{}).capacity)||8;
+  const closesLocal = e.closes_at ? new Date(new Date(e.closes_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16) : "";
+  modal(`<h3>${isNew?"New event":"Edit event"}</h3><form id="ef" class="stack">
+    <div class="grid g2">
+      <div><label class="f">Program</label><select class="in" id="e_prog"><option value="">—</option>${S.ov.programs.map(p=>`<option value="${p.id}" ${p.id===e.program_id?"selected":""}>${esc(p.name)}</option>`).join("")}</select></div>
+      <div><label class="f">Venue / experience center</label><div class="row" style="flex-wrap:nowrap"><select class="in" id="e_venue">${S.ov.venues.filter(x=>x.is_active||x.id===e.venue_id).map(x=>`<option value="${x.id}" ${x.id===e.venue_id?"selected":""}>${esc(x.city)} — ${esc(x.name)} (${x.capacity} seats)</option>`).join("")}</select><button type="button" class="btn sm" id="e_nv" title="Add venue">+</button></div></div>
+    </div>
+    <div><label class="f">Event title</label><input class="in" id="e_title" value="${esc(e.title||"")}" placeholder="Cavitak Tech Week — Mumbai"></div>
+    <div class="grid g2"><div><label class="f">Link name (slug)</label><input class="in" id="e_slug" value="${esc(e.slug||"")}" placeholder="auto from title"></div>
+      <div><label class="f">Registrations close <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" type="datetime-local" id="e_close" value="${closesLocal}"></div></div>
+    <div><label class="f">Short description (shown on the registration page)</label><textarea class="in" id="e_desc">${esc(e.description||"")}</textarea></div>
+    <div><label class="f">Agenda (one line per item)</label><textarea class="in" id="e_agenda" placeholder="10:30 Welcome&#10;10:45 BrightSign hands-on&#10;11:45 tvONE CORIOmaster demo">${esc(e.agenda||"")}</textarea></div>
+    <div class="grid g2">
+      <div><label class="f">Status</label><select class="in" id="e_status">${["draft","open","closed"].map(s=>`<option value="${s}" ${s===e.status?"selected":""}>${s==="open"?"Open — accepting registrations":s==="draft"?"Draft — link not live":"Closed"}</option>`).join("")}</select></div>
+      <div><label class="f">Approval</label><select class="in" id="e_auto"><option value="false" ${!e.auto_approve?"selected":""}>Manual approval (recommended)</option><option value="true" ${e.auto_approve?"selected":""}>Auto-approve until full</option></select></div>
+    </div>
+    <div class="card pad" style="background:var(--grey-50);box-shadow:none">
+      <div class="b">Sessions</div><div class="small muted" style="margin-bottom:8px">Times are local to the venue's time zone. Generate a block of days, then fine-tune any row.</div>
+      <div class="grid g4" style="grid-template-columns:repeat(2,1fr)">
+        <div><label class="f">From</label><input class="in" type="date" id="g_from"></div><div><label class="f">To</label><input class="in" type="date" id="g_to"></div>
+      </div>
+      <div id="g_tpl" class="stack" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:8px"><button type="button" class="btn sm" id="g_addtpl">+ Slot template</button><label class="small row" style="gap:6px"><input type="checkbox" id="g_wk"> Skip Sat/Sun</label><div class="grow"></div><button type="button" class="btn sm primary" id="g_go">Generate sessions</button></div>
+    </div>
+    <div class="tscroll"><table class="t" id="s_tbl"><thead><tr><th>Date</th><th>Label</th><th>Start</th><th>End</th><th>Seats</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="row"><button type="button" class="btn sm" id="s_add">+ Add one session</button></div>
+    <div class="row" style="position:sticky;bottom:-18px;background:#fff;padding:10px 0;border-top:1px solid var(--line)">
+      <button class="btn primary" id="e_save">Save event</button><button type="button" class="btn" data-close>Cancel</button></div>
+  </form>`, m=>{
+    const tpl=[{label:"Morning",start:"10:30",end:"13:00"},{label:"Evening",start:"15:00",end:"17:30"}];
+    const drawTpl=()=>{ $("#g_tpl").innerHTML=tpl.map((t,i)=>`<div class="row" style="flex-wrap:nowrap;gap:6px">
+        <input class="in" data-t="${i}" data-k="label" value="${esc(t.label)}" style="min-width:0"><input class="in" type="time" data-t="${i}" data-k="start" value="${t.start}" style="max-width:120px"><input class="in" type="time" data-t="${i}" data-k="end" value="${t.end}" style="max-width:120px"><button type="button" class="btn sm ghost" data-tr="${i}">✕</button></div>`).join("");
+      $$("[data-t]",m).forEach(x=>x.oninput=()=>tpl[x.dataset.t][x.dataset.k]=x.value);
+      $$("[data-tr]",m).forEach(x=>x.onclick=()=>{ tpl.splice(+x.dataset.tr,1); drawTpl() }); };
+    drawTpl();
+    $("#g_addtpl").onclick=()=>{ tpl.push({label:"Session",start:"12:00",end:"14:00"}); drawTpl() };
+    const drawSlots=()=>{
+      const vis=slots.map((s,i)=>({s,i})).filter(x=>!x.s.remove).sort((a,b)=>(a.s.date+a.s.start).localeCompare(b.s.date+b.s.start));
+      $("#s_tbl tbody").innerHTML=vis.length?vis.map(({s,i})=>`<tr>
+        <td><input class="in" type="date" data-i="${i}" data-k="date" value="${s.date||""}" style="min-width:140px"></td>
+        <td><input class="in" data-i="${i}" data-k="label" value="${esc(s.label||"")}" style="min-width:100px"></td>
+        <td><input class="in" type="time" data-i="${i}" data-k="start" value="${s.start||""}" style="min-width:100px"></td>
+        <td><input class="in" type="time" data-i="${i}" data-k="end" value="${s.end||""}" style="min-width:100px"></td>
+        <td><input class="in" type="number" min="1" data-i="${i}" data-k="capacity" value="${s.capacity||8}" style="width:76px">${s.approved?`<div class="tiny muted">${s.approved} booked</div>`:""}</td>
+        <td><button type="button" class="btn sm ghost" data-rm="${i}" title="Remove">✕</button></td></tr>`).join(""):`<tr><td colspan="6" class="muted small">No sessions yet — use the generator above.</td></tr>`;
+      $$("[data-i]",m).forEach(x=>x.oninput=()=>slots[x.dataset.i][x.dataset.k]=x.value);
+      $$("[data-rm]",m).forEach(x=>x.onclick=()=>{ const s=slots[+x.dataset.rm]; if(s.id){ if(s.approved&&!confirm("This session has approved registrations. Hide it anyway? Existing registrations stay on record.")) return; s.remove=true } else slots.splice(+x.dataset.rm,1); drawSlots() });
+    };
+    drawSlots();
+    $("#g_go").onclick=()=>{
+      const a=$("#g_from").value, b=$("#g_to").value||a; if(!a) return toast("Pick a start date",true);
+      let d=new Date(a+"T00:00:00"), end=new Date(b+"T00:00:00"), n=0;
+      while(d<=end && n<120){ const dow=d.getDay(); const ds=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+        if(!($("#g_wk").checked&&(dow===0||dow===6))) tpl.forEach(t=>{ if(!slots.some(s=>!s.remove&&s.date===ds&&s.start===t.start)){ slots.push({date:ds,label:t.label,start:t.start,end:t.end,capacity:venueCap()}); n++ } });
+        d.setDate(d.getDate()+1) }
+      drawSlots(); toast(n+" session"+(n===1?"":"s")+" added");
+    };
+    $("#s_add").onclick=()=>{ const last=slots.filter(s=>!s.remove).slice(-1)[0]; slots.push({date:last?last.date:"",label:"Session",start:"10:30",end:"13:00",capacity:venueCap()}); drawSlots() };
+    $("#e_nv").onclick=()=>editVenue(null, ()=>editEvent(e.id?evById(e.id):null));
+    $("#ef").onsubmit=async ev=>{
+      ev.preventDefault(); const b=$("#e_save");
+      for(const s of slots){ if(s.remove) continue; if(!s.date||!s.start||!s.end) return toast("Every session needs a date, start and end time",true); if(s.end<=s.start) return toast(`"${s.label}" on ${s.date} ends before it starts`,true) }
+      busy(b,true);
+      const cl=$("#e_close").value;
+      try{
+        const r=await rpc("tw_save_event",{p_token:S.token,p_data:{id:e.id||"",program_id:$("#e_prog").value,venue_id:$("#e_venue").value,title:$("#e_title").value,
+          slug:$("#e_slug").value,description:$("#e_desc").value,agenda:$("#e_agenda").value,status:$("#e_status").value,auto_approve:$("#e_auto").value==="true",
+          closes_at:cl?new Date(cl).toISOString():"",slots:slots.map(s=>({id:s.id||"",date:s.date,label:s.label,start:s.start,end:s.end,capacity:+s.capacity||8,remove:!!s.remove}))}});
+        busy(b,false); if(!r.ok) return toast(r.error,true);
+        toast("Event saved"); closeModal(); await loadOverview(); go(S.tab);
+        if(isNew) shareKit(evById(r.id));
+      }catch(ex){ busy(b,false); toast(ex.message,true) }
+    };
+  });
+}
+
+/* ---------------- Approvals ---------------- */
+async function loadRegs(eventId){
+  const r=await rpc("tw_registrations",{p_token:S.token,p_event_id:eventId||null});
+  S.regs=r.rows||[]; S.regsEvent=eventId||null; return S.regs;
+}
+async function viewApprovals(v){
+  const ev=S.ov.events||[];
+  if(!ev.length){ v.innerHTML='<div class="card empty">No events yet.</div>'; return }
+  if(!S.apprEvent || !evById(S.apprEvent)) S.apprEvent=(ev.find(e=>e.counts.pending)||ev.find(e=>e.status==="open")||ev[0]).id;
+  S.apprStatus=S.apprStatus||"pending";
+  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><h2 style="font-size:22px">Approvals</h2><button class="btn sm" id="ap_ref">Refresh</button></div>
+    <div class="stack"><select class="in" id="ap_ev">${ev.map(e=>`<option value="${e.id}" ${e.id===S.apprEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}${e.counts.pending?` (${e.counts.pending} pending)`:""}</option>`).join("")}</select>
+    <div id="ap_body"><div class="empty"><span class="spin dark"></span></div></div></div>`;
+  $("#ap_ev").onchange=()=>{ S.apprEvent=$("#ap_ev").value; S.apprSlot=""; drawApprovals() };
+  $("#ap_ref").onclick=async()=>{ await loadOverview(); drawApprovals() };
+  drawApprovals();
+}
+async function drawApprovals(){
+  const body=$("#ap_body"); if(!body) return;
+  const e=evById(S.apprEvent);
+  try{ await loadRegs(S.apprEvent) }catch(ex){ body.innerHTML=`<div class="banner warn">${esc(ex.message)}</div>`; return }
+  const st=S.apprStatus, q=(S.apprQ||"").toLowerCase(), sl=S.apprSlot||"";
+  const counts={}; S.regs.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+  const rows=S.regs.filter(r=>(st==="all"||r.status===st)&&(!sl||r.slot_id===sl)&&(!q||[r.full_name,r.organization,r.email,r.phone,r.designation].join(" ").toLowerCase().includes(q)))
+    .sort((a,b)=>st==="pending"?a.created_at.localeCompare(b.created_at):b.created_at.localeCompare(a.created_at));
+  body.innerHTML=`
+    <div class="card pad"><div class="small muted b" style="margin-bottom:6px">Seats by session</div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">${e.slots.filter(s=>s.is_active).map(s=>`<button class="slot ${sl===s.id?"sel":""}" data-slot="${s.id}" style="padding:8px 10px">
+        <div class="tiny muted">${esc(s.date_label.split(",")[0].slice(0,3))}, ${esc(s.date_label.split(",")[1]||"").replace(/ \d{4}$/,"")}</div><div class="b small">${esc(s.label)}</div>
+        <div class="tiny"><b>${s.approved}</b>/${s.capacity} · <span style="color:var(--amber)">${s.pending} pend.</span></div>
+        <div class="bar" style="margin-top:4px;height:5px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%;background:${s.approved>=s.capacity?"var(--green)":"var(--red)"}"></i></div></button>`).join("")}</div></div>
+    <div class="seg">${["pending","waitlisted","approved","rejected","cancelled","all"].map(s=>`<button data-st="${s}" class="${s===st?"on":""}">${s==="all"?"All":STATUS_LABEL[s]} ${s==="all"?S.regs.length:(counts[s]||0)}</button>`).join("")}</div>
+    <input class="in" id="ap_q" placeholder="Search name, organisation, email, phone" value="${esc(S.apprQ||"")}">
+    <div class="card">${rows.length?`<div class="reg" style="background:var(--grey-50)"><input type="checkbox" id="ap_all"><div class="small muted b">Select all (${rows.length})</div></div>`+rows.map(r=>`
+      <div class="reg"><input type="checkbox" class="ap_ck" value="${r.id}">
+        <div class="grow"><div class="row between" style="align-items:flex-start"><div><span class="nm">${esc(r.full_name)}</span> ${chip(r.status)} ${r.checked_in_at?'<span class="chip in">✓ In</span>':""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
+          <button class="btn sm ghost" data-more="${r.id}">•••</button></div>
+          <div class="small">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}${r.partner_type?` <span class="muted">(${esc(r.partner_type)})</span>`:""}</div>
+          <div class="small muted">${esc(r.email)} · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>${r.participant_city?" · "+esc(r.participant_city):""}</div>
+          <div class="tiny muted" style="margin-top:2px">${esc(r.slot_date)} · ${esc(r.slot_label)} · registered ${esc(fmtDT(r.created_at))}${r.source?" · via "+esc(r.source):""}${r.decided_by?" · by "+esc(r.decided_by):""}</div>
+          ${r.interests?`<div class="tiny" style="margin-top:2px">💬 ${esc(r.interests)}</div>`:""}${r.reason&&r.status!=="approved"?`<div class="tiny muted">Note: ${esc(r.reason)}</div>`:""}
+        </div></div>`).join(""):`<div class="empty">Nothing ${st==="all"?"":"in "+STATUS_LABEL[st].toLowerCase()} here.</div>`}</div>
+    <div class="card pad sticky-actions hide" id="ap_bar"><div class="row"><span class="b" id="ap_n"></span><div class="grow"></div>
+      <button class="btn sm green" data-act="approve">Approve</button><button class="btn sm" data-act="waitlist">Waitlist</button>
+      <button class="btn sm" data-act="move">Move</button><button class="btn sm" data-act="reject">Reject</button></div></div>`;
+  $$("[data-st]",body).forEach(b=>b.onclick=()=>{ S.apprStatus=b.dataset.st; drawApprovals() });
+  $$("[data-slot]",body).forEach(b=>b.onclick=()=>{ S.apprSlot=S.apprSlot===b.dataset.slot?"":b.dataset.slot; drawApprovals() });
+  $("#ap_q").oninput=()=>{ S.apprQ=$("#ap_q").value; clearTimeout(window._apq); window._apq=setTimeout(()=>{ drawApprovals().then(()=>{ const i=$("#ap_q"); i.focus(); i.setSelectionRange(i.value.length,i.value.length) }) },250) };
+  const sel=()=>$$(".ap_ck:checked",body).map(x=>x.value);
+  const upd=()=>{ const n=sel().length; $("#ap_bar").classList.toggle("hide",!n); $("#ap_n").textContent=n+" selected" };
+  $$(".ap_ck",body).forEach(c=>c.onchange=upd);
+  $("#ap_all") && ($("#ap_all").onchange=ev=>{ $$(".ap_ck",body).forEach(c=>c.checked=ev.target.checked); upd() });
+  $$("[data-act]",body).forEach(b=>b.onclick=()=>decide(sel(), b.dataset.act));
+  $$("[data-more]",body).forEach(b=>b.onclick=()=>regMenu(S.regs.find(r=>r.id===b.dataset.more)));
+}
+async function decide(ids, act, extra={}){
+  if(!ids.length) return;
+  const e=evById(S.apprEvent);
+  if(act==="reject" && extra.reason===undefined){
+    return modal(`<h3>Reject ${ids.length} registration${ids.length>1?"s":""}</h3><div class="stack"><div><label class="f">Reason (included in the email, optional)</label>
+      <input class="in" id="rj_r" placeholder="e.g. Sessions are reserved for system integrators this week"></div>
+      <label class="small row"><input type="checkbox" id="rj_n" checked> Send email to the registrant</label>
+      <div class="row"><button class="btn primary" id="rj_go">Reject</button><button class="btn" data-close>Cancel</button></div></div>`, ()=>{
+      $("#rj_go").onclick=()=>{ const reason=$("#rj_r").value, notify=$("#rj_n").checked; closeModal(); decide(ids,"reject",{reason,notify}) } });
+  }
+  if(act==="move" && !extra.slot){
+    return modal(`<h3>Move to another session</h3><div class="stack"><select class="in" id="mv_s">${e.slots.filter(s=>s.is_active&&!s.past).map(s=>`<option value="${s.id}">${esc(s.date_label)} · ${esc(s.label)} (${s.seats_left} left)</option>`).join("")}</select>
+      <div class="small muted">Approved people get an updated confirmation with the new date and time.</div>
+      <div class="row"><button class="btn primary" id="mv_go">Move</button><button class="btn" data-close>Cancel</button></div></div>`, ()=>{
+      $("#mv_go").onclick=()=>{ const slot=$("#mv_s").value; closeModal(); decide(ids,"move",{slot}) } });
+  }
+  try{
+    const r=await rpc("tw_decide",{p_token:S.token,p_ids:ids,p_action:act,p_reason:extra.reason||null,p_slot:extra.slot||null,p_notify:extra.notify!==false});
+    if(!r.ok) return toast(r.error,true);
+    toast(`${r.done} updated${r.full?` · ${r.full} skipped (session full)`:""}${act==="approve"&&r.done?" · confirmations sent":""}`, !!r.full && !r.done);
+    await loadOverview(); drawApprovals();
+  }catch(ex){ toast(ex.message,true) }
+}
+function regMenu(r){
+  modal(`<h3>${esc(r.full_name)}</h3><div class="small muted" style="margin:-8px 0 12px">${esc(r.organization)} · ${chip(r.status)}</div>
+    <div class="stack">
+      ${r.status!=="approved"?'<button class="btn block green" data-a="approve">Approve & send pass</button>':""}
+      ${r.status!=="waitlisted"?'<button class="btn block" data-a="waitlist">Move to waitlist</button>':""}
+      <button class="btn block" data-a="move">Change session</button>
+      ${r.status!=="pending"&&r.status!=="approved"?'<button class="btn block" data-a="pending">Back to pending</button>':""}
+      <button class="btn block" id="rm_resend">Resend latest email</button>
+      ${r.pass_token?`<button class="btn block" id="rm_pass">Copy pass link</button>`:""}
+      ${r.status!=="rejected"?'<button class="btn block" data-a="reject">Reject</button>':""}
+      ${r.status!=="cancelled"?'<button class="btn block" data-a="cancel" style="color:var(--red)">Cancel registration</button>':""}
+      <button class="btn ghost block" data-close>Close</button></div>`, m=>{
+    $$("[data-a]",m).forEach(b=>b.onclick=()=>{ closeModal(); decide([r.id], b.dataset.a) });
+    $("#rm_resend").onclick=async()=>{ try{ const x=await rpc("tw_resend",{p_token:S.token,p_reg:r.id}); toast(x.ok?"Email queued ("+x.kind+")":x.error,!x.ok) }catch(e){ toast(e.message,true) } };
+    $("#rm_pass") && ($("#rm_pass").onclick=()=>copy(passLink(r.pass_token)));
+  });
+}
+
+/* ---------------- Check-in ---------------- */
+async function viewCheckin(v){
+  const ev=(S.ov.events||[]).filter(e=>e.slots.length);
+  if(!ev.length){ v.innerHTML='<div class="card empty">No events with sessions yet.</div>'; return }
+  const now=Date.now();
+  const nearest=(e)=>{ const sl=e.slots.filter(s=>s.is_active); return sl.find(s=>new Date(s.ends_at)>now-3600e3) || sl[sl.length-1] };
+  if(!S.ciEvent||!evById(S.ciEvent)){ S.ciEvent=(ev.map(e=>({e,s:nearest(e)})).filter(x=>x.s).sort((a,b)=>Math.abs(new Date(a.s.starts_at)-now)-Math.abs(new Date(b.s.starts_at)-now))[0]||{e:ev[0]}).e.id }
+  const e=evById(S.ciEvent); if(!S.ciSlot||!e.slots.find(s=>s.id===S.ciSlot)) S.ciSlot=(nearest(e)||{}).id;
+  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><h2 style="font-size:22px">Check-in</h2><button class="btn sm" id="ci_walk">+ Walk-in</button></div>
+   <div class="stack">
+    <div class="grid g2"><select class="in" id="ci_ev">${ev.map(x=>`<option value="${x.id}" ${x.id===S.ciEvent?"selected":""}>${esc(x.city)} — ${esc(x.title)}</option>`).join("")}</select>
+      <select class="in" id="ci_sl">${e.slots.filter(s=>s.is_active).map(s=>`<option value="${s.id}" ${s.id===S.ciSlot?"selected":""}>${esc(s.date_label)} · ${esc(s.label)}</option>`).join("")}</select></div>
+    <div class="card pad" style="text-align:center"><div id="ci_count" class="b" style="font-size:18px"></div>
+      <div id="reader" class="hide" style="margin-top:10px"></div>
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="ci_scan" style="min-height:52px;font-size:16px;padding:0 26px">📷 Start scanning</button></div>
+      <div class="row" style="margin-top:10px;flex-wrap:nowrap"><input class="in" id="ci_code" placeholder="…or paste pass link / code"><button class="btn" id="ci_go">Check</button></div></div>
+    <div id="ci_res"></div>
+    <div class="card"><div class="pad row between" style="padding-bottom:6px"><div class="b">Attendee list</div><input class="in" id="ci_q" placeholder="Search" style="max-width:200px;min-height:36px"></div><div id="ci_list"><div class="empty"><span class="spin dark"></span></div></div></div>
+   </div>`;
+  $("#ci_ev").onchange=()=>{ S.ciEvent=$("#ci_ev").value; S.ciSlot=null; viewCheckin(v) };
+  $("#ci_sl").onchange=()=>{ S.ciSlot=$("#ci_sl").value; drawCiList() };
+  $("#ci_go").onclick=()=>doCheckin($("#ci_code").value);
+  $("#ci_code").onkeydown=ev=>{ if(ev.key==="Enter") doCheckin($("#ci_code").value) };
+  $("#ci_scan").onclick=toggleScanner;
+  $("#ci_walk").onclick=walkIn;
+  $("#ci_q").oninput=drawCiList;
+  await loadRegs(S.ciEvent).catch(ex=>toast(ex.message,true)); drawCiList();
+}
+function drawCiList(){
+  const box=$("#ci_list"); if(!box) return;
+  const q=($("#ci_q").value||"").toLowerCase();
+  const list=S.regs.filter(r=>r.slot_id===S.ciSlot&&(r.status==="approved"||r.checked_in_at||r.status==="pending"||r.status==="waitlisted")&&(!q||(r.full_name+" "+r.organization+" "+r.phone).toLowerCase().includes(q)))
+    .sort((a,b)=>(!!a.checked_in_at-!!b.checked_in_at)||a.full_name.localeCompare(b.full_name));
+  const appr=S.regs.filter(r=>r.slot_id===S.ciSlot&&r.status==="approved"), inn=appr.filter(r=>r.checked_in_at).length;
+  $("#ci_count").innerHTML=`<span style="color:var(--green)">${inn}</span> / ${appr.length} checked in`;
+  box.innerHTML=list.length?list.map(r=>`<div class="reg"><div class="grow"><div class="nm">${esc(r.full_name)} ${r.status!=="approved"?chip(r.status):""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
+      <div class="small muted">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}</div>${r.checked_in_at?`<div class="tiny" style="color:var(--green)">✓ ${esc(fmtDT(r.checked_in_at))}${r.checked_in_by?" · "+esc(r.checked_in_by):""}</div>`:""}</div>
+      ${r.checked_in_at?`<button class="btn sm" data-undo="${r.id}">Undo</button>`:`<button class="btn sm green" data-in="${r.id}" ${r.status!=="approved"&&!can("super","approver")?"disabled":""}>Check in</button>`}</div>`).join("")
+    :'<div class="empty">No approved registrations for this session yet.</div>';
+  $$("[data-in]",box).forEach(b=>b.onclick=()=>setAtt(b.dataset.in,true,b));
+  $$("[data-undo]",box).forEach(b=>b.onclick=()=>{ if(confirm("Undo check-in?")) setAtt(b.dataset.undo,false,b) });
+}
+async function setAtt(id, present, btn){
+  const r=S.regs.find(x=>x.id===id);
+  if(present && r.status!=="approved" && !confirm(`${r.full_name} is ${r.status}. Approve and check in now?`)) return;
+  busy(btn,true);
+  try{ const x=await rpc("tw_set_attendance",{p_token:S.token,p_reg:id,p_present:present}); if(!x.ok){ busy(btn,false); return toast(x.error,true) }
+    await loadRegs(S.ciEvent); drawCiList(); toast(present?"Checked in":"Check-in undone"); loadOverview().catch(()=>{}) }
+  catch(e){ busy(btn,false); toast(e.message,true) }
+}
+let _lastScan="", _lastScanAt=0;
+async function toggleScanner(){
+  const btn=$("#ci_scan"), reader=$("#reader");
+  if(window._scanner){ try{ await window._scanner.stop() }catch(e){} window._scanner=null; reader.classList.add("hide"); btn.textContent="📷 Start scanning"; return }
+  try{
+    await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
+    reader.classList.remove("hide"); btn.textContent="Stop scanning";
+    const sc=new Html5Qrcode("reader"); window._scanner=sc;
+    await sc.start({facingMode:"environment"},{fps:10,qrbox:{width:240,height:240}},txt=>{
+      const now=Date.now(); if(txt===_lastScan && now-_lastScanAt<4000) return; _lastScan=txt; _lastScanAt=now; doCheckin(txt);
+    },()=>{});
+  }catch(e){ window._scanner=null; reader.classList.add("hide"); btn.textContent="📷 Start scanning";
+    toast("Camera not available: "+(e.message||e)+". Allow camera access, or type the code.",true) }
+}
+async function doCheckin(code, force=false){
+  code=(code||"").trim(); if(!code) return;
+  const res=$("#ci_res");
+  try{
+    const r=await rpc("tw_checkin",{p_token:S.token,p_pass:code,p_event_id:S.ciEvent,p_force:force});
+    const p=r.person||{};
+    const cls=r.code==="checked_in"?"ok":r.code==="already"?"warn":"bad";
+    const head={checked_in:"✓ Welcome!",already:"Already checked in",not_found:"QR not recognised",wrong_event:"Different event",not_approved:"Not approved"}[r.code]||r.message;
+    res.innerHTML=`<div class="scanres ${cls}"><div class="big">${esc(head)}</div>${p.full_name?`<div style="font-size:18px;font-weight:700;margin-top:4px">${esc(p.full_name)}</div>
+      <div>${esc([p.designation,p.organization].filter(Boolean).join(" · "))}</div><div class="small" style="opacity:.9">${esc(p.slot_date)} · ${esc(p.slot_label)} ${p.is_today===false?" — ⚠ not today's session":""}</div>`:`<div>${esc(r.message||"")}</div>`}
+      ${r.code==="already"&&p.checked_in_at?`<div class="small">at ${esc(fmtDT(p.checked_in_at))}</div>`:""}
+      ${r.can_force?`<button class="btn" id="ci_force" style="margin-top:10px">Approve & check in</button>`:""}</div>`;
+    if(navigator.vibrate) navigator.vibrate(cls==="ok"?80:[60,60,60]);
+    $("#ci_force") && ($("#ci_force").onclick=()=>doCheckin(code,true));
+    $("#ci_code").value="";
+    if(r.code==="checked_in"){ await loadRegs(S.ciEvent); drawCiList(); loadOverview().catch(()=>{}) }
+  }catch(e){ res.innerHTML=`<div class="scanres bad"><div class="big">Error</div><div>${esc(e.message)}</div></div>` }
+}
+function walkIn(){
+  const e=evById(S.ciEvent);
+  modal(`<h3>Register a walk-in</h3><form class="stack" id="wf">
+    <select class="in" id="w_s">${e.slots.filter(s=>s.is_active).map(s=>`<option value="${s.id}" ${s.id===S.ciSlot?"selected":""}>${esc(s.date_label)} · ${esc(s.label)}</option>`).join("")}</select>
+    <div class="grid g2"><input class="in" id="w_n" placeholder="Full name *"><input class="in" id="w_d" placeholder="Designation"><input class="in" id="w_o" placeholder="Organisation *">
+    <input class="in" id="w_e" type="email" placeholder="Email *"><input class="in" id="w_p" type="tel" placeholder="Mobile"><select class="in" id="w_t"><option value="">Organisation type</option>${PARTNER_TYPES.map(t=>`<option>${t}</option>`).join("")}</select></div>
+    <label class="consent"><input type="checkbox" id="w_c"><span>The attendee agreed to Cavitak using these details to record attendance and send event follow-up.</span></label>
+    <div class="row"><button class="btn primary" id="w_go">Add & check in</button><button type="button" class="btn" data-close>Cancel</button></div></form>`);
+  $("#wf").onsubmit=async ev=>{ ev.preventDefault(); const b=$("#w_go"); busy(b,true);
+    try{ const r=await rpc("tw_walkin",{p_token:S.token,p_slot_id:$("#w_s").value,p_data:{full_name:$("#w_n").value,designation:$("#w_d").value,organization:$("#w_o").value,email:$("#w_e").value,phone:$("#w_p").value,partner_type:$("#w_t").value,consent:$("#w_c").checked}});
+      busy(b,false); if(!r.ok) return toast(r.error,true); toast(r.existing?"Found existing registration — checked in":"Walk-in added & checked in"); closeModal(); await loadRegs(S.ciEvent); drawCiList(); loadOverview().catch(()=>{}) }
+    catch(ex){ busy(b,false); toast(ex.message,true) } };
+}
+
+/* ---------------- Reports ---------------- */
+async function viewReports(v){
+  const progs=S.ov.programs||[];
+  S.repProg=S.repProg||(progs[0]||{}).id||"";
+  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Reports</h2><div class="small muted">Attendees, partner coverage and channel performance</div></div></div>
+    <div class="stack">
+      <div class="grid g2"><select class="in" id="rp_ev"><option value="">All events</option>${(S.ov.events||[]).map(e=>`<option value="${e.id}" ${e.id===S.repEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}</option>`).join("")}</select>
+        <select class="in" id="rp_st"><option value="attended">Attended (checked in)</option><option value="approved">Approved</option><option value="noshow">No-shows (approved, past, not checked in)</option><option value="all">All registrations</option></select></div>
+      <div id="rp_kpi"></div>
+      <div class="card"><div class="pad row between"><div class="b">Attendee list</div><button class="btn sm primary" id="rp_x">Export Excel</button></div><div class="tscroll" id="rp_tbl"></div></div>
+      <div class="grid g2"><div class="card pad"><div class="b" style="margin-bottom:6px">Registrations by channel</div><div class="minibars" id="rp_src"></div></div>
+        <div class="card pad"><div class="b" style="margin-bottom:6px">Attendance by organisation type</div><div class="minibars" id="rp_type"></div></div></div>
+      <div class="card pad stack"><div class="row between"><div><div class="b">Target partner coverage</div><div class="small muted">Upload the partners you want to reach; see who registered and attended.</div></div></div>
+        <div class="row"><select class="in grow" id="cv_p" style="max-width:340px">${progs.map(p=>`<option value="${p.id}" ${p.id===S.repProg?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
+          <label class="btn sm">Upload target list<input type="file" id="cv_f" accept=".xlsx,.xls,.csv" hidden></label><button class="btn sm" id="cv_tpl">Template</button></div>
+        <div id="cv_body"><div class="empty"><span class="spin dark"></span></div></div></div>
+    </div>`;
+  $("#rp_ev").onchange=()=>{ S.repEvent=$("#rp_ev").value; drawReport() };
+  $("#rp_st").onchange=drawReport;
+  $("#rp_x").onclick=exportExcel;
+  $("#cv_p").onchange=()=>{ S.repProg=$("#cv_p").value; drawCoverage() };
+  $("#cv_f").onchange=uploadTargets;
+  $("#cv_tpl").onclick=async()=>{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
+    const ws=XLSX.utils.aoa_to_sheet([["Organisation","Contact name","Email","Phone","City","Owner","Notes"],["Example Systems Pvt Ltd","Rohan Mehta","rohan@example.com","+91 98xxxxxx","Mumbai","Mohit",""]]);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Targets"); XLSX.writeFile(wb,"tech-week-target-partners.xlsx") };
+  S.repEvent=S.repEvent||"";
+  try{ await loadRegs(null) }catch(e){ toast(e.message,true) }
+  drawReport(); drawCoverage();
+}
+function repRows(){
+  const st=$("#rp_st").value, now=new Date();
+  return S.regs.filter(r=>(!S.repEvent||r.event_id===S.repEvent)&&(
+    st==="all"||(st==="attended"&&r.checked_in_at)||(st==="approved"&&r.status==="approved")||(st==="noshow"&&r.status==="approved"&&!r.checked_in_at&&new Date(r.slot_starts_at)<now)));
+}
+function drawReport(){
+  const base=S.regs.filter(r=>!S.repEvent||r.event_id===S.repEvent), rows=repRows();
+  const appr=base.filter(r=>r.status==="approved").length, inn=base.filter(r=>r.checked_in_at).length;
+  const orgs=new Set(base.filter(r=>r.checked_in_at).map(r=>r.organization.toLowerCase().trim())).size;
+  const pastAppr=base.filter(r=>r.status==="approved"&&new Date(r.slot_starts_at)<new Date()), pastIn=pastAppr.filter(r=>r.checked_in_at).length;
+  $("#rp_kpi").innerHTML=`<div class="grid g4" style="grid-template-columns:repeat(2,1fr)">
+    <div class="card kpi"><div class="l">Registered</div><div class="v">${base.filter(r=>r.status!=="cancelled").length}</div></div>
+    <div class="card kpi"><div class="l">Approved</div><div class="v">${appr}</div></div>
+    <div class="card kpi"><div class="l">Attended</div><div class="v" style="color:var(--green)">${inn}</div><div class="tiny muted">${orgs} organisations</div></div>
+    <div class="card kpi"><div class="l">Show-up rate</div><div class="v">${pastAppr.length?Math.round(pastIn/pastAppr.length*100)+"%":"—"}</div><div class="tiny muted">of past approved seats</div></div></div>`;
+  $("#rp_tbl").innerHTML=rows.length?`<table class="t"><thead><tr><th>Name</th><th>Designation</th><th>Organisation</th><th>Email</th><th>Mobile</th><th>City / EC</th><th>Session</th><th>Status</th><th>Checked in</th><th>Source</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td class="b">${esc(r.full_name)}</td><td>${esc(r.designation||"")}</td><td>${esc(r.organization)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.city)}</td><td>${esc(r.slot_date)}<div class="tiny muted">${esc(r.slot_label)}</div></td><td>${chip(r.status)}</td><td>${r.checked_in_at?esc(fmtDT(r.checked_in_at)):""}</td><td>${esc(r.source||"direct")}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">No rows for this filter.</div>';
+  const bars=(el,map)=>{ const ent=Object.entries(map).sort((a,b)=>b[1]-a[1]); const mx=Math.max(1,...ent.map(x=>x[1]));
+    $(el).innerHTML=ent.length?ent.map(([k,n])=>`<div class="r"><span title="${esc(k)}">${esc(k)}</span><div class="bar"><i style="width:${n/mx*100}%"></i></div><b>${n}</b></div>`).join(""):'<div class="small muted">No data yet</div>' };
+  const src={}, typ={};
+  base.filter(r=>r.status!=="cancelled").forEach(r=>{ const k=r.source||"direct"; src[k]=(src[k]||0)+1 });
+  base.filter(r=>r.checked_in_at).forEach(r=>{ const k=r.partner_type||"Not specified"; typ[k]=(typ[k]||0)+1 });
+  bars("#rp_src",src); bars("#rp_type",typ);
+}
+async function exportExcel(){
+  try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js") }catch(e){ return toast(e.message,true) }
+  const rows=repRows();
+  const head=["Name","Designation","Organisation","Org type","Email","Mobile","Participant city","Event","Experience center","City","Session date","Slot","Time","Status","Checked in at","Checked in by","Walk-in","Source","Interests","Registered at","Decided by"];
+  const data=rows.map(r=>[r.full_name,r.designation||"",r.organization,r.partner_type||"",r.email,r.phone,r.participant_city||"",r.event_title,r.venue,r.city,r.slot_date,r.slot_label,r.slot_time,STATUS_LABEL[r.status]||r.status,
+    r.checked_in_at?new Date(r.checked_in_at).toLocaleString("en-IN"):"",r.checked_in_by||"",r.walk_in?"Yes":"",r.source||"direct",r.interests||"",new Date(r.created_at).toLocaleString("en-IN"),r.decided_by||""]);
+  const ws=XLSX.utils.aoa_to_sheet([head,...data]);
+  const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}},alignment:{vertical:"center"},border:{bottom:{style:"thin",color:{rgb:"A51B23"}}}};
+  head.forEach((_,i)=>{ const c=XLSX.utils.encode_cell({r:0,c:i}); ws[c].s=hs });
+  ws["!cols"]=head.map((h,i)=>({wch:Math.min(40,Math.max(h.length+2,...data.map(r=>String(r[i]).length+1)))}));
+  ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,data.length),c:head.length-1}})};
+  ws["!freeze"]={xSplit:1,ySplit:1};
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Attendees");
+  const e=evById(S.repEvent); const name=("tech-week-"+(e?e.city+"-":"")+$("#rp_st").value+"-"+new Date().toISOString().slice(0,10)).toLowerCase().replace(/[^a-z0-9-]+/g,"-");
+  XLSX.writeFile(wb,name+".xlsx"); toast("Excel downloaded");
+}
+async function drawCoverage(){
+  const box=$("#cv_body"); if(!box) return;
+  if(!S.repProg){ box.innerHTML='<div class="small muted">Create a program first (Admin → Programs).</div>'; return }
+  try{
+    const r=await rpc("tw_coverage",{p_token:S.token,p_program_id:S.repProg});
+    const t=r.targets||[], reached=t.filter(x=>x.attended>0).length, reg=t.filter(x=>x.registered>0).length;
+    box.innerHTML=!t.length?'<div class="banner info">No target list yet. Download the template, fill in the partners you want to reach, and upload it.</div>':`
+      <div class="grid g3" style="grid-template-columns:repeat(3,1fr)"><div class="kpi card" style="box-shadow:none"><div class="l">Targets</div><div class="v">${t.length}</div></div>
+        <div class="kpi card" style="box-shadow:none"><div class="l">Registered</div><div class="v">${reg}</div><div class="tiny muted">${Math.round(reg/t.length*100)}%</div></div>
+        <div class="kpi card" style="box-shadow:none"><div class="l">Attended</div><div class="v" style="color:var(--green)">${reached}</div><div class="tiny muted">${Math.round(reached/t.length*100)}%</div></div></div>
+      <div class="seg"><button class="on" data-cv="all">All</button><button data-cv="missing">Not yet registered</button><button data-cv="reg">Registered, not attended</button><button data-cv="att">Attended</button></div>
+      <div class="tscroll"><table class="t"><thead><tr><th>Organisation</th><th>Owner</th><th>City</th><th>Reg.</th><th>Appr.</th><th>Attended</th><th>Who came</th></tr></thead><tbody id="cv_rows"></tbody></table></div>
+      ${(r.non_targets||[]).length?`<details><summary class="b" style="cursor:pointer;margin-top:8px">Organisations outside the target list (${r.non_targets.length})</summary>
+        <table class="t"><thead><tr><th>Organisation</th><th>Registered</th><th>Attended</th></tr></thead><tbody>${r.non_targets.map(n=>`<tr><td>${esc(n.organization)}</td><td>${n.registered}</td><td>${n.attended}</td></tr>`).join("")}</tbody></table></details>`:""}`;
+    const draw=f=>{ $("#cv_rows").innerHTML=t.filter(x=>f==="all"||(f==="missing"&&!x.registered)||(f==="reg"&&x.registered&&!x.attended)||(f==="att"&&x.attended))
+      .map(x=>`<tr><td class="b">${esc(x.organization)}${x.contact_name?`<div class="tiny muted">${esc(x.contact_name)}</div>`:""}</td><td>${esc(x.owner||"")}</td><td>${esc(x.city||"")}</td><td>${x.registered}</td><td>${x.approved}</td>
+        <td>${x.attended?`<span class="chip approved">${x.attended}</span>`:'<span class="muted">0</span>'}</td><td class="small">${esc(x.people||"")}</td></tr>`).join("")||'<tr><td colspan="7" class="muted">None</td></tr>' };
+    t.length && (draw("all"), $$("[data-cv]",box).forEach(b=>b.onclick=()=>{ $$("[data-cv]",box).forEach(x=>x.classList.remove("on")); b.classList.add("on"); draw(b.dataset.cv) }));
+  }catch(e){ box.innerHTML=`<div class="banner warn">${esc(e.message)}</div>` }
+}
+async function uploadTargets(ev){
+  const f=ev.target.files[0]; ev.target.value=""; if(!f) return;
+  try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js") }catch(e){ return toast(e.message,true) }
+  const wb=XLSX.read(await f.arrayBuffer(),{type:"array"}); const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
+  const pick=(r,keys)=>{ for(const k of Object.keys(r)){ const n=k.toLowerCase().replace(/[^a-z]/g,""); if(keys.some(x=>n.includes(x))) return String(r[k]).trim() } return "" };
+  const data=rows.map(r=>({organization:pick(r,["organisation","organization","company","partner","firm"]),contact_name:pick(r,["contact","name"]),email:pick(r,["email","mail"]),
+    phone:pick(r,["phone","mobile"]),city:pick(r,["city","location","region"]),owner:pick(r,["owner","sales","account"]),notes:pick(r,["note","remark"])})).filter(r=>r.organization);
+  if(!data.length) return toast("No rows with an Organisation column found",true);
+  const replace=confirm(`${data.length} target partners found.\n\nOK = replace the existing target list for this program\nCancel = add to the existing list`);
+  try{ const r=await rpc("tw_targets_import",{p_token:S.token,p_program_id:S.repProg,p_rows:data,p_replace:replace}); toast(r.ok?r.imported+" targets imported":r.error,!r.ok); drawCoverage() }catch(e){ toast(e.message,true) }
+}
+
+/* ---------------- Admin ---------------- */
+function viewAdmin(v){
+  const tabs=can("super")?[["users","Users"],["venues","Venues"],["programs","Programs"],["settings","Settings"],["email","Email log"],["audit","Audit log"]]:[["email","Email log"],["audit","Audit log"]];
+  if(!tabs.find(t=>t[0]===S.adminTab)) S.adminTab=tabs[0][0];
+  v.innerHTML=`<h2 style="font-size:22px;margin-bottom:12px">Admin</h2><div class="seg" style="margin-bottom:12px">${tabs.map(t=>`<button data-at="${t[0]}" class="${t[0]===S.adminTab?"on":""}">${t[1]}</button>`).join("")}</div><div id="ad_body"></div>`;
+  $$("[data-at]",v).forEach(b=>b.onclick=()=>{ S.adminTab=b.dataset.at; viewAdmin(v) });
+  ({users:adUsers,venues:adVenues,programs:adPrograms,settings:adSettings,email:adEmail,audit:adAudit}[S.adminTab])($("#ad_body"));
+}
+const ROLE_INFO={super:"Everything: events, approvals, users, settings",approver:"Approve/reject, check-in, reports, email log",checkin:"Scan QR and check people in at the door",marketing:"See events, share links, reports (contact details masked), upload targets"};
+async function adUsers(b){
+  b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
+  const r=await rpc("tw_users_list",{p_token:S.token}).catch(e=>({rows:[],err:e.message}));
+  b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Team members who can sign in to this console.</div><button class="btn primary sm" id="nu">+ Add user</button></div>
+    <div class="card">${r.rows.map(u=>`<div class="reg"><div class="grow"><div class="nm">${esc(u.full_name)} <span class="chip">${esc(u.role)}</span>${u.is_active?"":' <span class="chip cancelled">Inactive</span>'}</div>
+      <div class="small muted">@${esc(u.username)}${u.email?" · "+esc(u.email):""}${u.last_login?" · last login "+esc(fmtDT(u.last_login)):" · never signed in"}</div></div>
+      <button class="btn sm" data-u="${u.id}">Edit</button></div>`).join("")}</div>
+    <div class="card pad small" style="margin-top:12px">${Object.entries(ROLE_INFO).map(([k,v])=>`<div><b>${k}</b> — ${v}</div>`).join("")}</div>`;
+  $("#nu").onclick=()=>editUser(null,b);
+  $$("[data-u]",b).forEach(x=>x.onclick=()=>editUser(r.rows.find(u=>u.id===x.dataset.u),b));
+}
+function editUser(u,b){
+  const isNew=!u; u=u||{role:"approver",is_active:true};
+  modal(`<h3>${isNew?"Add user":"Edit "+esc(u.full_name)}</h3><form class="stack" id="uf">
+    ${isNew?`<div><label class="f">Username</label><input class="in" id="u_un" autocapitalize="none" placeholder="e.g. mohit"></div>`:""}
+    <div><label class="f">Full name</label><input class="in" id="u_fn" value="${esc(u.full_name||"")}"></div>
+    <div class="grid g2"><div><label class="f">Email</label><input class="in" id="u_em" value="${esc(u.email||"")}"></div><div><label class="f">Mobile</label><input class="in" id="u_ph" value="${esc(u.phone||"")}"></div></div>
+    <div><label class="f">Role</label><select class="in" id="u_ro">${Object.keys(ROLE_INFO).map(k=>`<option value="${k}" ${k===u.role?"selected":""}>${k} — ${ROLE_INFO[k]}</option>`).join("")}</select></div>
+    ${!isNew?`<label class="small row"><input type="checkbox" id="u_ac" ${u.is_active?"checked":""}> Active</label>`:""}
+    <div class="row"><button class="btn primary" id="u_go">Save</button>${!isNew?'<button type="button" class="btn" id="u_rs">Reset password</button>':""}<button type="button" class="btn" data-close>Cancel</button></div></form>`);
+  const showPw=(name,pw)=>modal(`<h3>Temporary password</h3><p>Share this with <b>${esc(name)}</b>. They'll be asked to set their own on first sign-in.</p>
+    <div class="row"><input class="in grow" value="${esc(pw)}" readonly id="tp"><button class="btn" id="tpc">Copy</button></div>
+    <p class="small muted">Console: ${esc(baseUrl())}</p><div class="row"><button class="btn primary" data-close>Done</button></div>`,()=>{ $("#tpc").onclick=()=>copy(`Tech Week console: ${baseUrl()}\nUsername: ${$("#u_un")?$("#u_un").value:u.username}\nTemporary password: ${pw}`) });
+  $("#uf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#u_go"); busy(bt,true);
+    try{ const un=isNew?$("#u_un").value:u.username;
+      const r=await rpc("tw_user_save",{p_token:S.token,p_data:{id:u.id||"",username:un,full_name:$("#u_fn").value,email:$("#u_em").value,phone:$("#u_ph").value,role:$("#u_ro").value,is_active:isNew?true:$("#u_ac").checked}});
+      busy(bt,false); if(!r.ok) return toast(r.error,true); adUsers(b); if(r.temp_password){ const n=$("#u_fn").value; showPw(n,r.temp_password); $("#tpc").onclick=()=>copy(`Tech Week console: ${baseUrl()}\nUsername: ${un}\nTemporary password: ${r.temp_password}`) } else { toast("Saved"); closeModal() } }
+    catch(ex){ busy(bt,false); toast(ex.message,true) } };
+  $("#u_rs") && ($("#u_rs").onclick=async()=>{ if(!confirm("Reset password for "+u.full_name+"?")) return; const r=await rpc("tw_user_reset",{p_token:S.token,p_id:u.id}).catch(e=>({ok:false,error:e.message}));
+    if(!r.ok) return toast(r.error,true); showPw(u.full_name,r.temp_password); $("#tpc").onclick=()=>copy(`Tech Week console: ${baseUrl()}\nUsername: ${u.username}\nTemporary password: ${r.temp_password}`) });
+}
+function adVenues(b){
+  const vs=S.ov.venues||[];
+  b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Experience centers and rooms. The address, map link and contact appear in every confirmation email.</div><button class="btn primary sm" id="nv">+ Add venue</button></div>
+    <div class="stack">${vs.map(v=>`<div class="card pad"><div class="row between" style="align-items:flex-start"><div class="grow"><div class="b">${esc(v.city)} — ${esc(v.name)}${v.is_active?"":' <span class="chip cancelled">Inactive</span>'}</div>
+      <div class="small">${esc(v.room_name||"")} · ${v.capacity} seats · ${esc(v.timezone)}</div><div class="small muted" style="white-space:pre-line">${esc(v.address)}</div>
+      ${/to be updated/i.test(v.address)?'<div class="banner warn small" style="margin-top:6px">Please add the full address before opening registrations.</div>':""}
+      ${!v.map_url?'<div class="tiny muted">No Google Maps link yet</div>':""}</div><button class="btn sm" data-v="${v.id}">Edit</button></div></div>`).join("")||'<div class="card empty">No venues yet.</div>'}</div>`;
+  $("#nv").onclick=()=>editVenue(null,()=>go("admin"));
+  $$("[data-v]",b).forEach(x=>x.onclick=()=>editVenue(vs.find(v=>v.id===x.dataset.v),()=>go("admin")));
+}
+function editVenue(v, after){
+  const isNew=!v; v=v||{capacity:8,timezone:"Asia/Kolkata",is_active:true};
+  const TZ=["Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Riyadh","Asia/Qatar","Asia/Kathmandu","Asia/Dhaka","Asia/Colombo","Europe/London","Europe/Amsterdam","America/New_York"];
+  modal(`<h3>${isNew?"Add venue":"Edit venue"}</h3><form class="stack" id="vf">
+    <div class="grid g2"><div><label class="f">Experience center name</label><input class="in" id="v_n" value="${esc(v.name||"")}" placeholder="Cavitak Bay"></div>
+      <div><label class="f">City</label><input class="in" id="v_c" value="${esc(v.city||"")}" placeholder="Mumbai"></div></div>
+    <div><label class="f">Full address (shown in emails)</label><textarea class="in" id="v_a">${esc(v.address||"")}</textarea></div>
+    <div><label class="f">Google Maps link</label><input class="in" id="v_m" value="${esc(v.map_url||"")}" placeholder="https://maps.app.goo.gl/..."></div>
+    <div class="grid g3"><div><label class="f">Room</label><input class="in" id="v_r" value="${esc(v.room_name||"")}" placeholder="Training room"></div>
+      <div><label class="f">Seating capacity</label><input class="in" type="number" min="1" id="v_cap" value="${v.capacity}"></div>
+      <div><label class="f">Time zone</label><select class="in" id="v_tz">${[...new Set([v.timezone,...TZ])].map(t=>`<option ${t===v.timezone?"selected":""}>${t}</option>`).join("")}</select></div></div>
+    <div class="grid g2"><div><label class="f">On-site contact</label><input class="in" id="v_cn" value="${esc(v.contact_name||"")}"></div><div><label class="f">Contact phone</label><input class="in" id="v_cp" value="${esc(v.contact_phone||"")}"></div></div>
+    <div><label class="f">Instructions for attendees</label><textarea class="in" id="v_i" placeholder="Parking, photo ID, reporting time…">${esc(v.instructions||"")}</textarea></div>
+    ${!isNew?`<label class="small row"><input type="checkbox" id="v_ac" ${v.is_active?"checked":""}> Active</label>`:""}
+    <div class="row"><button class="btn primary" id="v_go">Save venue</button><button type="button" class="btn" data-close>Cancel</button></div></form>`);
+  $("#vf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#v_go"); busy(bt,true);
+    try{ const r=await rpc("tw_save_venue",{p_token:S.token,p_data:{id:v.id||"",name:$("#v_n").value,city:$("#v_c").value,address:$("#v_a").value,map_url:$("#v_m").value,room_name:$("#v_r").value,
+        capacity:+$("#v_cap").value,timezone:$("#v_tz").value,contact_name:$("#v_cn").value,contact_phone:$("#v_cp").value,instructions:$("#v_i").value,is_active:isNew?true:$("#v_ac").checked}});
+      busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Venue saved"); closeModal(); await loadOverview(); after&&after() }
+    catch(ex){ busy(bt,false); toast(ex.message,true) } };
+}
+function adPrograms(b){
+  const ps=S.ov.programs||[];
+  b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">A program groups events across cities (e.g. "Tech Week — Nov 2026") so targets and coverage roll up together.</div><button class="btn primary sm" id="np">+ Add program</button></div>
+    <div class="card">${ps.map(p=>`<div class="reg"><div class="grow"><div class="nm">${esc(p.name)}</div><div class="small muted">${(S.ov.events||[]).filter(e=>e.program_id===p.id).length} events · created ${esc(fmtD(p.created_at))}</div></div><button class="btn sm" data-p="${p.id}">Rename</button></div>`).join("")||'<div class="empty">No programs</div>'}</div>`;
+  const ed=p=>{ const n=prompt("Program name",p?p.name:"Tech Week — "); if(!n) return;
+    rpc("tw_save_program",{p_token:S.token,p_data:{id:p?p.id:"",name:n,is_active:true}}).then(async r=>{ if(!r.ok) return toast(r.error,true); await loadOverview(); viewAdmin($("#view")) }).catch(e=>toast(e.message,true)) };
+  $("#np").onclick=()=>ed(null); $$("[data-p]",b).forEach(x=>x.onclick=()=>ed(ps.find(p=>p.id===x.dataset.p)));
+}
+function adSettings(b){
+  const s=S.settings||{}, st=S.ov.email_stats||{};
+  b.innerHTML=`<form class="card pad stack" id="sf">
+    <div><label class="f">Public link of this console</label><input class="in" id="s_url" value="${esc(s.public_url||"")}" placeholder="https://…/techweek/"><div class="tiny muted">Used for registration links, pass links and QR codes in emails.</div></div>
+    <div class="grid g2"><div><label class="f">Notify on new registration (comma separated)</label><input class="in" id="s_ne" value="${esc(s.notify_email||"")}"></div>
+      <div><label class="f">Reply-to email</label><input class="in" id="s_rt" value="${esc(s.reply_to||"")}"></div>
+      <div><label class="f">Sender name</label><input class="in" id="s_fn" value="${esc(s.from_name||"")}"></div>
+      <div><label class="f">Sender email <span class="muted" style="font-weight:400">(must be a verified domain in Resend)</span></label><input class="in" id="s_fe" value="${esc(s.from_email||"")}" placeholder="techweek@cavitak.com"></div>
+      <div><label class="f">Brand name</label><input class="in" id="s_bn" value="${esc(s.brand_name||"")}"></div>
+      <div><label class="f">Feedback form link (sent after attendance)</label><input class="in" id="s_fb" value="${esc(s.feedback_url||"")}" placeholder="https://forms.gle/…"></div></div>
+    <div class="banner ${st.failed?"warn":"info"} small"><b>Email status (30 days):</b> ${st.sent||0} sent · ${st.failed||0} failed · ${st.queued||0} waiting.
+      ${s.email_last_ok?"Last success "+esc(fmtDT(s.email_last_ok))+".":""} ${s.email_last_error?"<br>Last error: "+esc(s.email_last_error):""}</div>
+    <div class="row"><button class="btn primary" id="s_go">Save settings</button></div></form>`;
+  $("#sf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#s_go"); busy(bt,true);
+    try{ const r=await rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:$("#s_url").value,notify_email:$("#s_ne").value,reply_to:$("#s_rt").value,from_name:$("#s_fn").value,from_email:$("#s_fe").value,brand_name:$("#s_bn").value,feedback_url:$("#s_fb").value}});
+      busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Settings saved"); await loadOverview() }catch(ex){ busy(bt,false); toast(ex.message,true) } };
+}
+const KIND_LABEL={received:"Request received",approved:"Confirmation + QR",waitlisted:"Waitlisted",promoted:"Seat opened",rejected:"Rejected",cancelled:"Cancelled",moved:"Session changed",reminder:"Reminder",thankyou:"Thank-you",admin_new:"Admin alert"};
+async function adEmail(b){
+  b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
+  const r=await rpc("tw_outbox_list",{p_token:S.token,p_limit:300}).catch(e=>({rows:[]}));
+  b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Every automatic email, newest first. Failed emails retry automatically every 10 minutes (up to 4 tries).</div><button class="btn sm" id="er">Refresh</button></div>
+    <div class="card tscroll"><table class="t"><thead><tr><th>When</th><th>Email</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>${r.rows.map(o=>`<tr>
+      <td class="small">${esc(fmtDT(o.created_at))}</td><td><b>${esc(KIND_LABEL[o.kind]||o.kind)}</b><div class="tiny muted">${esc(o.full_name||"")}${o.organization?" · "+esc(o.organization):""}</div></td>
+      <td class="small">${esc(o.to_email)}</td><td>${o.status==="sent"?'<span class="chip approved">Sent</span>':o.status==="failed"?'<span class="chip" style="background:#FDECEC;color:#9B1C22">Failed</span>':'<span class="chip pending">'+esc(o.status)+'</span>'}
+      ${o.error?`<div class="tiny muted" style="max-width:260px">${esc(o.error)}</div>`:""}</td><td>${o.status!=="sent"?`<button class="btn sm" data-rt="${o.id}">Retry</button>`:""}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No emails yet</td></tr>'}</tbody></table></div>`;
+  $("#er").onclick=()=>adEmail(b);
+  $$("[data-rt]",b).forEach(x=>x.onclick=async()=>{ busy(x,true); await rpc("tw_outbox_retry",{p_token:S.token,p_id:+x.dataset.rt}).catch(()=>{}); setTimeout(()=>adEmail(b),2500) });
+}
+async function adAudit(b){
+  b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
+  const r=await rpc("tw_audit_list",{p_token:S.token,p_limit:300}).catch(e=>({rows:[]}));
+  b.innerHTML=`<div class="card tscroll"><table class="t"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody>${r.rows.map(a=>`<tr><td class="small">${esc(fmtDT(a.at))}</td><td class="small">${esc(a.actor||"")}</td><td><b>${esc(a.action)}</b><div class="tiny muted">${esc(a.entity||"")}</div></td>
+    <td class="tiny muted" style="max-width:340px">${esc(a.detail?JSON.stringify(a.detail).slice(0,200):"")}</td></tr>`).join("")||'<tr><td colspan="4" class="muted">No activity yet</td></tr>'}</tbody></table></div>`;
+}
+
+/* ---------------- start ---------------- */
+if(params.has("e")) renderRegister();
+else if(params.has("p")) renderPass();
+else bootConsole();
+</script>
+</body>
+</html>
