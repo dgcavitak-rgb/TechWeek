@@ -9,9 +9,9 @@ const GOLD = [176 / 255, 141 / 255, 74 / 255];
 // Standard PDF fonts only cover Windows-1252; strip accents and replace anything else.
 function safe(s) {
   return String(s ?? "")
-    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
-    .replace(/[^\x20-\x7E -ÿ–—•·]/g, "")
+    .replace(/[^\x20-\x7E\xA0-\xFF\u2013\u2014\u2022\u00B7]/g, "")
     .trim();
 }
 
