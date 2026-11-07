@@ -215,7 +215,7 @@ main.console{padding:16px 0 96px}
 .htl{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}@media(min-width:760px){.htl{grid-template-columns:repeat(6,1fr)}}
 .htl div{border-top:3px solid var(--red);background:var(--grey-50);border-radius:8px;padding:8px}.htl b{display:block;font-size:13px}.htl small{font-size:12px;color:var(--muted)}
 .hfaq{display:grid;gap:12px}@media(min-width:760px){.hfaq{grid-template-columns:1fr 1fr}}
-@media print{.top,.bnav,.hbtn,#hp_pr,.toast{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}.hgrid,.hsteps,.hfaq{grid-template-columns:1fr 1fr}.htl{grid-template-columns:repeat(3,1fr)}}
+@media print{.top,.bnav,.hbtn,#hp_pr,.toast{display:none!important}.printable .hgrid,.printable .hsteps{gap:8px}.printable .sech{margin-top:6px}body{background:#fff}.card{box-shadow:none;break-inside:avoid}.hgrid,.hsteps,.hfaq{grid-template-columns:1fr 1fr}.htl{grid-template-columns:repeat(3,1fr)}}
 
 .cal-h,.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal-h div{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:2px 4px}
 .cal-c{min-height:86px;border:1px solid var(--line-2);border-radius:8px;padding:4px;display:flex;flex-direction:column;gap:3px;background:#fff}.cal-c.off{background:transparent;border:0}.cal-c.wk{background:#FAFAFB}
@@ -2329,7 +2329,7 @@ function viewHelp(v){
   const role=S.user.role;
   const card=(icon,title,lines,on)=>`<div class="card pad hcard ${on?"hon":""}"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico(icon,20)}</span><b>${title}</b>${on?'<span class="chip approved">You</span>':""}</div><ul class="hlist">${lines.map(l=>`<li>${l}</li>`).join("")}</ul></div>`;
   const step=(n,t,x)=>`<div class="hstep"><span>${n}</span><div><b>${t}</b><div class="small muted">${x}</div></div></div>`;
-  v.innerHTML=`${pageHead(ico("bulb",22),"Quick guide","Everything you need to run a Tech Week — print it or keep it open on your phone",'<button class="btn sm" id="hp_pr">'+ico("printer",15)+' Print / save PDF</button>')}
+  v.innerHTML=`<div class="printable">${pageHead(ico("bulb",22),"Quick guide","Everything you need to run a Tech Week — print it or keep it open on your phone",'<button class="btn sm" id="hp_pr">'+ico("printer",15)+' Print / save PDF</button>')}
   <div class="stack">
     <div class="sech">${ico("users",18)} What each login can do</div>
     <div class="hgrid">
@@ -2378,7 +2378,7 @@ function viewHelp(v){
          ["Somebody forgot their password","Admin → Users → Reset password, then share the temporary password privately."]].map(([q,a])=>`<div><b>${q}</b><div class="small muted">${a}</div></div>`).join("")}
     </div></div>
     <div class="tiny muted" style="text-align:center">Tech Week console v${APP_VERSION} · Cavitak Marketing Pvt. Ltd.</div>
-  </div>`;
+  </div></div>`;
   $("#hp_pr").onclick=()=>window.print();
 }
 /* ---------------- start ---------------- */
