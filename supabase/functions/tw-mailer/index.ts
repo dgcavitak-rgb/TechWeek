@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     return new Response(bytes, { headers: { "Content-Type": "application/pdf", "Content-Disposition": 'inline; filename="Cavitak-Tech-Week-Certificate.pdf"', "Access-Control-Allow-Origin": "*" } });
   }
   if (req.method !== "POST") return json({ ok: true, service: "tw-mailer",
-    provider: (envGet("SMTP_USER") && envGet("SMTP_PASS")) ? "gmail-smtp" : envGet("RESEND_API_KEY") ? "resend" : "none" });
+    provider: msReady() ? "microsoft-365" : (envGet("SMTP_USER") && envGet("SMTP_PASS")) ? "gmail-smtp" : envGet("RESEND_API_KEY") ? "resend" : "none" });
   const secret = req.headers.get("x-tw-hook") ?? "";
   let id: number;
   try { id = Number((await req.json()).id); } catch { return json({ ok: false, error: "bad body" }, 400); }
@@ -444,10 +444,41 @@ async function build(p: any): Promise<Mail> {
   return { subject, html: shell(p, headline, body, pre), text, attachments };
 }
 
+// Microsoft 365 via Graph (app registration with Mail.Send, limited to one mailbox)
+function msReady() { return !!(envGet("MS_TENANT_ID") && envGet("MS_CLIENT_ID") && envGet("MS_CLIENT_SECRET") && envGet("MS_SENDER")); }
+let msToken = { value: "", exp: 0 };
+async function msAccessToken() {
+  if (msToken.value && Date.now() < msToken.exp - 60000) return msToken.value;
+  const body = new URLSearchParams({ client_id: envGet("MS_CLIENT_ID"), client_secret: envGet("MS_CLIENT_SECRET"),
+    scope: "https://graph.microsoft.com/.default", grant_type: "client_credentials" });
+  const res = await fetch(`https://login.microsoftonline.com/${envGet("MS_TENANT_ID")}/oauth2/v2.0/token`, { method: "POST", body });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j.access_token) throw new Error(`Microsoft sign-in failed: ${j.error_description || j.error || res.status}`);
+  msToken = { value: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000 };
+  return msToken.value;
+}
+
 async function send(p: any, m: Mail): Promise<string> {
   const fromName = p.settings?.from_name || "Cavitak Tech Week";
   const replyTo = p.event?.sales?.email || p.settings?.reply_to || undefined;
   const to = p.outbox.to_email.split(/[,;]\s*/).filter(Boolean);
+  // 0) Microsoft 365 mailbox (Graph API) when configured
+  if (msReady()) {
+    const tok = await msAccessToken();
+    const sender = envGet("MS_SENDER");
+    const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`, {
+      method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ saveToSentItems: false, message: {
+        subject: m.subject, body: { contentType: "HTML", content: m.html },
+        from: { emailAddress: { address: sender, name: fromName } },
+        toRecipients: to.map((a: string) => ({ emailAddress: { address: a } })),
+        replyTo: replyTo ? String(replyTo).split(/[,;]\s*/).filter(Boolean).map((a: string) => ({ emailAddress: { address: a } })) : [],
+        attachments: m.attachments.map((a) => ({ "@odata.type": "#microsoft.graph.fileAttachment", name: a.filename, contentType: a.type, contentBytes: a.content })),
+      } }),
+    });
+    if (res.status !== 202) { const t = await res.text().catch(() => ""); throw new Error(`Microsoft 365 ${res.status}: ${t.slice(0, 300)}`); }
+    return "graph";
+  }
   // 1) Gmail / Workspace SMTP when configured (no DNS needed)
   const user = envGet("SMTP_USER"), pass = envGet("SMTP_PASS").replace(/\s+/g, "");
   if (user && pass) {

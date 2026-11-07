@@ -1153,7 +1153,7 @@ async function invitesKit(e){
       ${rows.length?`<div class="tscroll" style="max-height:46vh;overflow:auto"><table class="t"><thead><tr><th><input type="checkbox" id="iv_all"></th><th>Name</th><th>Organisation</th><th>Email</th><th>Status</th></tr></thead><tbody>${rows.map(x=>`<tr>
         <td><input type="checkbox" class="iv_ck" value="${x.id}"></td><td class="b">${esc(x.full_name||"—")}${x.owner?`<div class="tiny muted">Owner: ${esc(x.owner)}</div>`:""}</td><td>${esc(x.organization||"")}</td><td class="small">${esc(x.email)}</td>
         <td><span class="chip ${ST[x.status][1]}">${ST[x.status][0]}</span>${x.attended?' <span class="chip in">✓ Attended</span>':""}${x.sent_at?`<div class="tiny muted">${esc(fmtDT(x.sent_at))}</div>`:""}</td></tr>`).join("")}</tbody></table></div>
-        <div class="row"><span class="small muted">Selected:</span><button class="btn sm" id="iv_resend" ${e.status!=="open"?"disabled":""}>Send / resend</button><button class="btn sm ghost" id="iv_del" style="color:var(--red)">Remove</button></div>`
+        <div class="row"><span class="small muted">Selected:</span><button class="btn sm" id="iv_resend" ${e.status!=="open"?"disabled":""}>Send / resend</button>${can("super")?`<button class="btn sm ghost" id="iv_del" style="color:var(--red)">Remove</button>`:""}</div>`
       :'<div class="empty">No contacts yet. Download the template, fill it in and upload.</div>'}
       <div class="row"><button class="btn ghost" data-close>Close</button></div>`;
     $$("[data-close]",box).forEach(b=>b.onclick=closeModal);
@@ -1831,7 +1831,7 @@ async function uploadTargets(ev){
   const data=rows.map(r=>({organization:pick(r,["organisation","organization","company","partner","firm"]),contact_name:pick(r,["contact","name"]),email:pick(r,["email","mail"]),
     phone:pick(r,["phone","mobile"]),city:pick(r,["city","location","region"]),owner:pick(r,["owner","sales","account"]),notes:pick(r,["note","remark"])})).filter(r=>r.organization);
   if(!data.length) return toast("No rows with an Organisation column found",true);
-  const replace=confirm(`${data.length} target partners found.\n\nOK = replace the existing target list for this program\nCancel = add to the existing list`);
+  const replace=can("super")?confirm(`${data.length} target partners found.\n\nOK = replace the existing target list for this program\nCancel = add to the existing list`):false;
   try{ const r=await rpc("tw_targets_import",{p_token:S.token,p_program_id:S.repProg,p_rows:data,p_replace:replace}); toast(r.ok?r.imported+" targets imported":r.error,!r.ok); drawCoverage() }catch(e){ toast(e.message,true) }
 }
 
