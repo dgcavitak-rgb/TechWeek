@@ -18,9 +18,18 @@ const json = (b: unknown, status = 200) =>
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
+// Secret names typed in the dashboard sometimes carry stray spaces; match them by trimmed name.
+function envGet(name: string): string {
+  const direct = Deno.env.get(name);
+  if (direct) return direct.trim();
+  const all = Deno.env.toObject();
+  for (const k of Object.keys(all)) if (k.trim().toUpperCase() === name) return (all[k] || "").trim();
+  return "";
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ ok: true, service: "tw-mailer",
-    provider: (Deno.env.get("SMTP_USER") && Deno.env.get("SMTP_PASS")) ? "gmail-smtp" : Deno.env.get("RESEND_API_KEY") ? "resend" : "none" });
+    provider: (envGet("SMTP_USER") && envGet("SMTP_PASS")) ? "gmail-smtp" : envGet("RESEND_API_KEY") ? "resend" : "none" });
   const secret = req.headers.get("x-tw-hook") ?? "";
   let id: number;
   try { id = Number((await req.json()).id); } catch { return json({ ok: false, error: "bad body" }, 400); }
@@ -263,11 +272,11 @@ async function send(p: any, m: Mail): Promise<string> {
   const replyTo = p.settings?.reply_to || undefined;
   const to = p.outbox.to_email.split(/[,;]\s*/).filter(Boolean);
   // 1) Gmail / Workspace SMTP when configured (no DNS needed)
-  const user = Deno.env.get("SMTP_USER"), pass = (Deno.env.get("SMTP_PASS") || "").replace(/\s+/g, "");
+  const user = envGet("SMTP_USER"), pass = envGet("SMTP_PASS").replace(/\s+/g, "");
   if (user && pass) {
     const transport = nodemailer.createTransport({
-      host: Deno.env.get("SMTP_HOST") || "smtp.gmail.com",
-      port: Number(Deno.env.get("SMTP_PORT") || 465), secure: true, auth: { user, pass },
+      host: envGet("SMTP_HOST") || "smtp.gmail.com",
+      port: Number(envGet("SMTP_PORT") || 465), secure: true, auth: { user, pass },
     });
     const info = await transport.sendMail({
       from: `"${fromName}" <${user}>`, to, replyTo, subject: m.subject, html: m.html, text: m.text,
@@ -276,7 +285,7 @@ async function send(p: any, m: Mail): Promise<string> {
     return info.messageId ?? "smtp";
   }
   // 2) Resend (needs a verified domain to reach anyone other than the account owner)
-  const resendKey = Deno.env.get("RESEND_API_KEY");
+  const resendKey = envGet("RESEND_API_KEY");
   if (resendKey) {
     const fromEmail = p.settings?.from_email || "onboarding@resend.dev";
     const res = await fetch("https://api.resend.com/emails", {
