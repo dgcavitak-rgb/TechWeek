@@ -139,7 +139,7 @@ main.console{padding:16px 0 96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 
 /* ---------------- helpers ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -212,7 +212,7 @@ const STATUS_LABEL={pending:"Pending",approved:"Approved",waitlisted:"Waitlisted
 const chip=(s)=>`<span class="chip ${esc(s)}">${esc(STATUS_LABEL[s]||s)}</span>`;
 const PARTNER_TYPES=["System Integrator","AV Consultant","Reseller / Dealer","End customer","Architect / Designer","OEM / Technology partner","Other"];
 
-const isPublic = params.has("e") || params.has("p");
+const isPublic = params.has("e") || params.has("p") || params.has("c") || params.has("d");
 const S = { token: store.get("tw_token"), user:null, ov:null, settings:{}, tab: store.get("tw_tab") || "dash", regs:[], regsEvent:null };
 
 /* =============================================================
@@ -290,6 +290,7 @@ async function renderRegister(){
         email:val("#f_email"),phone:val("#f_phone"),city:val("#f_city"),interests:val("#f_int"),
         consent:true,source:src,website:$("#f_web").value }});
       if(!r.ok){ busy(btn,false); return fail(r.error) }
+      if(r.token) store.set("tw_pass_"+ev.slug, r.token);
       const s = d.slots.find(x=>x.id===slotId)||{};
       const msg = r.duplicate ? {h:"You're already registered",p:r.message}
         : r.status==="approved" ? {h:"You're confirmed!",p:"Your seat is confirmed. We've emailed your entry QR pass and calendar invite."}
@@ -316,6 +317,7 @@ async function renderPass(){
   if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Pass not found</h2><p>${esc(d.error)}</p></div>`); return }
   const p=d.person, s=d.slot, v=d.venue, ev=d.event;
   document.title="Tech Week pass — "+p.full_name;
+  if(d.status!=="cancelled") store.set("tw_pass_"+ev.slug, tok);
   const stMsg={approved:"Confirmed — show this QR at reception",pending:"Your request is under review",waitlisted:"You're on the waitlist",rejected:"We couldn't accommodate this request",cancelled:"This registration is cancelled"}[d.status]||d.status;
   app.innerHTML=`
   <div class="hero" style="padding-bottom:72px"><div class="wrap">
@@ -354,6 +356,115 @@ async function renderPass(){
     if(!confirm("Cancel your registration? Your seat will be released to another partner.")) return;
     try{ const r=await rpc("tw_cancel",{p_token:tok}); if(!r.ok) return toast(r.error,true); toast("Registration cancelled"); renderPass() }catch(e){ toast(e.message,true) }
   });
+}
+
+/* =============================================================
+   PUBLIC — self check-in (visitor scans the room QR)
+   ============================================================= */
+async function renderSelfCheckin(){
+  const code=params.get("c"), app=$("#app");
+  let d; try{ d=await rpc("tw_door_info",{p_code:code}) }catch(e){ d={ok:false,error:e.message} }
+  if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Check-in not available</h2><p>${esc(d.error)}</p></div>`); return }
+  document.title="Check in — "+d.event.title;
+  const saved=store.get("tw_pass_"+d.event.slug);
+  let me=null;
+  if(saved){ try{ const p=await rpc("tw_pass",{p_token:saved}); if(p.ok && p.status!=="cancelled") me=p }catch(e){} }
+  const cur=d.current[0];
+  app.innerHTML=`
+  <div class="hero" style="padding-bottom:64px"><div class="wrap" style="max-width:520px">
+    <div class="eyebrow">${esc(d.brand||"Cavitak")} · Tech Week · ${esc(d.venue.city)}</div>
+    <h1 style="font-size:26px">Welcome! Let's check you in</h1>
+    <div style="opacity:.92">${esc(d.venue.name)}${cur?` · ${esc(cur.label)}, ${esc(cur.time_label)}`:""}</div>
+  </div></div>
+  <div class="wrap lift" style="max-width:520px"><div class="card pad stack" id="sc_box">
+    ${me?`<div style="text-align:center"><div class="muted small">Registered on this phone</div><div style="font-size:20px;font-weight:800;margin-top:2px">${esc(me.person.full_name)}</div>
+        <div class="muted small">${esc(me.person.organization)}</div></div>
+      <button class="btn primary block" id="sc_me" style="min-height:54px;font-size:17px">✓ Check me in</button>
+      <button class="btn ghost block small" id="sc_other">Not you? Check in with email or mobile</button>`:""}
+    <form id="sc_form" class="stack ${me?"hide":""}">
+      <div><label class="f" for="sc_id">Email or mobile you registered with</label>
+        <input class="in" id="sc_id" autocomplete="email" inputmode="email" placeholder="name@company.com or 98765 43210" style="min-height:50px;font-size:16px"></div>
+      <button class="btn primary block" id="sc_go" style="min-height:54px;font-size:17px">Check in</button>
+    </form>
+    <div id="sc_err" class="banner warn hide"></div>
+  </div><div class="foot">Not registered? Please see the reception desk.</div></div>`;
+  const done=(r)=>{
+    if(r.token) store.set("tw_pass_"+d.event.slug, r.token);
+    const sl=r.slot||{};
+    $("#sc_box").innerHTML=`<div style="text-align:center;padding:10px 0">
+      <div style="width:76px;height:76px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;margin:0 auto 12px;font-size:40px">✓</div>
+      <h2 style="font-size:24px">${r.code==="already"?"You're already checked in":"Welcome, "+esc(r.name)+"!"}</h2>
+      <p class="muted">${r.code==="already"?"See you inside, "+esc(r.name)+".":"You're checked in. Please take a seat — we'll begin shortly."}</p>
+      ${sl.label?`<div class="card pad" style="background:var(--grey-50);box-shadow:none;text-align:left"><div class="b">${esc(sl.date_label)}</div><div class="small">${esc(sl.label)} · ${esc(sl.time_label)}</div></div>`:""}
+      ${r.token?`<a class="btn" style="margin-top:12px" href="?p=${esc(r.token)}">View my pass</a>`:""}</div>`;
+    if(navigator.vibrate) navigator.vibrate(80);
+  };
+  const run=async(args,btn)=>{
+    const err=$("#sc_err"); err.classList.add("hide"); busy(btn,true);
+    try{ const r=await rpc("tw_self_checkin",Object.assign({p_code:code},args)); busy(btn,false);
+      if(r.ok) return done(r);
+      err.innerHTML=`<b>${r.name?esc(r.name)+", ":""}${r.code==="wrong_time"?"not yet":"we couldn't check you in"}.</b><br>${esc(r.message)}`; err.classList.remove("hide");
+    }catch(e){ busy(btn,false); err.textContent=e.message; err.classList.remove("hide") }
+  };
+  $("#sc_me") && ($("#sc_me").onclick=()=>run({p_pass:saved},$("#sc_me")));
+  $("#sc_other") && ($("#sc_other").onclick=()=>{ $("#sc_form").classList.remove("hide"); $("#sc_me").classList.add("hide"); $("#sc_other").classList.add("hide"); $("#sc_id").focus() });
+  $("#sc_form").onsubmit=e=>{ e.preventDefault(); const v=$("#sc_id").value.trim(); if(!v) return; run({p_ident:v},$("#sc_go")) };
+}
+
+/* =============================================================
+   PUBLIC — room screen display (TV / BrightSign HTML5)
+   ============================================================= */
+async function renderDisplay(){
+  const code=params.get("d"), app=$("#app");
+  document.body.style.background="#0E0F12"; document.body.style.overflow="hidden";
+  const scanUrl=baseUrl()+"?c="+encodeURIComponent(code);
+  app.innerHTML=`<style>
+    .tv{position:fixed;inset:0;display:grid;grid-template-columns:1.25fr 1fr;color:#fff;font-family:Inter,system-ui,sans-serif;
+        background:radial-gradient(1200px 700px at 15% 20%,#C8232C 0%,#7A0F15 45%,#1A0B0D 100%)}
+    .tv .l{padding:6vh 5vw;display:flex;flex-direction:column;justify-content:space-between}
+    .tv .eb{font-size:1.5vw;letter-spacing:.2em;text-transform:uppercase;opacity:.85;font-weight:600}
+    .tv h1{font-size:4.4vw;line-height:1.05;margin:1.5vh 0 0;font-weight:800;letter-spacing:-.02em}
+    .tv .ses{font-size:2.2vw;margin-top:3vh;opacity:.95}
+    .tv .cnt{font-size:9vw;font-weight:800;line-height:1;letter-spacing:-.03em}
+    .tv .cntl{font-size:1.7vw;opacity:.85;margin-top:1vh}
+    .tv .clock{font-size:1.6vw;opacity:.8}
+    .tv .r{display:flex;align-items:center;justify-content:center;padding:4vh 4vw}
+    .tv .qrc{background:#fff;color:#14171A;border-radius:2.2vw;padding:3vw;text-align:center;box-shadow:0 2vw 6vw rgba(0,0,0,.45);width:100%;max-width:36vw}
+    .tv .qrc .t{font-size:2.6vw;font-weight:800;margin-bottom:1.6vh}
+    .tv .qrc .s{font-size:1.35vw;color:#5B6470;margin-top:1.6vh;line-height:1.4}
+    .tv #tvqr{display:flex;justify-content:center}.tv #tvqr canvas,.tv #tvqr img{width:26vw!important;height:26vw!important;max-height:56vh!important;max-width:56vh!important}
+    .tv .wel{position:fixed;left:5vw;bottom:14vh;max-width:50vw;transform:translateY(30px);opacity:0;transition:all .5s;background:#16794A;color:#fff;
+        border-radius:1.6vw;padding:2vh 3vw;font-size:2.6vw;font-weight:800;box-shadow:0 1vw 4vw rgba(0,0,0,.4);white-space:nowrap}
+    .tv .wel.on{opacity:1;transform:translateY(0)}.tv .wel small{display:block;font-size:1.4vw;font-weight:600;opacity:.9}
+  </style>
+  <div class="tv"><div class="l">
+      <div><div class="eb" id="tv_eb">Cavitak · Tech Week</div><h1 id="tv_t">Loading…</h1><div class="ses" id="tv_s"></div></div>
+      <div><div class="cnt" id="tv_c"></div><div class="cntl" id="tv_cl"></div></div>
+      <div class="clock" id="tv_clk"></div></div>
+    <div class="r"><div class="qrc"><div class="t">Scan to check in</div><div id="tvqr"></div>
+      <div class="s">Open your phone camera, scan, and confirm with your registered email or mobile.</div></div></div>
+    <div class="wel" id="tv_w"></div></div>`;
+  qrInto($("#tvqr"), scanUrl, 600);
+  const seen=new Set(), queue=[]; let first=true, showing=false;
+  const showNext=()=>{ if(showing||!queue.length) return; showing=true; const p=queue.shift(); const w=$("#tv_w");
+    w.innerHTML=`Welcome, ${esc(p.name)}! 👋<small>${esc(p.org)}</small>`; w.classList.add("on");
+    setTimeout(()=>{ w.classList.remove("on"); setTimeout(()=>{ showing=false; showNext() },600) },4500) };
+  const clock=()=>{ $("#tv_clk").textContent=new Date().toLocaleString("en-IN",{weekday:"long",day:"numeric",month:"long",hour:"numeric",minute:"2-digit"}) };
+  const tick=async()=>{
+    try{
+      const d=await rpc("tw_door_info",{p_code:code});
+      if(!d.ok){ $("#tv_t").textContent=d.error; return }
+      $("#tv_eb").textContent=(d.brand||"Cavitak")+" · Tech Week · "+d.venue.city;
+      $("#tv_t").textContent=d.event.title;
+      const c=d.current[0];
+      if(c){ $("#tv_s").textContent=c.label+" · "+c.time_label; $("#tv_c").textContent=c.checked_in+" / "+c.approved; $("#tv_cl").textContent="checked in"; }
+      else{ $("#tv_s").textContent=d.next?("Next: "+d.next.date_label+" · "+d.next.label+", "+d.next.time_label):"No more sessions scheduled"; $("#tv_c").textContent=""; $("#tv_cl").textContent=d.next?"Check-in opens 45 minutes before the session":""; }
+      (d.recent||[]).slice().reverse().forEach(p=>{ const k=p.name+p.at; if(!seen.has(k)){ seen.add(k); if(!first) queue.push(p) } });
+      first=false; showNext();
+    }catch(e){ /* keep showing last state; retry next tick */ }
+  };
+  clock(); setInterval(clock,20000); tick(); setInterval(tick,8000);
+  setTimeout(()=>location.reload(), 6*3600e3); // daily-safe refresh for always-on screens
 }
 
 /* =============================================================
@@ -495,6 +606,7 @@ function eventCard(e){
     <div class="row" style="margin-top:12px">
       <button class="btn sm primary" data-share="${e.id}">Share link</button>
       ${can("super","approver")?`<button class="btn sm" data-appr="${e.id}">Approvals${c.pending?` (${c.pending})`:""}</button>`:""}
+      ${can("super","approver","checkin")?`<button class="btn sm" data-door="${e.id}">Room QR & screen</button>`:""}
       ${can("super","approver","marketing")?`<button class="btn sm" data-sess="${e.id}">Sessions</button>`:""}
       ${can("super")?`<button class="btn sm" data-edit="${e.id}">Edit</button>`:""}
     </div></div>`;
@@ -504,6 +616,32 @@ function bindEventCards(root){
   $$("[data-appr]",root).forEach(b=>b.onclick=()=>{ S.apprEvent=b.dataset.appr; S.apprStatus="pending"; go("approvals") });
   $$("[data-edit]",root).forEach(b=>b.onclick=()=>editEvent(evById(b.dataset.edit)));
   $$("[data-sess]",root).forEach(b=>b.onclick=()=>sessionsView(evById(b.dataset.sess)));
+  $$("[data-door]",root).forEach(b=>b.onclick=()=>doorKit(evById(b.dataset.door)));
+}
+async function doorKit(e){
+  let r; try{ r=await rpc("tw_door_code",{p_token:S.token,p_event:e.id}) }catch(x){ return toast(x.message,true) }
+  if(!r.ok) return toast(r.error,true);
+  const scan=baseUrl()+"?c="+r.code, screen=baseUrl()+"?d="+r.code;
+  modal(`<h3>Room check-in — ${esc(e.title)}</h3><div class="stack">
+    ${e.status==="draft"?'<div class="banner warn">This event is still a draft. Room check-in starts working once the event is open.</div>':""}
+    <div class="banner info small">Visitors scan this QR with their own phone and confirm with their registered email or mobile. It works only for approved registrations, from 45 minutes before their session until it ends. Staff scanning still works as a backup.</div>
+    <div><label class="f">Option 1 — Show it on the room screen (recommended)</label>
+      <div class="small muted" style="margin-bottom:6px">Open this link full-screen on the room TV, a laptop or a BrightSign player (HTML5). It shows the QR, the current session, a live check-in counter and a "Welcome" message for each arrival.</div>
+      <div class="row"><input class="in grow" value="${esc(screen)}" readonly><button class="btn" id="dk_cs">Copy</button><a class="btn primary" href="${esc(screen)}" target="_blank" rel="noopener">Open screen</a></div></div>
+    <div><label class="f">Option 2 — Print a table standee</label>
+      <div class="poster printable"><div class="ph"><div class="tiny" style="letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600">Cavitak · Tech Week · ${esc(e.city)}</div>
+        <div style="font-size:24px;font-weight:800;margin-top:4px">Welcome! Scan to check in</div><div style="opacity:.9;margin-top:2px">${esc(e.venue_name)}</div></div>
+        <div class="pb"><div class="qrbox" id="dk_qr" style="border:0"></div><div class="small muted" style="margin-top:6px">Open your phone camera, scan, and confirm with the email or mobile you registered with.</div></div></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="dk_print">Print</button><button class="btn" id="dk_png">Download QR</button></div></div>
+    ${can("super")?'<div class="small muted">If a photo of this QR is shared outside the room, you can <a href="#" id="dk_rot">change the code</a>; old printouts and screens then stop working.</div>':""}
+    <div class="row"><button class="btn ghost" data-close>Close</button></div></div>`, ()=>{
+    qrInto($("#dk_qr"), scan, 220);
+    $("#dk_cs").onclick=()=>copy(screen);
+    $("#dk_print").onclick=()=>window.print();
+    $("#dk_png").onclick=()=>{ const a=document.createElement("a"); a.href=qrDataUrl(scan,900); a.download=e.slug+"-room-checkin-qr.png"; a.click() };
+    $("#dk_rot") && ($("#dk_rot").onclick=async ev=>{ ev.preventDefault(); if(!confirm("Change the room check-in code? Printed QRs and open screens will need the new one.")) return;
+      const x=await rpc("tw_door_code",{p_token:S.token,p_event:e.id,p_rotate:true}).catch(err=>({ok:false,error:err.message})); if(!x.ok) return toast(x.error,true); toast("New code created"); doorKit(e) });
+  });
 }
 function sessionsView(e){
   modal(`<h3>${esc(e.title)} — sessions</h3><div class="tscroll"><table class="t"><thead><tr><th>Date</th><th>Slot</th><th>Seats</th><th>Pending</th><th>Waitlist</th><th>In</th></tr></thead><tbody>
@@ -742,7 +880,7 @@ async function viewCheckin(v){
   const nearest=(e)=>{ const sl=e.slots.filter(s=>s.is_active); return sl.find(s=>new Date(s.ends_at)>now-3600e3) || sl[sl.length-1] };
   if(!S.ciEvent||!evById(S.ciEvent)){ S.ciEvent=(ev.map(e=>({e,s:nearest(e)})).filter(x=>x.s).sort((a,b)=>Math.abs(new Date(a.s.starts_at)-now)-Math.abs(new Date(b.s.starts_at)-now))[0]||{e:ev[0]}).e.id }
   const e=evById(S.ciEvent); if(!S.ciSlot||!e.slots.find(s=>s.id===S.ciSlot)) S.ciSlot=(nearest(e)||{}).id;
-  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><h2 style="font-size:22px">Check-in</h2><button class="btn sm" id="ci_walk">+ Walk-in</button></div>
+  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><h2 style="font-size:22px">Check-in</h2><div class="row"><button class="btn sm" id="ci_door">Room QR & screen</button><button class="btn sm" id="ci_walk">+ Walk-in</button></div></div>
    <div class="stack">
     <div class="grid g2"><select class="in" id="ci_ev">${ev.map(x=>`<option value="${x.id}" ${x.id===S.ciEvent?"selected":""}>${esc(x.city)} — ${esc(x.title)}</option>`).join("")}</select>
       <select class="in" id="ci_sl">${e.slots.filter(s=>s.is_active).map(s=>`<option value="${s.id}" ${s.id===S.ciSlot?"selected":""}>${esc(s.date_label)} · ${esc(s.label)}</option>`).join("")}</select></div>
@@ -759,6 +897,9 @@ async function viewCheckin(v){
   $("#ci_code").onkeydown=ev=>{ if(ev.key==="Enter") doCheckin($("#ci_code").value) };
   $("#ci_scan").onclick=toggleScanner;
   $("#ci_walk").onclick=walkIn;
+  $("#ci_door").onclick=()=>doorKit(evById(S.ciEvent));
+  clearInterval(window._ciPoll); window._ciPoll=setInterval(async()=>{ if(S.tab!=="checkin"||!$("#ci_list")) return clearInterval(window._ciPoll);
+    try{ await loadRegs(S.ciEvent); drawCiList() }catch(e){} }, 20000); // picks up self check-ins from the room QR
   $("#ci_q").oninput=drawCiList;
   await loadRegs(S.ciEvent).catch(ex=>toast(ex.message,true)); drawCiList();
 }
@@ -1049,6 +1190,8 @@ async function adAudit(b){
 /* ---------------- start ---------------- */
 if(params.has("e")) renderRegister();
 else if(params.has("p")) renderPass();
+else if(params.has("c")) renderSelfCheckin();
+else if(params.has("d")) renderDisplay();
 else bootConsole();
 </script>
 </body>
