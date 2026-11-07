@@ -9,11 +9,11 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Cavitak Tech Week">
 <meta property="og:title" content="Cavitak Tech Week — Register for partner training">
-<meta property="og:description" content="Hands-on BrightSign, tvONE & Green Hippo training at Cavitak Experience Centers. Limited seats · QR entry pass on approval.">
-<meta property="og:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg">
+<meta property="og:description" content="Hands-on BrightSign training at Cavitak Experience Centers. Limited seats · QR entry pass on approval.">
+<meta property="og:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg?v=2">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg">
+<meta name="twitter:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg?v=2">
 <link rel="icon" href="icon-512.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -714,7 +714,7 @@ function shareKit(e){
         "",
         "🎯 *What you'll get*",
         "▫️ Live demos at our Experience Center",
-        "▫️ Hands-on time with the products",
+        "▫️ Hands-on time with "+((["BrightSign","tvONE","Green Hippo"].filter(b=>(e.title+" "+(e.description||"")).toLowerCase().includes(b.toLowerCase())).join(", "))||"the products")+(/brightsign/i.test(e.title)?" players":""),
         "▫️ Q&A with the Cavitak product team",
         "",
         "🎟️ *Only "+cap+" seats per session* — confirmed on approval, with a QR entry pass sent by email.",
