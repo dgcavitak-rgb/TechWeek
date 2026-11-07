@@ -1,6 +1,6 @@
 // Cavitak Tech Week — email worker
 // Triggered by the database (pg_net) for every row inserted into tw_outbox.
-// Sends via Resend (RESEND_API_KEY) or Gmail/Workspace SMTP (SMTP_USER + SMTP_PASS).
+// Sends via Gmail/Workspace SMTP (SMTP_USER + SMTP_PASS) when set, otherwise Resend (RESEND_API_KEY).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import QRCode from "npm:qrcode@1.5.4";
 import nodemailer from "npm:nodemailer@6.9.16";
@@ -19,7 +19,8 @@ const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return json({ ok: true, service: "tw-mailer" });
+  if (req.method !== "POST") return json({ ok: true, service: "tw-mailer",
+    provider: (Deno.env.get("SMTP_USER") && Deno.env.get("SMTP_PASS")) ? "gmail-smtp" : Deno.env.get("RESEND_API_KEY") ? "resend" : "none" });
   const secret = req.headers.get("x-tw-hook") ?? "";
   let id: number;
   try { id = Number((await req.json()).id); } catch { return json({ ok: false, error: "bad body" }, 400); }
