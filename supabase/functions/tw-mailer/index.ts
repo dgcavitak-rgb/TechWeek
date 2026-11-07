@@ -4,6 +4,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import QRCode from "npm:qrcode@1.5.4";
 import nodemailer from "npm:nodemailer@6.9.16";
+import * as PDFLib from "npm:pdf-lib@1.17.1";
+import { buildCertificate } from "./cert.js";
 
 const SB = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false },
@@ -27,7 +29,21 @@ function envGet(name: string): string {
   return "";
 }
 
+const FN_URL = (Deno.env.get("SUPABASE_URL") || "") + "/functions/v1/tw-mailer";
+
+async function certBytes(pass: string) {
+  const { data: d, error } = await SB.rpc("tw_cert_payload", { p_pass: pass });
+  if (error || !d?.ok) return null;
+  return await buildCertificate(d, PDFLib, QRCode);
+}
+
 Deno.serve(async (req) => {
+  const url = new URL(req.url);
+  if (req.method === "GET" && url.searchParams.get("cert")) {
+    const bytes = await certBytes(url.searchParams.get("cert")!);
+    if (!bytes) return new Response("Certificate not available — it is issued after you attend the session.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    return new Response(bytes, { headers: { "Content-Type": "application/pdf", "Content-Disposition": 'inline; filename="Cavitak-Tech-Week-Certificate.pdf"', "Access-Control-Allow-Origin": "*" } });
+  }
   if (req.method !== "POST") return json({ ok: true, service: "tw-mailer",
     provider: (envGet("SMTP_USER") && envGet("SMTP_PASS")) ? "gmail-smtp" : envGet("RESEND_API_KEY") ? "resend" : "none" });
   const secret = req.headers.get("x-tw-hook") ?? "";
@@ -50,6 +66,12 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: msg }, 500);
   }
 });
+
+function b64(bytes: Uint8Array) {
+  let bin = ""; const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  return btoa(bin);
+}
 
 type Mail = { subject: string; html: string; text: string; attachments: { filename: string; content: string; type: string }[] };
 
@@ -138,7 +160,7 @@ function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
   </td></tr>
   <tr><td style="padding:22px 24px;color:${INK};font-size:15px;line-height:1.55">${bodyHtml}</td></tr>
   <tr><td style="padding:14px 24px;border-top:1px solid #EEF0F2;color:${MUTED};font-size:12px;line-height:1.5">
-    You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.
+    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
     ${p.settings?.reply_to ? `Questions? Reply to this email or write to ${esc(p.settings.reply_to)}.` : ""}
   </td></tr>
 </table></td></tr></table></body></html>`;
@@ -153,8 +175,8 @@ async function build(p: any): Promise<Mail> {
   const kind = p.outbox.kind as string;
   const r = p.reg, s = p.slot, e = p.event, v = p.venue;
   const first = esc(String(r.full_name).split(" ")[0]);
-  const when = `${s.date_label} · ${s.label}`;
-  const pass = passUrl(p);
+  const when = s ? `${s.date_label} · ${s.label}` : "";
+  const pass = r.pass_token ? passUrl(p) : "";
   const attachments: Mail["attachments"] = [];
   let subject = "", headline = "", body = "", pre = "";
 
@@ -247,14 +269,63 @@ async function build(p: any): Promise<Mail> {
         <p style="margin-top:18px">${btn(pass, "Open my pass")}${linkBtn(v.map_url, "Directions")}</p>`;
       break;
     case "thankyou": {
-      const fb = (p.settings?.feedback_url ?? "").trim();
-      subject = `Thank you for attending ${e.title}`;
+      const ext = (p.settings?.feedback_url ?? "").trim();
+      const base = (p.settings?.public_url ?? "").trim().split("?")[0];
+      const fb = ext || (base ? `${base}?f=${r.pass_token}` : "");
+      subject = `Thank you for attending ${e.title} — your certificate`;
       headline = "Thank you for joining us";
-      pre = "We hope the session was useful.";
+      pre = "Your certificate of attendance is attached.";
+      const cert = r.checked_in ? await certBytes(r.pass_token) : null;
+      if (cert) attachments.push({ filename: "Cavitak-Tech-Week-Certificate.pdf", content: b64(cert), type: "application/pdf" });
       body = `<p>Hi ${first},</p><p>Thank you for attending <strong>${esc(e.title)}</strong> at ${esc(v.name)}, ${esc(v.city)}.
         We hope the hands-on session was useful for your upcoming projects.</p>
-        ${fb ? `<p>We'd value two minutes of your feedback:</p><p>${btn(fb, "Share feedback")}</p>` : ""}
+        ${cert ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
+          <div style="font-weight:700">🎓 Your certificate of attendance</div>
+          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">Attached as a PDF · Certificate ID ${esc(r.cert_code)}</div>
+          ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : ""}
+        ${fb ? `<p><strong>How was the session?</strong> Two minutes of feedback helps us plan the next one.</p><p>${btn(fb, "Rate the session ★★★★★")}</p>` : ""}
+        ${(p.settings?.followup_url ?? "").trim() ? `<p>${linkBtn(p.settings.followup_url, "Slides & resources")}</p>` : ""}
         <p>For demos, project support or pricing, simply reply to this email.</p>`;
+      break;
+    }
+    case "noshow": {
+      const fu = (p.settings?.followup_url ?? "").trim();
+      const more = (p.next_slots || []).slice(0, 6);
+      subject = `We missed you at ${e.title}`;
+      headline = "We missed you today";
+      pre = "Here's how to catch up.";
+      body = `<p>Hi ${first},</p><p>We were sorry not to see you at <strong>${esc(e.title)}</strong> on ${esc(when)}.</p>
+        ${fu ? `<p>You can catch up with the slides and resources here:</p><p>${btn(fu, "Slides & resources")}</p>` : ""}
+        ${more.length ? `<p>Would another session suit you better? Upcoming sessions at ${esc(v.name)}:</p>
+          <ul style="padding-left:18px;margin:0 0 12px">${more.map((x: any) => `<li>${esc(x.date_label)} — ${esc(x.label)}, ${esc(x.time_label)}</li>`).join("")}</ul>
+          <p>Just <strong>reply to this email</strong> with the one you prefer and we'll move your seat.</p>` : `<p>Reply to this email and we'll let you know about the next session in ${esc(v.city)}.</p>`}`;
+      break;
+    }
+    case "reminder_soon":
+      subject = `Today at ${String(s.time_label).split(" – ")[0]}: ${e.title}`;
+      headline = "See you in a couple of hours";
+      pre = `${s.label} session today, ${s.time_label} at ${v.name}.`;
+      body = `<p>Hi ${first},</p><p>Your session starts <strong>today, ${esc(s.time_label)}</strong>. Keep this QR ready at the reception — or scan the QR on the room screen and confirm with your email.</p>
+        ${await qrBlock("Your entry pass")}
+        <p>${btn(v.map_url, "Get directions")}${linkBtn(pass, "Open my pass")}</p>${detailsBlock(p)}`;
+      break;
+    case "invite": {
+      const base = (p.settings?.public_url ?? "").trim().split("?")[0];
+      const link = base ? `${base}?e=${encodeURIComponent(e.slug)}&src=invite&i=${r.invite_token}` : "";
+      const list = (p.slots || []);
+      const days: Record<string, any[]> = {};
+      list.forEach((x: any) => { (days[x.local_date] = days[x.local_date] || []).push(x); });
+      const sched = Object.keys(days).sort().map((k) => `<tr><td style="padding:5px 12px 5px 0;font-weight:600;white-space:nowrap;vertical-align:top">${esc(days[k][0].date_label)}</td><td style="padding:5px 0">${days[k].map((x: any) => `${esc(x.label)} · ${esc(x.time_label)}`).join("<br>")}</td></tr>`).join("");
+      subject = `You're invited: ${e.title}`;
+      headline = "You're invited";
+      pre = `Hands-on partner training at ${v.name}, ${v.city}. Limited seats.`;
+      body = `<p>Hi ${first === "Partner" ? "there" : first},</p>
+        <p>We'd love to host you at <strong>${esc(e.title)}</strong> — a hands-on partner training at <strong>${esc(v.name)}</strong>, ${esc(v.city)}.</p>
+        ${e.description ? `<p style="color:${MUTED}">${esc(e.description)}</p>` : ""}
+        ${sched ? `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #E6E8EB;border-radius:10px;padding:12px 16px;background:#FAFBFC;font-size:14px">${sched}</table>` : ""}
+        <p style="margin:16px 0 6px">Seats are limited to ${esc(String((list[0] || {}).capacity || ""))} per session and confirmed on approval. Pick the session that suits you:</p>
+        <p>${btn(link, "Register now →")}</p>
+        <p style="font-size:13px;color:${MUTED}">📍 ${esc(v.address).replace(/\n/g, ", ")}${v.map_url ? ` · <a href="${esc(v.map_url)}" style="color:${RED}">Map</a>` : ""}</p>`;
       break;
     }
     case "admin_new": {
@@ -274,6 +345,7 @@ async function build(p: any): Promise<Mail> {
     default:
       throw new Error("Unknown email kind: " + kind);
   }
+  if (!s) return { subject, html: shell(p, headline, body, pre), text: headline + "\n\n" + e.title, attachments };
   const text = `${headline}\n\n${e.title}\n${s.date_label}\n${s.label}: ${s.time_label}\n${v.name}${v.room_name ? " · " + v.room_name : ""}\n${v.address}\n${v.map_url ?? ""}\n${pass ? "\nYour pass: " + pass : ""}`;
   return { subject, html: shell(p, headline, body, pre), text, attachments };
 }
