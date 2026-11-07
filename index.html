@@ -59,7 +59,10 @@ table.t td{padding:9px 10px;border-bottom:1px solid var(--line-2);vertical-align
 @media(min-width:720px){.modal-bg{align-items:center}}
 .modal{background:#fff;width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px}
 @media(min-width:720px){.modal{border-radius:16px}}
-.modal h3{font-size:18px;margin-bottom:12px}
+.modal{position:relative}
+.modal h3{font-size:18px;margin-bottom:12px;padding-right:36px}
+.mclose{position:sticky;top:0;float:right;margin:-6px -6px 0 0;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:15px;color:var(--muted);z-index:2}
+.mclose:hover{background:var(--grey-50);color:var(--ink)}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .spin{display:inline-block;width:18px;height:18px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite}
 .spin.dark{border-color:#0002;border-top-color:var(--red)}
@@ -139,7 +142,7 @@ main.console{padding:16px 0 96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 
 /* ---------------- helpers ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -199,14 +202,22 @@ function download(name, content, type){
 }
 function modal(html, onMount){
   const root=$("#modal-root");
-  root.innerHTML=`<div class="modal-bg"><div class="modal" role="dialog">${html}</div></div>`;
-  const bg=root.firstElementChild;
-  bg.addEventListener("click", e=>{ if(e.target===bg) closeModal() });
-  $$("[data-close]", bg).forEach(b=>b.onclick=closeModal);
-  onMount && onMount(bg.firstElementChild);
-  return bg.firstElementChild;
+  root.innerHTML=`<div class="modal-bg"><div class="modal" role="dialog"><button type="button" class="mclose" aria-label="Close" title="Close">✕</button>${html}</div></div>`;
+  const bg=root.firstElementChild, box=bg.firstElementChild;
+  let dirty=false;
+  const mark=e=>{ if(e.target.closest && e.target.closest("form")) dirty=true };
+  box.addEventListener("input", mark, true); box.addEventListener("change", mark, true);
+  // Closing by tapping outside / Esc / ✕ never silently throws away typed changes
+  const tryClose=()=>{ if(!dirty || confirm("You have unsaved changes. Close without saving?")) closeModal() };
+  bg.addEventListener("click", e=>{ if(e.target===bg) tryClose() });
+  $(".mclose", box).onclick=tryClose;
+  $$("[data-close]", bg).forEach(b=>b.onclick=tryClose);
+  window._modalEsc=e=>{ if(e.key==="Escape") tryClose() }; document.addEventListener("keydown", window._modalEsc);
+  onMount && onMount(box);
+  dirty=false; // values filled in by onMount don't count as edits
+  return box;
 }
-function closeModal(){ $("#modal-root").innerHTML="" }
+function closeModal(){ $("#modal-root").innerHTML=""; if(window._modalEsc){ document.removeEventListener("keydown", window._modalEsc); window._modalEsc=null } }
 function busy(btn, on){ if(!btn) return; if(on){ btn.dataset.t=btn.innerHTML; btn.innerHTML='<span class="spin"></span>'; btn.disabled=true } else { btn.innerHTML=btn.dataset.t||btn.innerHTML; btn.disabled=false } }
 const STATUS_LABEL={pending:"Pending",approved:"Approved",waitlisted:"Waitlisted",rejected:"Rejected",cancelled:"Cancelled"};
 const chip=(s)=>`<span class="chip ${esc(s)}">${esc(STATUS_LABEL[s]||s)}</span>`;
