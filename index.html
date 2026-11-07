@@ -153,7 +153,7 @@ main.console{padding:16px 0 96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.4.0";
 
 /* ---------------- helpers ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -305,7 +305,7 @@ async function renderRegister(){
     if(!slotId) return fail("Please choose a session.");
     if(!val("#f_name")||!val("#f_desig")||!val("#f_org")) return fail("Please fill in your name, designation and organisation.");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("#f_email"))) return fail("Please enter a valid email address.");
-    if(val("#f_phone").replace(/\D/g,"").length<8) return fail("Please enter a valid mobile number.");
+    if(val("#f_phone").replace(/\D/g,"").length<10) return fail("Please enter a valid 10-digit mobile number.");
     if(!$("#f_consent").checked) return fail("Please accept the consent statement to continue.");
     const btn=$("#rf_go"); busy(btn,true);
     try{
@@ -600,11 +600,11 @@ function viewDash(v){
   let pastApproved=0, pastIn=0;
   ev.forEach(e=>e.slots.forEach(s=>{ if(new Date(s.ends_at)<new Date()){ pastApproved+=s.approved; pastIn+=s.checked_in } }));
   const showRate=pastApproved>0 ? Math.round(pastIn/pastApproved*100)+"%" : "—";
-  const st=S.ov.email_stats||{}, emailWarn = S.user.role==="super" && (st.failed>0 || (!S.settings.email_last_ok && st.queued>0));
+  const st=S.ov.email_stats||{}, emailWarn = can("super","approver") && st.failed>0;
   v.innerHTML=`
   <div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Dashboard</h2><div class="small muted">All Tech Week events across cities</div></div>
     ${can("super")?'<button class="btn primary" id="newev">+ New event</button>':""}</div>
-  ${emailWarn?`<div class="banner warn" style="margin-bottom:12px"><b>Emails need attention.</b> ${st.failed||0} failed, ${st.queued||0} waiting. ${S.settings.email_last_error?esc(S.settings.email_last_error):""} <a href="#" id="toemail">Open email log</a></div>`:""}
+  ${emailWarn?`<div class="banner warn" style="margin-bottom:12px"><b>Emails need attention.</b> ${st.failed||0} failed, ${st.queued||0} waiting. Open the email log to see why and retry. <a href="#" id="toemail">Open email log</a></div>`:""}
   ${!S.settings.public_url&&can("super")?`<div class="banner info" style="margin-bottom:12px">Set the public link of this console in <b>Admin → Settings</b> so emails carry working pass links.</div>`:""}
   <div class="grid g4" style="grid-template-columns:repeat(2,1fr);margin-bottom:14px">
     <div class="card kpi"><div class="l">Registrations</div><div class="v">${tot.total}</div><div class="tiny muted">${ev.length} event${ev.length===1?"":"s"}</div></div>
@@ -817,7 +817,7 @@ function editEvent(e){
         <td><button type="button" class="btn sm ghost" data-rm="${i}" title="Remove">✕</button></td></tr>`).join(""):`<tr><td colspan="6" class="muted small">No sessions yet — use the generator above.</td></tr>`;
       $$("[data-i]",m).forEach(x=>{ x.oninput=()=>{ slots[x.dataset.i][x.dataset.k]=x.value; summary() }; x.onchange=()=>{ slots[x.dataset.i][x.dataset.k]=x.value; drawSlots() } });
       summary();
-      $$("[data-rm]",m).forEach(x=>x.onclick=()=>{ const s=slots[+x.dataset.rm]; if(s.id){ if(s.approved&&!confirm("This session has approved registrations. Hide it anyway? Existing registrations stay on record.")) return; s.remove=true } else slots.splice(+x.dataset.rm,1); drawSlots() });
+      $$("[data-rm]",m).forEach(x=>x.onclick=()=>{ const s=slots[+x.dataset.rm]; if(s.id){ if(s.approved&&!confirm("People are booked in this session. Removing it will cancel their registrations and email them that the session is cancelled when you save. Continue?")) return; s.remove=true } else slots.splice(+x.dataset.rm,1); drawSlots() });
     };
     drawSlots();
     ["g_from","g_to"].forEach(id=>{ $("#"+id).onchange=()=>{ $("#"+id+"_l").textContent=dayLabel($("#"+id).value); if(id==="g_from"&&(!$("#g_to").value||$("#g_to").value<$("#g_from").value)){ $("#g_to").value=$("#g_from").value; $("#g_to_l").textContent=dayLabel($("#g_to").value) } } });
@@ -851,19 +851,32 @@ function editEvent(e){
           slug:$("#e_slug").value,description:$("#e_desc").value,agenda:$("#e_agenda").value,status:$("#e_status").value,auto_approve:$("#e_auto").value==="true",
           closes_at:cl?new Date(cl).toISOString():"",slots:slots.map(s=>({id:s.id||"",date:s.date,label:s.label,start:s.start,end:s.end,capacity:+s.capacity||8,remove:!!s.remove}))}});
         busy(b,false); if(!r.ok) return showErr(esc(r.error));
-        toast("Event saved"); closeModal(); await loadOverview(); go(S.tab);
+        const nt=(r.notified_changed||0)+(r.notified_cancelled||0);
+        toast(nt?`Event saved · ${r.notified_changed?r.notified_changed+" told about new timings":""}${r.notified_changed&&r.notified_cancelled?", ":""}${r.notified_cancelled?r.notified_cancelled+" told their session is cancelled":""}`:"Event saved");
+        closeModal(); await loadOverview(); go(S.tab);
         if(isNew) shareKit(evById(r.id));
       }catch(ex){ busy(b,false); showErr(esc(ex.message)) }
     };
-    $("#e_del") && ($("#e_del").onclick=async()=>{
-      const n=(e.counts&&e.counts.total)||0;
-      if(n>0){
-        const typed=prompt(`"${e.title}" has ${n} registration(s).\n\nDeleting removes the event, all its sessions and all registrations permanently. This cannot be undone.\n\nType DELETE to confirm:`);
-        if(typed!=="DELETE") return toast("Not deleted");
-      } else if(!confirm(`Delete "${e.title}" and its sessions? This cannot be undone.`)) return;
-      const r=await rpc("tw_delete_event",{p_token:S.token,p_id:e.id,p_with_registrations:n>0}).catch(x=>({ok:false,error:x.message}));
-      if(!r.ok) return toast(r.error||"Could not delete",true);
-      toast("Event deleted"); closeModal(); await loadOverview(); go(S.tab);
+    $("#e_del") && ($("#e_del").onclick=()=>{
+      const n=(e.counts&&e.counts.total)||0, act=(e.counts?(e.counts.pending+e.counts.approved+e.counts.waitlisted):0);
+      const doIt=async(mode,reason)=>{ const r=await rpc("tw_delete_event",{p_token:S.token,p_id:e.id,p_mode:mode,p_reason:reason||null}).catch(x=>({ok:false,error:x.message}));
+        if(!r.ok) return toast(r.error||"Could not delete",true);
+        toast(r.mode==="cancelled"?`Event cancelled · ${r.notified} participant${r.notified===1?"":"s"} notified by email`:"Event deleted");
+        closeModal(); await loadOverview(); go(S.tab) };
+      if(!n){ if(confirm(`Delete "${e.title}" and its sessions? This cannot be undone.`)) doIt("auto"); return }
+      modal(`<h3>Remove "${esc(e.title)}"</h3><div class="stack">
+        <div class="banner warn">This event has <b>${n}</b> registration${n===1?"":"s"} (${act} still active).</div>
+        <div class="card pad stack" style="box-shadow:none"><div class="b">Cancel the event and notify participants <span class="chip approved">Recommended</span></div>
+          <div class="small muted">Everyone still registered gets a cancellation email (with a calendar cancellation). The event disappears from the console and the link stops working; records are kept for reports.</div>
+          <div><label class="f">Message to participants (optional)</label><input class="in" id="dx_r" placeholder="e.g. Due to unforeseen circumstances — new dates will be shared soon."></div>
+          <button class="btn primary" id="dx_cancel">Cancel event & email ${act} participant${act===1?"":"s"}</button></div>
+        <div class="card pad stack" style="box-shadow:none"><div class="b">Delete permanently, no emails</div>
+          <div class="small muted">Only for test or dummy events. Removes the event, sessions and all registrations for good.</div>
+          <button class="btn" id="dx_purge" style="color:var(--red)">Delete permanently</button></div>
+        <div class="row"><button class="btn ghost" data-close>Keep the event</button></div></div>`, ()=>{
+        $("#dx_cancel").onclick=()=>{ if(confirm(`Cancel "${e.title}" and email ${act} participant(s)? This cannot be undone.`)) doIt("cancel_notify",$("#dx_r").value) };
+        $("#dx_purge").onclick=()=>{ const t=prompt("Type DELETE to permanently remove this event and all its registrations (no emails will be sent):"); if(t==="DELETE") doIt("purge"); else toast("Not deleted") };
+      });
     });
   });
 }
@@ -957,6 +970,7 @@ function regMenu(r){
       ${r.status!=="waitlisted"?'<button class="btn block" data-a="waitlist">Move to waitlist</button>':""}
       <button class="btn block" data-a="move">Change session</button>
       ${r.status!=="pending"&&r.status!=="approved"?'<button class="btn block" data-a="pending">Back to pending</button>':""}
+      ${can("super","approver")?'<button class="btn block" id="rm_edit">Edit details</button>':""}
       <button class="btn block" id="rm_resend">Resend latest email</button>
       ${r.pass_token?`<button class="btn block" id="rm_pass">Copy pass link</button>`:""}
       ${r.status!=="rejected"?'<button class="btn block" data-a="reject">Reject</button>':""}
@@ -967,6 +981,16 @@ function regMenu(r){
     $("#rm_del") && ($("#rm_del").onclick=async()=>{ if(!confirm(`Permanently delete ${r.full_name}'s registration? Use this for test or duplicate entries — it cannot be undone. (To keep a record, use Cancel instead.)`)) return;
       const x=await rpc("tw_delete_registration",{p_token:S.token,p_ids:[r.id]}).catch(err=>({ok:false,error:err.message}));
       if(!x.ok) return toast(x.error,true); toast("Registration deleted"); closeModal(); await loadOverview(); drawApprovals() });
+    $("#rm_edit") && ($("#rm_edit").onclick=()=>modal(`<h3>Edit ${esc(r.full_name)}</h3><form class="stack" id="rf2">
+      <div class="grid g2"><div><label class="f">Full name</label><input class="in" id="r_n" value="${esc(r.full_name)}"></div><div><label class="f">Designation</label><input class="in" id="r_d" value="${esc(r.designation||"")}"></div>
+      <div><label class="f">Organisation</label><input class="in" id="r_o" value="${esc(r.organization)}"></div><div><label class="f">Organisation type</label><select class="in" id="r_t"><option value=""></option>${PARTNER_TYPES.map(t=>`<option ${t===r.partner_type?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div><label class="f">Email</label><input class="in" id="r_e" type="email" value="${esc(r.email)}"></div><div><label class="f">Mobile</label><input class="in" id="r_p" value="${esc(r.phone)}"></div>
+      <div><label class="f">City</label><input class="in" id="r_c" value="${esc(r.participant_city||"")}"></div></div>
+      ${r.status==="approved"?'<div class="small muted">If you change the email, the confirmation and QR pass are re-sent to the new address.</div>':""}
+      <div class="row"><button class="btn primary" id="r_go">Save</button><button type="button" class="btn" data-close>Cancel</button></div></form>`, ()=>{
+        $("#rf2").onsubmit=async ev=>{ ev.preventDefault(); const b=$("#r_go"); busy(b,true);
+          const x=await rpc("tw_update_registration",{p_token:S.token,p_id:r.id,p_data:{full_name:$("#r_n").value,designation:$("#r_d").value,organization:$("#r_o").value,partner_type:$("#r_t").value,email:$("#r_e").value,phone:$("#r_p").value,city:$("#r_c").value}}).catch(err=>({ok:false,error:err.message}));
+          busy(b,false); if(!x.ok) return toast(x.error,true); toast(x.resent?"Saved · pass re-sent to the new email":"Saved"); closeModal(); drawApprovals() } }));
     $("#rm_resend").onclick=async()=>{ try{ const x=await rpc("tw_resend",{p_token:S.token,p_reg:r.id}); toast(x.ok?"Email queued ("+x.kind+")":x.error,!x.ok) }catch(e){ toast(e.message,true) } };
     $("#rm_pass") && ($("#rm_pass").onclick=()=>copy(passLink(r.pass_token)));
   });
@@ -1272,15 +1296,15 @@ function adSettings(b){
     try{ const r=await rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:$("#s_url").value,notify_email:$("#s_ne").value,reply_to:$("#s_rt").value,from_name:$("#s_fn").value,from_email:$("#s_fe").value,brand_name:$("#s_bn").value,feedback_url:$("#s_fb").value}});
       busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Settings saved"); await loadOverview() }catch(ex){ busy(bt,false); toast(ex.message,true) } };
 }
-const KIND_LABEL={received:"Request received",approved:"Confirmation + QR",waitlisted:"Waitlisted",promoted:"Seat opened",rejected:"Rejected",cancelled:"Cancelled",moved:"Session changed",reminder:"Reminder",thankyou:"Thank-you",admin_new:"Admin alert"};
+const KIND_LABEL={received:"Request received",approved:"Confirmation + QR",waitlisted:"Waitlisted",promoted:"Seat opened",rejected:"Rejected",cancelled:"Cancelled",moved:"Session changed",event_cancelled:"Event cancelled",session_cancelled:"Session cancelled",reminder:"Reminder",thankyou:"Thank-you",admin_new:"Admin alert"};
 async function adEmail(b){
   b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
   const r=await rpc("tw_outbox_list",{p_token:S.token,p_limit:300}).catch(e=>({rows:[]}));
   b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Every automatic email, newest first. Failed emails retry automatically every 10 minutes (up to 4 tries).</div><button class="btn sm" id="er">Refresh</button></div>
     <div class="card tscroll"><table class="t"><thead><tr><th>When</th><th>Email</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>${r.rows.map(o=>`<tr>
       <td class="small">${esc(fmtDT(o.created_at))}</td><td><b>${esc(KIND_LABEL[o.kind]||o.kind)}</b><div class="tiny muted">${esc(o.full_name||"")}${o.organization?" · "+esc(o.organization):""}</div></td>
-      <td class="small">${esc(o.to_email)}</td><td>${o.status==="sent"?'<span class="chip approved">Sent</span>':o.status==="failed"?'<span class="chip" style="background:#FDECEC;color:#9B1C22">Failed</span>':'<span class="chip pending">'+esc(o.status)+'</span>'}
-      ${o.error?`<div class="tiny muted" style="max-width:260px">${esc(o.error)}</div>`:""}</td><td>${o.status!=="sent"?`<button class="btn sm" data-rt="${o.id}">Retry</button>`:""}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No emails yet</td></tr>'}</tbody></table></div>`;
+      <td class="small">${esc(o.to_email)}</td><td>${o.status==="sent"?'<span class="chip approved">Sent</span>':o.status==="failed"?'<span class="chip" style="background:#FDECEC;color:#9B1C22">Failed</span>':o.status==="skipped"?'<span class="chip">Skipped</span>':'<span class="chip pending">'+esc(o.status)+'</span>'}
+      ${o.error?`<div class="tiny muted" style="max-width:260px">${esc(o.error)}</div>`:""}</td><td>${o.status==="failed"||o.status==="queued"?`<button class="btn sm" data-rt="${o.id}">Retry</button>`:""}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No emails yet</td></tr>'}</tbody></table></div>`;
   $("#er").onclick=()=>adEmail(b);
   $$("[data-rt]",b).forEach(x=>x.onclick=async()=>{ busy(x,true); await rpc("tw_outbox_retry",{p_token:S.token,p_id:+x.dataset.rt}).catch(()=>{}); setTimeout(()=>adEmail(b),2500) });
 }

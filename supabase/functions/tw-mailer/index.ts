@@ -187,7 +187,7 @@ async function build(p: any): Promise<Mail> {
       subject = kind === "moved" ? `Session updated — ${e.title} · ${when}` : `You're confirmed — ${e.title} · ${when}`;
       headline = kind === "moved" ? "Your session has been updated" : "You're confirmed!";
       pre = `${when} at ${v.name}, ${v.city}. Show the QR at reception.`;
-      body = `<p>Hi ${first},</p><p>${kind === "moved" ? "Your Tech Week session has been changed. Here are your updated details." :
+      body = `<p>Hi ${first},</p><p>${kind === "moved" ? "Your Tech Week session details have changed (date, time or venue). Your seat is still confirmed — here are the updated details and a fresh calendar invite." :
         "Great news — your seat is confirmed for Tech Week."} Please show the QR code below at the reception for a quick check-in.</p>
         ${await qrBlock("Your entry pass")}
         ${detailsBlock(p, { showAgenda: true })}
@@ -225,6 +225,17 @@ async function build(p: any): Promise<Mail> {
       body = `<p>Hi ${first},</p><p>Your registration for <strong>${esc(when)}</strong> at ${esc(v.name)}, ${esc(v.city)} has been cancelled
         and your seat released.${r.reason && r.reason !== "Cancelled by attendee" ? ` <br><span style="color:${MUTED}">Note: ${esc(r.reason)}</span>` : ""}</p>
         <p>We hope to see you at a future session.</p>`;
+      addIcs(true);
+      break;
+    case "event_cancelled":
+    case "session_cancelled":
+      subject = kind === "event_cancelled" ? `Cancelled: ${e.title}` : `Session cancelled — ${e.title} · ${when}`;
+      headline = kind === "event_cancelled" ? "This event has been cancelled" : "Your session has been cancelled";
+      pre = `We're sorry — ${when} will not take place.`;
+      body = `<p>Hi ${first},</p><p>We're sorry to let you know that ${kind === "event_cancelled" ? `<strong>${esc(e.title)}</strong>` : `your session on <strong>${esc(when)}</strong>`}
+        at ${esc(v.name)}, ${esc(v.city)} has been <strong>cancelled</strong>. Your registration and entry pass are no longer valid.</p>
+        ${r.reason ? `<p style="color:${MUTED}">${esc(r.reason)}</p>` : ""}
+        <p>We apologise for the inconvenience and will share new dates with you as soon as they are planned. For anything urgent, simply reply to this email.</p>`;
       addIcs(true);
       break;
     case "reminder":
