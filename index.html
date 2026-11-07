@@ -153,7 +153,7 @@ main.console{padding:16px 0 96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 
 /* ---------------- helpers ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -180,6 +180,8 @@ async function rpc(fn, args = {}){
   }
   return data;
 }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") }
+function dayLabel(ds){ if(!/^\d{4}-\d{2}-\d{2}$/.test(ds||"")) return ""; const d=new Date(ds+"T00:00:00"); return d.toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}) }
 function fmtDT(iso){ if(!iso) return ""; const d=new Date(iso); return d.toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"numeric",minute:"2-digit"}) }
 function fmtD(iso){ if(!iso) return ""; return new Date(iso).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) }
 function baseUrl(){
@@ -771,15 +773,17 @@ function editEvent(e){
     <div class="card pad" style="background:var(--grey-50);box-shadow:none">
       <div class="b">Sessions</div><div class="small muted" style="margin-bottom:8px">Times are local to the venue's time zone. Generate a block of days, then fine-tune any row.</div>
       <div class="grid g4" style="grid-template-columns:repeat(2,1fr)">
-        <div><label class="f">From</label><input class="in" type="date" id="g_from"></div><div><label class="f">To</label><input class="in" type="date" id="g_to"></div>
+        <div><label class="f">From</label><input class="in" type="date" id="g_from" min="${todayStr()}"><div class="tiny muted" id="g_from_l"></div></div><div><label class="f">To</label><input class="in" type="date" id="g_to" min="${todayStr()}"><div class="tiny muted" id="g_to_l"></div></div>
       </div>
       <div id="g_tpl" class="stack" style="margin-top:8px"></div>
       <div class="row" style="margin-top:8px"><button type="button" class="btn sm" id="g_addtpl">+ Slot template</button><label class="small row" style="gap:6px"><input type="checkbox" id="g_wk"> Skip Sat/Sun</label><div class="grow"></div><button type="button" class="btn sm primary" id="g_go">Generate sessions</button></div>
     </div>
     <div class="tscroll"><table class="t" id="s_tbl"><thead><tr><th>Date</th><th>Label</th><th>Start</th><th>End</th><th>Seats</th><th></th></tr></thead><tbody></tbody></table></div>
-    <div class="row"><button type="button" class="btn sm" id="s_add">+ Add one session</button></div>
+    <div class="row between"><button type="button" class="btn sm" id="s_add">+ Add one session</button><div class="small b" id="s_sum"></div></div>
+    <div id="e_err" class="banner warn hide"></div>
     <div class="row" style="position:sticky;bottom:-18px;background:#fff;padding:10px 0;border-top:1px solid var(--line)">
-      <button class="btn primary" id="e_save">Save event</button><button type="button" class="btn" data-close>Cancel</button></div>
+      <button class="btn primary" id="e_save">Save event</button><button type="button" class="btn" data-close>Cancel</button>
+      <div class="grow"></div>${!isNew&&can("super")?'<button type="button" class="btn ghost" id="e_del" style="color:var(--red)">Delete event</button>':""}</div>
   </form>`, m=>{
     const tpl=[{label:"Morning",start:"10:30",end:"13:00"},{label:"Evening",start:"15:00",end:"17:30"}];
     const drawTpl=()=>{ $("#g_tpl").innerHTML=tpl.map((t,i)=>`<div class="row" style="flex-wrap:nowrap;gap:6px">
@@ -788,21 +792,41 @@ function editEvent(e){
       $$("[data-tr]",m).forEach(x=>x.onclick=()=>{ tpl.splice(+x.dataset.tr,1); drawTpl() }); };
     drawTpl();
     $("#g_addtpl").onclick=()=>{ tpl.push({label:"Session",start:"12:00",end:"14:00"}); drawTpl() };
+    const live=()=>slots.filter(s=>!s.remove);
+    const slotProblem=(s)=>{
+      if(!s.date) return "Pick a date";
+      if(!s.id && s.date<todayStr()) return "Date is in the past";
+      if(s.start&&s.end&&s.end<=s.start) return "Ends before it starts";
+      if(s.date>String(new Date().getFullYear()+2)) return "Check the year";
+      const clash=live().find(o=>o!==s&&o.date===s.date&&o.start&&o.end&&s.start&&s.end&&o.start<s.end&&s.start<o.end);
+      if(clash) return "Overlaps "+(clash.label||"another session");
+      return "";
+    };
+    const summary=()=>{ const l=live().filter(s=>s.date).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+      const bad=live().filter(slotProblem).length;
+      $("#s_sum").innerHTML=l.length?`${l.length} session${l.length>1?"s":""} · ${esc(dayLabel(l[0].date))}${l.length>1&&l[0].date!==l[l.length-1].date?" → "+esc(dayLabel(l[l.length-1].date)):""}${bad?` · <span style="color:var(--red)">${bad} to fix</span>`:""}`:"" };
     const drawSlots=()=>{
       const vis=slots.map((s,i)=>({s,i})).filter(x=>!x.s.remove).sort((a,b)=>(a.s.date+a.s.start).localeCompare(b.s.date+b.s.start));
       $("#s_tbl tbody").innerHTML=vis.length?vis.map(({s,i})=>`<tr>
-        <td><input class="in" type="date" data-i="${i}" data-k="date" value="${s.date||""}" style="min-width:140px"></td>
+        <td><input class="in" type="date" data-i="${i}" data-k="date" value="${s.date||""}" ${s.id?"":`min="${todayStr()}"`} style="min-width:140px;${slotProblem(s)?"border-color:var(--red);background:#FFF5F5":""}">
+          <div class="tiny" style="color:${slotProblem(s)?"var(--red)":"var(--muted)"};margin-top:2px">${esc(slotProblem(s)||dayLabel(s.date))}</div></td>
         <td><input class="in" data-i="${i}" data-k="label" value="${esc(s.label||"")}" style="min-width:100px"></td>
         <td><input class="in" type="time" data-i="${i}" data-k="start" value="${s.start||""}" style="min-width:100px"></td>
         <td><input class="in" type="time" data-i="${i}" data-k="end" value="${s.end||""}" style="min-width:100px"></td>
         <td><input class="in" type="number" min="1" data-i="${i}" data-k="capacity" value="${s.capacity||8}" style="width:76px">${s.approved?`<div class="tiny muted">${s.approved} booked</div>`:""}</td>
         <td><button type="button" class="btn sm ghost" data-rm="${i}" title="Remove">✕</button></td></tr>`).join(""):`<tr><td colspan="6" class="muted small">No sessions yet — use the generator above.</td></tr>`;
-      $$("[data-i]",m).forEach(x=>x.oninput=()=>slots[x.dataset.i][x.dataset.k]=x.value);
+      $$("[data-i]",m).forEach(x=>{ x.oninput=()=>{ slots[x.dataset.i][x.dataset.k]=x.value; summary() }; x.onchange=()=>{ slots[x.dataset.i][x.dataset.k]=x.value; drawSlots() } });
+      summary();
       $$("[data-rm]",m).forEach(x=>x.onclick=()=>{ const s=slots[+x.dataset.rm]; if(s.id){ if(s.approved&&!confirm("This session has approved registrations. Hide it anyway? Existing registrations stay on record.")) return; s.remove=true } else slots.splice(+x.dataset.rm,1); drawSlots() });
     };
     drawSlots();
+    ["g_from","g_to"].forEach(id=>{ $("#"+id).onchange=()=>{ $("#"+id+"_l").textContent=dayLabel($("#"+id).value); if(id==="g_from"&&(!$("#g_to").value||$("#g_to").value<$("#g_from").value)){ $("#g_to").value=$("#g_from").value; $("#g_to_l").textContent=dayLabel($("#g_to").value) } } });
     $("#g_go").onclick=()=>{
       const a=$("#g_from").value, b=$("#g_to").value||a; if(!a) return toast("Pick a start date",true);
+      if(a<todayStr()) return toast("The From date is in the past ("+dayLabel(a)+")",true);
+      if(b<a) return toast("The To date ("+dayLabel(b)+") is before the From date ("+dayLabel(a)+")",true);
+      if((new Date(b)-new Date(a))/864e5>62) return toast("That range is over 2 months — please check the dates",true);
+      const badT=tpl.find(t=>!t.start||!t.end||t.end<=t.start); if(badT) return toast(`Template "${badT.label}" ends before it starts`,true);
       let d=new Date(a+"T00:00:00"), end=new Date(b+"T00:00:00"), n=0;
       while(d<=end && n<120){ const dow=d.getDay(); const ds=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
         if(!($("#g_wk").checked&&(dow===0||dow===6))) tpl.forEach(t=>{ if(!slots.some(s=>!s.remove&&s.date===ds&&s.start===t.start)){ slots.push({date:ds,label:t.label,start:t.start,end:t.end,capacity:venueCap()}); n++ } });
@@ -813,18 +837,34 @@ function editEvent(e){
     $("#e_nv").onclick=()=>editVenue(null, ()=>editEvent(e.id?evById(e.id):null));
     $("#ef").onsubmit=async ev=>{
       ev.preventDefault(); const b=$("#e_save");
-      for(const s of slots){ if(s.remove) continue; if(!s.date||!s.start||!s.end) return toast("Every session needs a date, start and end time",true); if(s.end<=s.start) return toast(`"${s.label}" on ${s.date} ends before it starts`,true) }
+      const err=$("#e_err"); err.classList.add("hide");
+      const showErr=msg=>{ err.innerHTML=msg; err.classList.remove("hide"); err.scrollIntoView({behavior:"smooth",block:"center"}) };
+      const probs=live().map(s=>({s,p:(!s.start||!s.end)?"Missing start or end time":slotProblem(s)})).filter(x=>x.p);
+      if(probs.length) return showErr("<b>Please fix these sessions before saving:</b><br>"+probs.map(x=>`• ${esc(x.s.label||"Session")} — ${esc(dayLabel(x.s.date)||"no date")}: ${esc(x.p)}`).join("<br>"));
+      if(!live().length && $("#e_status").value==="open") return showErr("Add at least one session before opening registrations.");
+      const clv=$("#e_close").value, lastStart=live().map(s=>s.date+"T"+s.start).sort().pop();
+      if(clv && lastStart && clv>lastStart) return showErr("Registrations must close before the last session starts.");
       busy(b,true);
       const cl=$("#e_close").value;
       try{
         const r=await rpc("tw_save_event",{p_token:S.token,p_data:{id:e.id||"",program_id:$("#e_prog").value,venue_id:$("#e_venue").value,title:$("#e_title").value,
           slug:$("#e_slug").value,description:$("#e_desc").value,agenda:$("#e_agenda").value,status:$("#e_status").value,auto_approve:$("#e_auto").value==="true",
           closes_at:cl?new Date(cl).toISOString():"",slots:slots.map(s=>({id:s.id||"",date:s.date,label:s.label,start:s.start,end:s.end,capacity:+s.capacity||8,remove:!!s.remove}))}});
-        busy(b,false); if(!r.ok) return toast(r.error,true);
+        busy(b,false); if(!r.ok) return showErr(esc(r.error));
         toast("Event saved"); closeModal(); await loadOverview(); go(S.tab);
         if(isNew) shareKit(evById(r.id));
-      }catch(ex){ busy(b,false); toast(ex.message,true) }
+      }catch(ex){ busy(b,false); showErr(esc(ex.message)) }
     };
+    $("#e_del") && ($("#e_del").onclick=async()=>{
+      const n=(e.counts&&e.counts.total)||0;
+      if(n>0){
+        const typed=prompt(`"${e.title}" has ${n} registration(s).\n\nDeleting removes the event, all its sessions and all registrations permanently. This cannot be undone.\n\nType DELETE to confirm:`);
+        if(typed!=="DELETE") return toast("Not deleted");
+      } else if(!confirm(`Delete "${e.title}" and its sessions? This cannot be undone.`)) return;
+      const r=await rpc("tw_delete_event",{p_token:S.token,p_id:e.id,p_with_registrations:n>0}).catch(x=>({ok:false,error:x.message}));
+      if(!r.ok) return toast(r.error||"Could not delete",true);
+      toast("Event deleted"); closeModal(); await loadOverview(); go(S.tab);
+    });
   });
 }
 
@@ -872,7 +912,7 @@ async function drawApprovals(){
         </div></div>`).join(""):`<div class="empty">Nothing ${st==="all"?"":"in "+STATUS_LABEL[st].toLowerCase()} here.</div>`}</div>
     <div class="card pad sticky-actions hide" id="ap_bar"><div class="row"><span class="b" id="ap_n"></span><div class="grow"></div>
       <button class="btn sm green" data-act="approve">Approve</button><button class="btn sm" data-act="waitlist">Waitlist</button>
-      <button class="btn sm" data-act="move">Move</button><button class="btn sm" data-act="reject">Reject</button></div></div>`;
+      <button class="btn sm" data-act="move">Move</button><button class="btn sm" data-act="reject">Reject</button>${can("super")?'<button class="btn sm ghost" id="ap_del" style="color:var(--red)">Delete</button>':""}</div></div>`;
   $$("[data-st]",body).forEach(b=>b.onclick=()=>{ S.apprStatus=b.dataset.st; drawApprovals() });
   $$("[data-slot]",body).forEach(b=>b.onclick=()=>{ S.apprSlot=S.apprSlot===b.dataset.slot?"":b.dataset.slot; drawApprovals() });
   $("#ap_q").oninput=()=>{ S.apprQ=$("#ap_q").value; clearTimeout(window._apq); window._apq=setTimeout(()=>{ drawApprovals().then(()=>{ const i=$("#ap_q"); i.focus(); i.setSelectionRange(i.value.length,i.value.length) }) },250) };
@@ -881,6 +921,10 @@ async function drawApprovals(){
   $$(".ap_ck",body).forEach(c=>c.onchange=upd);
   $("#ap_all") && ($("#ap_all").onchange=ev=>{ $$(".ap_ck",body).forEach(c=>c.checked=ev.target.checked); upd() });
   $$("[data-act]",body).forEach(b=>b.onclick=()=>decide(sel(), b.dataset.act));
+  $("#ap_del") && ($("#ap_del").onclick=async()=>{ const ids=sel(); if(!ids.length) return;
+    if(!confirm(`Permanently delete ${ids.length} registration(s)? Use this only for test or duplicate entries. This cannot be undone.`)) return;
+    const x=await rpc("tw_delete_registration",{p_token:S.token,p_ids:ids}).catch(err=>({ok:false,error:err.message}));
+    if(!x.ok) return toast(x.error,true); toast(x.deleted+" deleted"); await loadOverview(); drawApprovals() });
   $$("[data-more]",body).forEach(b=>b.onclick=()=>regMenu(S.regs.find(r=>r.id===b.dataset.more)));
 }
 async function decide(ids, act, extra={}){
@@ -917,8 +961,12 @@ function regMenu(r){
       ${r.pass_token?`<button class="btn block" id="rm_pass">Copy pass link</button>`:""}
       ${r.status!=="rejected"?'<button class="btn block" data-a="reject">Reject</button>':""}
       ${r.status!=="cancelled"?'<button class="btn block" data-a="cancel" style="color:var(--red)">Cancel registration</button>':""}
+      ${can("super")?'<button class="btn ghost block" id="rm_del" style="color:var(--red)">Delete permanently</button>':""}
       <button class="btn ghost block" data-close>Close</button></div>`, m=>{
     $$("[data-a]",m).forEach(b=>b.onclick=()=>{ closeModal(); decide([r.id], b.dataset.a) });
+    $("#rm_del") && ($("#rm_del").onclick=async()=>{ if(!confirm(`Permanently delete ${r.full_name}'s registration? Use this for test or duplicate entries — it cannot be undone. (To keep a record, use Cancel instead.)`)) return;
+      const x=await rpc("tw_delete_registration",{p_token:S.token,p_ids:[r.id]}).catch(err=>({ok:false,error:err.message}));
+      if(!x.ok) return toast(x.error,true); toast("Registration deleted"); closeModal(); await loadOverview(); drawApprovals() });
     $("#rm_resend").onclick=async()=>{ try{ const x=await rpc("tw_resend",{p_token:S.token,p_reg:r.id}); toast(x.ok?"Email queued ("+x.kind+")":x.error,!x.ok) }catch(e){ toast(e.message,true) } };
     $("#rm_pass") && ($("#rm_pass").onclick=()=>copy(passLink(r.pass_token)));
   });
@@ -1189,7 +1237,10 @@ function editVenue(v, after){
       <div><label class="f">Contact email <span class="muted" style="font-weight:400">(gets registration alerts)</span></label><input class="in" id="v_ce" type="email" value="${esc(v.contact_email||"")}" placeholder="center@cavitak.com"></div></div>
     <div><label class="f">Instructions for attendees</label><textarea class="in" id="v_i" placeholder="Parking, photo ID, reporting time…">${esc(v.instructions||"")}</textarea></div>
     ${!isNew?`<label class="small row"><input type="checkbox" id="v_ac" ${v.is_active?"checked":""}> Active</label>`:""}
-    <div class="row"><button class="btn primary" id="v_go">Save venue</button><button type="button" class="btn" data-close>Cancel</button></div></form>`);
+    <div class="row"><button class="btn primary" id="v_go">Save venue</button><button type="button" class="btn" data-close>Cancel</button><div class="grow"></div>${!isNew?'<button type="button" class="btn ghost" id="v_del" style="color:var(--red)">Delete venue</button>':""}</div></form>`);
+  $("#v_del") && ($("#v_del").onclick=async()=>{ if(!confirm(`Delete venue "${v.name}"? This cannot be undone.`)) return;
+    const x=await rpc("tw_delete_venue",{p_token:S.token,p_id:v.id}).catch(err=>({ok:false,error:err.message}));
+    if(!x.ok) return toast(x.error,true); toast("Venue deleted"); closeModal(); await loadOverview(); after&&after() });
   $("#vf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#v_go"); busy(bt,true);
     try{ const r=await rpc("tw_save_venue",{p_token:S.token,p_data:{id:v.id||"",name:$("#v_n").value,city:$("#v_c").value,address:$("#v_a").value,map_url:$("#v_m").value,room_name:$("#v_r").value,
         capacity:+$("#v_cap").value,timezone:$("#v_tz").value,contact_name:$("#v_cn").value,contact_phone:$("#v_cp").value,contact_email:$("#v_ce").value,instructions:$("#v_i").value,is_active:isNew?true:$("#v_ac").checked}});
