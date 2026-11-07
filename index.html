@@ -358,7 +358,7 @@ async function renderPass(){
       <div><div class="small muted b">DATE</div><div class="b">${esc(s.date_label)}</div></div>
       <div><div class="small muted b">SLOT</div><div><span class="b">${esc(s.label)}</span> · ${esc(s.time_label)}</div></div>
       <div><div class="small muted b">VENUE</div><div class="b">${esc(v.name)}${v.room_name?" · "+esc(v.room_name):""}, ${esc(v.city)}</div><div class="small" style="white-space:pre-line">${esc(v.address)}</div></div>
-      ${v.contact_name||v.contact_phone?`<div><div class="small muted b">CONTACT</div><div>${esc([v.contact_name,v.contact_phone].filter(Boolean).join(" · "))}</div></div>`:""}
+      ${v.contact_name||v.contact_phone||v.contact_email?`<div><div class="small muted b">CONTACT</div><div>${esc([v.contact_name,v.contact_phone].filter(Boolean).join(" · "))}${v.contact_email?` · <a href="mailto:${esc(v.contact_email)}">${esc(v.contact_email)}</a>`:""}</div></div>`:""}
       ${v.instructions?`<div class="small muted">${esc(v.instructions)}</div>`:""}
       <div class="row">${v.map_url?`<a class="btn" href="${esc(v.map_url)}" target="_blank" rel="noopener">Directions</a>`:""}
         ${d.status==="approved"?`<button class="btn" id="ics">Add to calendar</button>`:""}
@@ -1168,7 +1168,7 @@ function adVenues(b){
   const vs=S.ov.venues||[];
   b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Experience centers and rooms. The address, map link and contact appear in every confirmation email.</div><button class="btn primary sm" id="nv">+ Add venue</button></div>
     <div class="stack">${vs.map(v=>`<div class="card pad"><div class="row between" style="align-items:flex-start"><div class="grow"><div class="b">${esc(v.city)} — ${esc(v.name)}${v.is_active?"":' <span class="chip cancelled">Inactive</span>'}</div>
-      <div class="small">${esc(v.room_name||"")} · ${v.capacity} seats · ${esc(v.timezone)}</div><div class="small muted" style="white-space:pre-line">${esc(v.address)}</div>
+      <div class="small">${esc(v.room_name||"")} · ${v.capacity} seats · ${esc(v.timezone)}${v.contact_email?" · ✉ "+esc(v.contact_email):""}</div><div class="small muted" style="white-space:pre-line">${esc(v.address)}</div>
       ${/to be updated/i.test(v.address)?'<div class="banner warn small" style="margin-top:6px">Please add the full address before opening registrations.</div>':""}
       ${!v.map_url?'<div class="tiny muted">No Google Maps link yet</div>':""}</div><button class="btn sm" data-v="${v.id}">Edit</button></div></div>`).join("")||'<div class="card empty">No venues yet.</div>'}</div>`;
   $("#nv").onclick=()=>editVenue(null,()=>go("admin"));
@@ -1185,13 +1185,14 @@ function editVenue(v, after){
     <div class="grid g3"><div><label class="f">Room</label><input class="in" id="v_r" value="${esc(v.room_name||"")}" placeholder="Training room"></div>
       <div><label class="f">Seating capacity</label><input class="in" type="number" min="1" id="v_cap" value="${v.capacity}"></div>
       <div><label class="f">Time zone</label><select class="in" id="v_tz">${[...new Set([v.timezone,...TZ])].map(t=>`<option ${t===v.timezone?"selected":""}>${t}</option>`).join("")}</select></div></div>
-    <div class="grid g2"><div><label class="f">On-site contact</label><input class="in" id="v_cn" value="${esc(v.contact_name||"")}"></div><div><label class="f">Contact phone</label><input class="in" id="v_cp" value="${esc(v.contact_phone||"")}"></div></div>
+    <div class="grid g3"><div><label class="f">On-site contact</label><input class="in" id="v_cn" value="${esc(v.contact_name||"")}"></div><div><label class="f">Contact phone</label><input class="in" id="v_cp" value="${esc(v.contact_phone||"")}"></div>
+      <div><label class="f">Contact email <span class="muted" style="font-weight:400">(gets registration alerts)</span></label><input class="in" id="v_ce" type="email" value="${esc(v.contact_email||"")}" placeholder="center@cavitak.com"></div></div>
     <div><label class="f">Instructions for attendees</label><textarea class="in" id="v_i" placeholder="Parking, photo ID, reporting time…">${esc(v.instructions||"")}</textarea></div>
     ${!isNew?`<label class="small row"><input type="checkbox" id="v_ac" ${v.is_active?"checked":""}> Active</label>`:""}
     <div class="row"><button class="btn primary" id="v_go">Save venue</button><button type="button" class="btn" data-close>Cancel</button></div></form>`);
   $("#vf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#v_go"); busy(bt,true);
     try{ const r=await rpc("tw_save_venue",{p_token:S.token,p_data:{id:v.id||"",name:$("#v_n").value,city:$("#v_c").value,address:$("#v_a").value,map_url:$("#v_m").value,room_name:$("#v_r").value,
-        capacity:+$("#v_cap").value,timezone:$("#v_tz").value,contact_name:$("#v_cn").value,contact_phone:$("#v_cp").value,instructions:$("#v_i").value,is_active:isNew?true:$("#v_ac").checked}});
+        capacity:+$("#v_cap").value,timezone:$("#v_tz").value,contact_name:$("#v_cn").value,contact_phone:$("#v_cp").value,contact_email:$("#v_ce").value,instructions:$("#v_i").value,is_active:isNew?true:$("#v_ac").checked}});
       busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Venue saved"); closeModal(); await loadOverview(); after&&after() }
     catch(ex){ busy(bt,false); toast(ex.message,true) } };
 }

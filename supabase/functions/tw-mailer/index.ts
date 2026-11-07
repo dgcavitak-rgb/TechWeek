@@ -116,7 +116,7 @@ function detailsBlock(p: any, opts: { showAgenda?: boolean } = {}) {
         ${row("Slot", `<strong>${esc(s.label)}</strong> · ${esc(s.time_label)}`)}
         ${row("Venue", venueLine)}
         ${row("Address", esc(v.address).replace(/\n/g, "<br>") + mapBtn)}
-        ${v.contact_name || v.contact_phone ? row("Contact", esc([v.contact_name, v.contact_phone].filter(Boolean).join(" · "))) : ""}
+        ${v.contact_name || v.contact_phone || v.contact_email ? row("Contact", esc([v.contact_name, v.contact_phone].filter(Boolean).join(" · ")) + (v.contact_email ? `${v.contact_name || v.contact_phone ? " · " : ""}<a href="mailto:${esc(v.contact_email)}" style="color:${RED};text-decoration:none">${esc(v.contact_email)}</a>` : "")) : ""}
         ${v.instructions ? row("Please note", esc(v.instructions).replace(/\n/g, "<br>")) : ""}
         ${opts.showAgenda && e.agenda ? row("Agenda", esc(e.agenda).replace(/\n/g, "<br>")) : ""}
       </table>
