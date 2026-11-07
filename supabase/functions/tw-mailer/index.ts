@@ -261,6 +261,20 @@ async function send(p: any, m: Mail): Promise<string> {
   const fromName = p.settings?.from_name || "Cavitak Tech Week";
   const replyTo = p.settings?.reply_to || undefined;
   const to = p.outbox.to_email.split(/[,;]\s*/).filter(Boolean);
+  // 1) Gmail / Workspace SMTP when configured (no DNS needed)
+  const user = Deno.env.get("SMTP_USER"), pass = (Deno.env.get("SMTP_PASS") || "").replace(/\s+/g, "");
+  if (user && pass) {
+    const transport = nodemailer.createTransport({
+      host: Deno.env.get("SMTP_HOST") || "smtp.gmail.com",
+      port: Number(Deno.env.get("SMTP_PORT") || 465), secure: true, auth: { user, pass },
+    });
+    const info = await transport.sendMail({
+      from: `"${fromName}" <${user}>`, to, replyTo, subject: m.subject, html: m.html, text: m.text,
+      attachments: m.attachments.map((a) => ({ filename: a.filename, content: a.content, encoding: "base64", contentType: a.type })),
+    });
+    return info.messageId ?? "smtp";
+  }
+  // 2) Resend (needs a verified domain to reach anyone other than the account owner)
   const resendKey = Deno.env.get("RESEND_API_KEY");
   if (resendKey) {
     const fromEmail = p.settings?.from_email || "onboarding@resend.dev";
@@ -276,17 +290,5 @@ async function send(p: any, m: Mail): Promise<string> {
     if (!res.ok) throw new Error(`Resend ${res.status}: ${body?.message ?? JSON.stringify(body)}`);
     return body?.id ?? "resend";
   }
-  const user = Deno.env.get("SMTP_USER"), pass = Deno.env.get("SMTP_PASS");
-  if (user && pass) {
-    const transport = nodemailer.createTransport({
-      host: Deno.env.get("SMTP_HOST") || "smtp.gmail.com",
-      port: Number(Deno.env.get("SMTP_PORT") || 465), secure: true, auth: { user, pass },
-    });
-    const info = await transport.sendMail({
-      from: `"${fromName}" <${p.settings?.from_email || user}>`, to, replyTo, subject: m.subject, html: m.html, text: m.text,
-      attachments: m.attachments.map((a) => ({ filename: a.filename, content: a.content, encoding: "base64", contentType: a.type })),
-    });
-    return info.messageId ?? "smtp";
-  }
-  throw new Error("No email provider configured yet (add RESEND_API_KEY, or SMTP_USER + SMTP_PASS).");
+  throw new Error("No email provider configured yet (add SMTP_USER + SMTP_PASS, or RESEND_API_KEY).");
 }

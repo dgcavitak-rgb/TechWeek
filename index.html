@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cavitak Tech Week</title>
 <meta name="theme-color" content="#C8232C">
+<meta name="description" content="Hands-on partner training at Cavitak Experience Centers. Limited seats, confirmed on approval with a QR entry pass.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cavitak Tech Week">
+<meta property="og:title" content="Cavitak Tech Week — Register for partner training">
+<meta property="og:description" content="Hands-on BrightSign, tvONE & Green Hippo training at Cavitak Experience Centers. Limited seats · QR entry pass on approval.">
+<meta property="og:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg">
+<link rel="icon" href="icon-512.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -142,7 +153,7 @@ main.console{padding:16px 0 96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.2.0";
 
 /* ---------------- helpers ---------------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -672,7 +683,7 @@ function shareKit(e){
       <input class="in hide" id="sk_custom" placeholder="e.g. mumbai-si-meet" style="margin-top:6px"></div>
     <div><label class="f">Registration link</label><div class="row"><input class="in grow" id="sk_link" readonly><button class="btn" id="sk_copy">Copy</button></div></div>
     <div><label class="f">WhatsApp / email message</label><textarea class="in" id="sk_msg" style="min-height:150px"></textarea>
-      <div class="row" style="margin-top:6px"><button class="btn sm" id="sk_cmsg">Copy message</button><a class="btn sm" id="sk_wa" target="_blank" rel="noopener">Send via WhatsApp</a><a class="btn sm" id="sk_mail">Open in email</a></div></div>
+      <div class="row" style="margin-top:6px"><button class="btn sm" id="sk_cmsg">Copy message</button><a class="btn sm green" id="sk_wa" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.7 11.7 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg> Send via WhatsApp</a><a class="btn sm" id="sk_mail">Open in email</a></div></div>
     <div class="poster printable" id="sk_poster"><div class="ph"><div class="tiny" style="letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600">Cavitak · Tech Week · ${esc(e.city)}</div>
       <div style="font-size:22px;font-weight:800;margin-top:4px">${esc(e.title)}</div><div style="opacity:.9;margin-top:2px">${esc(evDates(e))} · ${esc(e.venue_name)}</div></div>
       <div class="pb"><div class="qrbox" id="sk_qr" style="border:0"></div><div class="b" style="margin-top:6px">Scan to register</div><div class="tiny muted">Limited seats · approval required</div></div></div>
@@ -682,8 +693,37 @@ function shareKit(e){
       let src=$("#sk_ch").value; $("#sk_custom").classList.toggle("hide",src!=="__custom");
       if(src==="__custom") src=$("#sk_custom").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-");
       const link=regLink(e.slug, src); $("#sk_link").value=link;
-      const sess=[...new Set(e.slots.filter(s=>s.is_active).map(s=>s.label+" ("+s.time_label+")"))].join(" / ");
-      const msg=`*${e.title}*\n📍 ${e.venue_name}, ${e.city}\n🗓 ${evDates(e)}\n⏰ ${sess}\n\nHands-on partner training at the Cavitak Experience Center. Seats are limited to ${e.slots[0]?e.slots[0].capacity:""} per session and confirmed on approval.\n\nRegister here: ${link}`;
+      const sl=e.slots.filter(s=>s.is_active&&!s.past).sort((a,b)=>a.starts_at.localeCompare(b.starts_at));
+      const days={}; sl.forEach(s=>{ (days[s.local_date]=days[s.local_date]||[]).push(s) });
+      const short=t=>t.replace(/ (IST|GST|SGT)$/,"").replace(/:00/g,"").replace(/ – /g,"–");
+      const dayLines=Object.keys(days).sort().map(k=>{ const d0=days[k][0]; const dl=d0.date_label.split(",")[0].slice(0,3)+", "+(d0.date_label.split(",")[1]||"").trim().replace(/ \d{4}$/,"").replace(/(\d+) (\w{3})\w*/,"$1 $2");
+        return "▫️ "+dl+"  —  "+days[k].map(s=>s.label+" "+short(s.time_label)).join("  |  ") }).join("\n");
+      const ven=(S.ov.venues||[]).find(x=>x.id===e.venue_id)||{};
+      const cap=sl.length?Math.min(...sl.map(s=>s.capacity)):"";
+      const msg=[
+        "*"+e.title+"*",
+        "_Hands-on partner training at "+(ven.name||e.venue_name).split(" — ")[0]+", "+e.city+"_",
+        "",
+        "🗓️ *Schedule*",
+        dayLines||"Dates to be announced",
+        "",
+        "📍 *Venue*",
+        (ven.name||e.venue_name),
+        (ven.address||"").replace(/,?\s*\n\s*/g,", "),
+        ven.map_url?("🧭 "+ven.map_url):"",
+        "",
+        "🎯 *What you'll get*",
+        "▫️ Live demos at our Experience Center",
+        "▫️ Hands-on time with the products",
+        "▫️ Q&A with the Cavitak product team",
+        "",
+        "🎟️ *Only "+cap+" seats per session* — confirmed on approval, with a QR entry pass sent by email.",
+        "",
+        "👉 *Register here:*",
+        link,
+        "",
+        "— Team Cavitak"
+      ].filter((x,i,a)=>!(x===""&&a[i-1]==="")&&x!==null).join("\n").replace(/\n{3,}/g,"\n\n");
       $("#sk_msg").value=msg; $("#sk_wa").href="https://wa.me/?text="+encodeURIComponent(msg);
       $("#sk_mail").href="mailto:?subject="+encodeURIComponent("Invitation: "+e.title)+"&body="+encodeURIComponent(msg.replace(/\*/g,""));
       qrInto($("#sk_qr"), link, 200);
@@ -691,6 +731,7 @@ function shareKit(e){
     $("#sk_ch").onchange=upd; $("#sk_custom").oninput=upd; upd();
     $("#sk_copy").onclick=()=>copy($("#sk_link").value);
     $("#sk_cmsg").onclick=()=>copy($("#sk_msg").value);
+    $("#sk_wa").addEventListener("click",()=>{ try{ navigator.clipboard.writeText($("#sk_msg").value) }catch(err){} toast("Message also copied — if icons look broken in WhatsApp, select all and paste") });
     $("#sk_png").onclick=()=>{ const a=document.createElement("a"); a.href=qrDataUrl($("#sk_link").value,900); a.download=e.slug+"-register-qr.png"; a.click() };
     $("#sk_print").onclick=()=>window.print();
     $("#openNow") && ($("#openNow").onclick=async ev=>{ ev.preventDefault(); const r=await rpc("tw_set_event_status",{p_token:S.token,p_id:e.id,p_status:"open"}).catch(x=>({ok:false,error:x.message}));
