@@ -323,7 +323,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.4.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -581,6 +581,9 @@ async function renderRegister(){
             <div class="row" style="margin-top:10px">${v.map_url?`<a class="btn sm primary" href="${esc(v.map_url)}" target="_blank" rel="noopener">${ico("nav",15)} Directions</a>`:""}
               ${v.contact_phone?`<a class="btn sm" href="tel:${esc(v.contact_phone)}">${ico("phone",15)} Call</a>`:""}</div>
             ${v.instructions?`<div class="rg-note">${esc(v.instructions)}</div>`:""}</div></div>
+        ${ev.sales&&ev.sales.name?`<div class="card pad"><div class="rg-h">${ico("user",18)} Your Cavitak contact</div>
+          <div class="b" style="font-size:16px">${esc(ev.sales.name)}</div><div class="small muted">For pricing, demos and project discussions</div>
+          <div class="row" style="margin-top:10px">${ev.sales.phone?`<a class="btn sm" href="tel:${esc(ev.sales.phone)}">${ico("phone",15)} Call</a><a class="btn sm" href="https://wa.me/${esc(String(ev.sales.phone).replace(/\D/g,""))}" target="_blank" rel="noopener">${ico("chat",15)} WhatsApp</a>`:""}${ev.sales.email?`<a class="btn sm" href="mailto:${esc(ev.sales.email)}">${ico("mail",15)} Email</a>`:""}</div></div>`:""}
         <div class="card pad"><div class="rg-h">${ico("shield",18)} What happens next</div>
           <div class="rg-flow">${[["qr","QR entry pass","Emailed once your seat is approved"],["cal","Calendar invite","Added with one tap"],["bell","Reminders","A day before and on the day"],["award","Certificate","Emailed after you attend"]].map(([i,t,x])=>`<div><span>${ico(i,18)}</span><div><b>${t}</b><div class="tiny muted">${x}</div></div></div>`).join("")}</div></div>
       </aside>
@@ -1144,6 +1147,7 @@ async function invitesKit(e){
       ${e.status!=="open"?'<div class="banner warn">Open registrations for this event before sending invitations.</div>':""}
       <div class="small muted">Upload partner contacts (Excel or CSV). Each gets a personal email with the schedule, venue and a <b>Register</b> button that pre-fills their details. You'll see who registered and who attended.</div>
       <div class="grid g4" style="grid-template-columns:repeat(4,1fr)">${[["Contacts",rows.length],["Invited",c.sent+c.registered],["Registered",c.registered],["Attended",att]].map(([l,n])=>`<div class="card kpi" style="box-shadow:none;padding:10px"><div class="l">${l}</div><div class="v" style="font-size:22px">${n}</div></div>`).join("")}</div>
+      <div class="banner info small row" id="iv_re" style="justify-content:space-between;gap:8px"><span>Checking for people in ${esc(e.city)} who registered before but didn't attend…</span></div>
       <div class="row"><label class="btn sm">⬆ Upload list<input type="file" id="iv_f" accept=".xlsx,.xls,.csv" hidden></label><button class="btn sm" id="iv_tpl">Template</button><div class="grow"></div>
         ${c.new+c.failed?`<button class="btn sm primary" id="iv_send" ${e.status!=="open"?"disabled":""}>Send ${c.new+c.failed} invitation${c.new+c.failed>1?"s":""}</button>`:""}</div>
       ${rows.length?`<div class="tscroll" style="max-height:46vh;overflow:auto"><table class="t"><thead><tr><th><input type="checkbox" id="iv_all"></th><th>Name</th><th>Organisation</th><th>Email</th><th>Status</th></tr></thead><tbody>${rows.map(x=>`<tr>
@@ -1154,6 +1158,12 @@ async function invitesKit(e){
       <div class="row"><button class="btn ghost" data-close>Close</button></div>`;
     $$("[data-close]",box).forEach(b=>b.onclick=closeModal);
     const sel=()=>$$(".iv_ck:checked",box).map(x=>x.value);
+    rpc("tw_reinvite_candidates",{p_token:S.token,p_event:e.id,p_same_brand:true,p_add:false}).then(c=>{ const bx=$("#iv_re"); if(!bx) return;
+      const n=(c.noshow||0)+(c.interested||0);
+      if(!c.ok||!n){ bx.remove(); return }
+      bx.innerHTML=`<span>${ico("history",15)} <b>${n}</b> people in ${esc(c.city)} showed interest${(e.brand_ids||[]).length?" in this brand":""} before but didn't attend (${c.noshow} missed their session, ${c.interested} registered but weren't confirmed).</span><button class="btn sm primary" id="iv_readd">Add them to this list</button>`;
+      $("#iv_readd").onclick=async()=>{ const b=$("#iv_readd"); busy(b,true); const x=await rpc("tw_reinvite_candidates",{p_token:S.token,p_event:e.id,p_same_brand:true,p_add:true}).catch(er=>({ok:false,error:er.message}));
+        if(!x.ok){ busy(b,false); return toast(x.error,true) } toast(`${x.added} added — review and press Send`); draw() } }).catch(()=>{ $("#iv_re")&&$("#iv_re").remove() });
     $("#iv_all") && ($("#iv_all").onchange=ev=>$$(".iv_ck",box).forEach(x=>x.checked=ev.target.checked));
     $("#iv_tpl").onclick=async()=>{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
       const ws=XLSX.utils.aoa_to_sheet([["Name","Organisation","Email","Mobile","Designation","City","Owner"],["Rohan Mehta","Example Systems Pvt Ltd","rohan@example.com","9876543210","Project Manager","Mumbai","Mohit"]]);
@@ -1238,7 +1248,7 @@ function cloneEvent(e){
     $("#clf").onsubmit=ev=>{ ev.preventDefault(); const nd=$("#cl_d").value; if(!nd) return toast("Pick the first day",true);
       const v=vs.find(x=>x.id===$("#cl_v").value)||{}; const off=Math.round((new Date(nd+"T00:00:00")-new Date(sl[0].local_date+"T00:00:00"))/864e5);
       const shift=ds=>{ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()+off); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") };
-      const copyE={title:$("#cl_t").value,description:e.description,agenda:e.agenda,program_id:e.program_id,venue_id:v.id,status:"draft",auto_approve:e.auto_approve,brand_ids:e.brand_ids||[],company_cap:e.company_cap,
+      const copyE={title:$("#cl_t").value,description:e.description,agenda:e.agenda,program_id:e.program_id,venue_id:v.id,status:"draft",auto_approve:e.auto_approve,brand_ids:e.brand_ids||[],company_cap:e.company_cap,sales_name:e.sales_name,sales_email:e.sales_email,sales_phone:e.sales_phone,
         slots:sl.map(s=>({local_date:shift(s.local_date),label:s.label,local_start:s.local_start,local_end:s.local_end,capacity:Math.min(s.capacity,v.capacity||s.capacity),approved:0,is_active:true}))};
       closeModal(true); editEvent(copyE); toast("Review the copied sessions, then save") };
   });
@@ -1250,7 +1260,7 @@ function shareKit(e){
   const draftWarn = e.status!=="open" ? `<div class="banner warn">This event is <b>${esc(e.status)}</b>. The link will show "not active" until you open registrations.${can("super")?' <a href="#" id="openNow">Open registrations now</a>':""}</div>` : "";
   modal(`<h3>Share — ${esc(e.title)}</h3><div class="stack">${draftWarn}
     <div><label class="f">Source tag <span class="muted" style="font-weight:400">(so reports show which channel brought each registration)</span></label>
-      <select class="in" id="sk_ch">${CH.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join("")}<option value="__custom">Custom…</option></select>
+      <select class="in" id="sk_ch">${!can("super")?`<option value="by-${esc(S.user.username)}" selected>My personal link (${esc(S.user.full_name)})</option>`:""}${CH.map(c=>`<option value="${c[0]}">${c[1]}</option>`).join("")}<option value="__custom">Custom…</option></select>
       <input class="in hide" id="sk_custom" placeholder="e.g. mumbai-si-meet" style="margin-top:6px"></div>
     <div><label class="f">Registration link</label><div class="row"><input class="in grow" id="sk_link" readonly><button class="btn" id="sk_copy">Copy</button></div></div>
     <div><label class="f">WhatsApp / email message</label><textarea class="in" id="sk_msg" style="min-height:150px"></textarea>
@@ -1336,6 +1346,8 @@ function editEvent(e){
     <div><label class="f">Event title</label><input class="in" id="e_title" value="${esc(e.title||"")}" placeholder="Cavitak Tech Week — Mumbai"></div>
     <div><label class="f">Brands in this event</label><div class="row" style="gap:8px">${(S.ov.brands||[]).filter(b=>b.is_active||(e.brand_ids||[]).includes(b.id)).map(b=>`<label class="bpick"><input type="checkbox" class="e_b" value="${b.id}" ${(e.brand_ids||[]).includes(b.id)?"checked":""}><span style="--bc:${esc(b.color1)}">${esc(b.name)}</span></label>`).join("")||'<span class="small muted">No brands yet — add them in Admin → Brands.</span>'}</div>
       <div class="tiny muted" style="margin-top:4px">The first ticked brand sets the page colours, perks and certificate line. Tick several for a multi-brand day.</div></div>
+    <div><label class="f">Sales contact for partners <span class="muted" style="font-weight:400">(shown on the page and in emails; replies go to this person)</span></label>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"><input class="in" id="e_sn" value="${esc(e.sales_name||"")}" placeholder="Name"><input class="in" id="e_se" type="email" value="${esc(e.sales_email||"")}" placeholder="name@cavitak.com"><input class="in" id="e_sp" value="${esc(e.sales_phone||"")}" placeholder="+91 …"></div></div>
     <div class="grid g2"><div><label class="f">Seats per company per session <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" id="e_cap" type="number" min="1" value="${esc(e.company_cap||"")}" placeholder="No limit"><div class="tiny muted">e.g. 2 — stops one partner filling a small room.</div></div></div>
     <div class="grid g2"><div><label class="f">Link name (slug)</label><input class="in" id="e_slug" value="${esc(e.slug||"")}" placeholder="auto from title"></div>
       <div><label class="f">Registrations close <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" type="datetime-local" id="e_close" value="${closesLocal}"></div></div>
@@ -1426,7 +1438,7 @@ function editEvent(e){
           slug:$("#e_slug").value,description:$("#e_desc").value,agenda:$("#e_agenda").value,status:$("#e_status").value,auto_approve:$("#e_auto").value==="true",
           closes_at:cl?new Date(cl).toISOString():"",slots:slots.map(s=>({id:s.id||"",date:s.date,label:s.label,start:s.start,end:s.end,capacity:+s.capacity||8,remove:!!s.remove}))}});
         busy(b,false); if(!r.ok) return showErr(esc(r.error));
-        await rpc("tw_event_meta",{p_token:S.token,p_id:r.id,p_data:{brand_ids:$$(".e_b:checked").map(x=>x.value),company_cap:$("#e_cap").value}}).catch(()=>{});
+        await rpc("tw_event_meta",{p_token:S.token,p_id:r.id,p_data:{brand_ids:$$(".e_b:checked").map(x=>x.value),company_cap:$("#e_cap").value,sales_name:$("#e_sn").value,sales_email:$("#e_se").value,sales_phone:$("#e_sp").value}}).catch(()=>{});
         const nt=(r.notified_changed||0)+(r.notified_cancelled||0);
         toast(nt?`Event saved · ${r.notified_changed?r.notified_changed+" told about new timings":""}${r.notified_changed&&r.notified_cancelled?", ":""}${r.notified_cancelled?r.notified_cancelled+" told their session is cancelled":""}`:"Event saved");
         closeModal(); await loadOverview(); go(S.tab);
@@ -2338,7 +2350,7 @@ function viewHelp(v){
       ${card("key","Super admin",["Create events, brands, venues and logins","Approve, check in, see everything","Budget, privacy, backup"],role==="super")}
       ${card("check","Approver",["Approve / waitlist / move requests","Check people in at the door","Reports for their centres"],role==="approver")}
       ${card("scan","Check-in staff",["Scan QR passes on the day","Tap a name or add a walk-in","Print badges and visitor list"],role==="checkin")}
-      ${card("share","Marketing",["Share registration links (WhatsApp kit)","Send invites, upload target lists","Reports and leads — contacts masked"],role==="marketing")}
+      ${card("share","Marketing / Sales",["Personal registration link — reports show who you brought","Send invites, see seats filled","Reports and leads — contacts masked"],role==="marketing")}
       ${card("tag","Brand / OEM manager",["Sees only their brand's events","Brand report, partners, feedback","Contacts and budgets hidden"],role==="brand")}
     </div>
 
@@ -2346,7 +2358,7 @@ function viewHelp(v){
     <div class="card pad hsteps">
       ${step(1,"Create the event","Events → New event (or Clone to another city). Pick the centre, brand, dates and sessions. Save as Draft.")}
       ${step(2,"Open registrations","Edit → Status: Open. Add trainers in Sessions — their names show on the page.")}
-      ${step(3,"Share the link","Share link → copy the WhatsApp message or send email invites to your partner list.")}
+      ${step(3,"Share the link","Share link → WhatsApp / LinkedIn message. Invites → upload partners, or one click to re-invite people who missed earlier sessions in that city.")}
       ${step(4,"Approve requests","Approvals tab (you also get a 9 AM email). Approving sends the QR pass by email automatically.")}
       ${step(5,"Day before","Polite reminder goes at 10 AM by itself. Trainer gets the attendee list. Print the visitor list for security.")}
       ${step(6,"On the day","Put the Room QR on the screen. Check people in (see below). Add walk-ins.")}

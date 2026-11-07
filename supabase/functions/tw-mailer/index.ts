@@ -158,9 +158,19 @@ function contentPack(p: any) {
   const fu = (p.settings?.followup_url ?? "").trim();
   return fu ? { url: fu, note: "Slides & resources" } : null;
 }
+function salesBlock(p: any) {
+  const sc = p.event?.sales || {};
+  if (!sc.name) return "";
+  const tel = sc.phone ? `<a href="tel:${esc(sc.phone)}" style="color:${RED};text-decoration:none">${esc(sc.phone)}</a>` : "";
+  const mail = sc.email ? `<a href="mailto:${esc(sc.email)}" style="color:${RED};text-decoration:none">${esc(sc.email)}</a>` : "";
+  return `<div style="border:1px solid #E6E8EB;border-radius:10px;padding:12px 14px;margin:18px 0 0;background:#FAFBFC;font-size:14px">
+    <div style="font-size:12px;color:${MUTED};text-transform:uppercase;letter-spacing:.08em">Your Cavitak contact</div>
+    <div style="font-weight:700;margin-top:2px">${esc(sc.name)}</div>
+    <div style="color:${MUTED};font-size:13px">For pricing, demos and project discussions${tel || mail ? " · " : ""}${[tel, mail].filter(Boolean).join(" · ")}</div></div>`;
+}
 function signoff(p: any) {
   const bs = brandsOf(p);
-  return `<p style="margin-top:22px">Warm regards,<br><strong>Team ${esc(p.settings?.brand_name || "Cavitak")}</strong>${bs.length ? `<br><span style="color:${MUTED};font-size:13px">in association with ${bs.map((b: any) => esc(b.name)).join(" & ")}</span>` : ""}</p>`;
+  return `${salesBlock(p)}<p style="margin-top:22px">Warm regards,<br><strong>Team ${esc(p.settings?.brand_name || "Cavitak")}</strong>${bs.length ? `<br><span style="color:${MUTED};font-size:13px">in association with ${bs.map((b: any) => esc(b.name)).join(" & ")}</span>` : ""}</p>`;
 }
 function publicBase(p: any) { return (p.settings?.public_url ?? "").trim().split("?")[0]; }
 function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
@@ -182,7 +192,7 @@ function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
   <tr><td style="padding:22px 24px;color:${INK};font-size:15px;line-height:1.55">${bodyHtml}</td></tr>
   <tr><td style="padding:14px 24px;border-top:1px solid #EEF0F2;color:${MUTED};font-size:12px;line-height:1.5">
     ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : p.outbox?.kind === "trainer_brief" ? "Sent to the trainer assigned to this session in the Tech Week console." : p.outbox?.kind === "approver_digest" ? "Daily summary for Tech Week approvers. Sent only on days with pending requests." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
-    ${p.settings?.reply_to ? `Questions? Reply to this email or write to ${esc(p.settings.reply_to)}.` : ""}
+    ${(p.event?.sales?.email || p.settings?.reply_to) ? `Questions? Reply to this email or write to ${esc(p.event?.sales?.email || p.settings.reply_to)}.` : ""}
     ${privacy || erase ? `<div style="margin-top:6px">${[privacy, erase].filter(Boolean).join(" · ")}</div>` : ""}
   </td></tr>
 </table></td></tr></table></body></html>`;
@@ -247,7 +257,7 @@ async function build(p: any): Promise<Mail> {
       subject = `You're on the waitlist — ${e.title} · ${when}`;
       headline = "You're on the waitlist";
       pre = "This session is currently full. We'll notify you if a seat opens.";
-      body = `<p>Hi ${first},</p><p>Thank you for your interest. The session you chose is currently full, so we've placed you on the
+      body = `<p>Dear ${first},</p><p>Thank you for your interest. The session you chose is currently full, so we've placed you on the
         <strong>waitlist</strong>. If a seat opens up, we'll email you right away.</p>${detailsBlock(p)}
         <p style="margin-top:18px">${linkBtn(pass, "View status")}</p>`;
       break;
@@ -436,14 +446,15 @@ async function build(p: any): Promise<Mail> {
 
 async function send(p: any, m: Mail): Promise<string> {
   const fromName = p.settings?.from_name || "Cavitak Tech Week";
-  const replyTo = p.settings?.reply_to || undefined;
+  const replyTo = p.event?.sales?.email || p.settings?.reply_to || undefined;
   const to = p.outbox.to_email.split(/[,;]\s*/).filter(Boolean);
   // 1) Gmail / Workspace SMTP when configured (no DNS needed)
   const user = envGet("SMTP_USER"), pass = envGet("SMTP_PASS").replace(/\s+/g, "");
   if (user && pass) {
     const transport = nodemailer.createTransport({
       host: envGet("SMTP_HOST") || "smtp.gmail.com",
-      port: Number(envGet("SMTP_PORT") || 465), secure: true, auth: { user, pass },
+      port: Number(envGet("SMTP_PORT") || 465), secure: Number(envGet("SMTP_PORT") || 465) === 465,
+      requireTLS: Number(envGet("SMTP_PORT") || 465) !== 465, auth: { user, pass },
     });
     const info = await transport.sendMail({
       from: `"${fromName}" <${user}>`, to, replyTo, subject: m.subject, html: m.html, text: m.text,
