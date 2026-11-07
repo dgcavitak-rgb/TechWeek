@@ -146,22 +146,30 @@ function detailsBlock(p: any, opts: { showAgenda?: boolean } = {}) {
   </table>`;
 }
 
+function brandsOf(p: any): any[] { return Array.isArray(p.event?.brands) ? p.event.brands : []; }
+function headColor(p: any) { const b = brandsOf(p); return b.length === 1 && /^#[0-9a-f]{6}$/i.test(b[0].color1 || "") ? b[0].color1 : RED; }
+function publicBase(p: any) { return (p.settings?.public_url ?? "").trim().split("?")[0]; }
 function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
-  const brand = esc(p.settings?.brand_name || "Cavitak");
+  const bs = brandsOf(p);
+  const brand = esc(p.settings?.brand_name || "Cavitak") + (bs.length ? " × " + bs.map((b: any) => esc(b.name)).join(" · ") : "");
+  const base = publicBase(p);
+  const privacy = base ? `<a href="${esc(base)}?privacy=1" style="color:${MUTED}">Privacy notice</a>` : "";
+  const erase = base && p.reg?.pass_token && p.outbox?.kind !== "admin_new" ? `<a href="${esc(base)}?x=${esc(p.reg.pass_token)}" style="color:${MUTED}">Delete my data</a>` : "";
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;background:#F2F3F5;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif">
 <span style="display:none;max-height:0;overflow:hidden">${esc(preheader)}</span>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F3F5;padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden">
-  <tr><td style="background:${RED};padding:18px 24px;color:#fff">
+  <tr><td style="background:${headColor(p)};padding:18px 24px;color:#fff">
     <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.9">${brand} · Tech Week</div>
     <div style="font-size:21px;font-weight:700;margin-top:4px">${esc(headline)}</div>
   </td></tr>
   <tr><td style="padding:22px 24px;color:${INK};font-size:15px;line-height:1.55">${bodyHtml}</td></tr>
   <tr><td style="padding:14px 24px;border-top:1px solid #EEF0F2;color:${MUTED};font-size:12px;line-height:1.5">
-    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
+    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : p.outbox?.kind === "trainer_brief" ? "Sent to the trainer assigned to this session in the Tech Week console." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
     ${p.settings?.reply_to ? `Questions? Reply to this email or write to ${esc(p.settings.reply_to)}.` : ""}
+    ${privacy || erase ? `<div style="margin-top:6px">${[privacy, erase].filter(Boolean).join(" · ")}</div>` : ""}
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -326,6 +334,24 @@ async function build(p: any): Promise<Mail> {
         <p style="margin:16px 0 6px">Seats are limited to ${esc(String((list[0] || {}).capacity || ""))} per session and confirmed on approval. Pick the session that suits you:</p>
         <p>${btn(link, "Register now →")}</p>
         <p style="font-size:13px;color:${MUTED}">📍 ${esc(v.address).replace(/\n/g, ", ")}${v.map_url ? ` · <a href="${esc(v.map_url)}" style="color:${RED}">Map</a>` : ""}</p>`;
+      break;
+    }
+    case "trainer_brief": {
+      const list = (p.attendees || []) as any[];
+      subject = `Your session tomorrow: ${e.title} · ${when} · ${list.length} confirmed`;
+      headline = "Your session briefing";
+      pre = `${list.length} confirmed partner${list.length === 1 ? "" : "s"} · ${s.time_label} at ${v.name}`;
+      const rows = list.map((a: any, i: number) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #EEF0F2;color:${MUTED}">${i + 1}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2"><strong>${esc(a.name)}</strong><div style="font-size:12px;color:${MUTED}">${esc(a.designation || "")}</div></td>
+        <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2">${esc(a.organization)}<div style="font-size:12px;color:${MUTED}">${esc(a.type || "")}</div></td>
+        <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2;font-size:13px">${esc(a.interests || "—")}</td></tr>`).join("");
+      body = `<p>Hi ${first},</p><p>You are the trainer for this session. Here is who is coming and what they want to learn.</p>
+        ${detailsBlock(p, { showAgenda: true })}
+        <h3 style="font-size:16px;margin:20px 0 8px">Confirmed partners (${list.length})${p.pending ? ` <span style="font-weight:400;color:${MUTED};font-size:13px">· ${p.pending} still awaiting approval</span>` : ""}</h3>
+        ${list.length ? `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;border-collapse:collapse">
+          <tr style="background:#F5F6F8;font-size:12px;color:${MUTED};text-align:left"><th style="padding:6px 8px">#</th><th style="padding:6px 8px">Name</th><th style="padding:6px 8px">Organisation</th><th style="padding:6px 8px">Wants to learn</th></tr>${rows}</table>`
+          : `<p style="color:${MUTED}">No confirmed partners yet.</p>`}
+        <p style="margin-top:16px;font-size:13px;color:${MUTED}">Contact details are kept in the console for privacy. The check-in team will have the room QR ready.</p>`;
       break;
     }
     case "admin_new": {

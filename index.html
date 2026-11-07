@@ -205,6 +205,28 @@ main.console{padding:16px 0 96px}
 .ev-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line-2)}
 .card.empty svg{color:var(--muted)}
 .kpi2{min-width:0}@media(max-width:600px){.kpi.kpi2 .kico{display:none}.kpi.kpi2 .l{padding-right:0}}
+
+/* ---------- multi-brand ---------- */
+.logo span,.tabs button{white-space:nowrap}.tabs button{padding:8px 10px}
+@media(min-width:900px) and (max-width:1220px){.acct-t{display:none}.acct{padding:3px}.tabs button svg{display:none}.tabs{margin-left:4px}}
+.bchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--bc) 12%,#fff);color:var(--bc);white-space:nowrap}
+.bchip:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--bc)}
+.bpick{cursor:pointer}.bpick input{position:absolute;opacity:0;pointer-events:none}
+.bpick span{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px;background:#fff}
+.bpick span:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--bc)}
+.bpick input:checked+span{border-color:var(--bc);background:color-mix(in srgb,var(--bc) 12%,#fff);color:var(--bc)}
+.bpick input:focus-visible+span{outline:2px solid var(--bc);outline-offset:2px}
+.rg-blogo{background:#fff;border-radius:8px;padding:4px 8px;display:inline-flex;height:30px;align-items:center;margin-left:8px}.rg-blogo img{max-height:22px;max-width:120px;display:block}
+.bgrid{display:grid;gap:12px;grid-template-columns:1fr}@media(min-width:720px){.bgrid{grid-template-columns:repeat(2,1fr)}}@media(min-width:1000px){.bgrid{grid-template-columns:repeat(3,1fr)}}
+.bcard{border:1px solid var(--line);border-top:4px solid var(--bc);border-radius:12px;padding:14px;display:grid;gap:8px;background:#fff}
+.bswatch{height:64px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 14px;color:#fff;font-size:16px}.bswatch.big{height:84px;justify-content:space-between}
+.bprev-btn{font-size:12px;font-weight:700;border-radius:8px;padding:6px 10px}
+.bnums{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bnums div{background:var(--grey-50);border-radius:8px;padding:6px 8px}.bnums b{display:block;font-size:17px}.bnums small{font-size:11px;color:var(--muted)}
+.cpick{width:46px;height:42px;padding:2px;border:1px solid var(--line);border-radius:10px;background:#fff;flex:none}
+tr.clk{cursor:pointer}tr.clk:hover td{background:var(--grey-50)}
+.in.saved{border-color:var(--green)!important;box-shadow:0 0 0 3px rgba(22,121,74,.15)}
+.ldl.lead-hot{color:var(--red);font-weight:700}.ldl.lead-warm{color:var(--amber);font-weight:700}.ldl.lead-cold{color:var(--blue);font-weight:600}
+.prose h3{font-size:16px;margin:18px 0 6px}.prose p,.prose li{color:var(--ink-2)}
 /* ---------- participant registration page ---------- */
 body.rg{--acc:#C8232C;--acc2:#8E1219;--acc-50:#FDF1F2;background:#F6F5FA}
 body.rg-bs{--acc:#7C3AED;--acc2:#312E81;--acc-50:#F3EEFF}
@@ -283,7 +305,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "2.0.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -435,8 +457,10 @@ async function renderRegister(){
   let d; try{ d = await rpc("tw_public_event",{p_slug:slug}) }catch(e){ d={ok:false,error:e.message} }
   if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Link not active</h2><p>${esc(d.error)}</p></div>`); return }
   const ev=d.event, v=d.venue; document.title = ev.title + " — Register";
-  const bs=/brightsign/i.test(ev.title+" "+(ev.description||""));
+  const brands=d.brands||[], b0=brands[0];
+  const bs=!b0&&/brightsign/i.test(ev.title+" "+(ev.description||""));
   document.body.classList.add("rg", bs?"rg-bs":"rg-cv");
+  if(b0){ const st=document.body.style; st.setProperty("--acc",b0.color1); st.setProperty("--acc2",b0.color2); st.setProperty("--acc-50",tint(b0.color1,.9)) }
   const open=d.slots.filter(s=>!s.past);
   const byDay={}; d.slots.forEach(s=>{ (byDay[s.local_date]=byDay[s.local_date]||{label:s.date_label,items:[]}).items.push(s) });
   const short=l=>l.split(",").slice(1).join(",").trim().replace(/ \d{4}$/,"");
@@ -446,12 +470,13 @@ async function renderRegister(){
   const perSession=d.slots.length?Math.min(...d.slots.map(s=>s.capacity)):0;
   const sessLabels=[...new Set(d.slots.map(s=>s.label))];
   const slotIcon=l=>/even|night/i.test(l)?"moon":/after|noon/i.test(l)?"sunset":"sun";
-  const products = bs ? "BrightSign players" : "the latest AV products";
+  const products = b0 ? b0.name+" products" : bs ? "BrightSign players" : "the latest AV products";
   const perks=[
     ["cpu","Hands-on labs",`Work directly on ${products} with guided exercises.`],
     ["monitor","Live demo walk-through","See real deployments running at our Experience Center."],
     ["chat","Ask the experts","Bring your project questions — get answers from our product team."],
     ["award","Certificate","Receive a certificate of attendance after the session."]];
+  if(b0&&Array.isArray(b0.perks)&&b0.perks.length) perks.splice(0,perks.length,...b0.perks.slice(0,4).map(x=>[IC[x.icon]?x.icon:"star",x.title||"",x.text||""]));
   const agenda=(ev.agenda||"").split("\n").map(x=>x.trim()).filter(Boolean).map(line=>{ const m=line.match(/^(\d{1,2}[:.]\d{2}\s*(?:AM|PM|am|pm)?)\s*[-–—:]?\s*(.*)$/); return m?{t:m[1],x:m[2]}:{t:"",x:line} });
   const mapQ=encodeURIComponent((v.name||"")+", "+(v.address||"").replace(/\n/g,", "));
 
@@ -462,7 +487,7 @@ async function renderRegister(){
         const tone=dis?"var(--muted)":full?"var(--blue)":s.seats_left<=2?"var(--amber)":"var(--green)";
         return `<button type="button" class="slot rg-slot ${dis?"dis":""}" data-id="${s.id}" ${dis?"disabled":""}>
           <div class="row" style="gap:10px;flex-wrap:nowrap"><span class="rg-sico">${ico(slotIcon(s.label),20)}</span>
-            <div class="grow"><div class="tt">${esc(s.label)}</div><div class="small muted">${esc(s.time_label)}</div></div><span class="rg-tick">✓</span></div>
+            <div class="grow"><div class="tt">${esc(s.label)}</div><div class="small muted">${esc(s.time_label)}</div>${s.trainer_name?`<div class="tiny b" style="color:var(--acc);margin-top:2px">with ${esc(s.trainer_name)}${s.trainer_title?" · "+esc(s.trainer_title):""}</div>`:""}</div><span class="rg-tick">✓</span></div>
           <div class="rg-meter"><i style="width:${dis?100:pct}%;background:${tone}"></i></div>
           <div class="seats" style="color:${tone}">${dis?"Session closed":full?"Full · join the waitlist":s.seats_left<=2?`Only ${s.seats_left} seat${s.seats_left>1?"s":""} left!`:`${s.seats_left} of ${s.capacity} seats left`}</div></button>` }).join("")}</div></div>` }).join("");
 
@@ -485,7 +510,7 @@ async function renderRegister(){
     <input class="hp" id="f_web" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="rg-step"><span>3</span><div><div class="b">Confirm</div></div></div>
     <div class="rg-sum hide" id="rf_sum"></div>
-    <label class="consent"><input type="checkbox" id="f_consent"><span>I agree that Cavitak Marketing Pvt. Ltd. may use these details to manage my registration, send event communication and record my attendance. My data is not sold or shared outside Cavitak and its brand partners for this program, and I can ask for it to be deleted anytime by replying to any event email.</span></label>
+    <label class="consent"><input type="checkbox" id="f_consent"><span>I agree that Cavitak Marketing Pvt. Ltd. may use these details to manage my registration, send event communication and record my attendance. My data is not sold or shared outside Cavitak and its brand partners for this program, and I can ask for it to be deleted anytime using the link in any event email. <a href="?privacy=1" target="_blank" rel="noopener" style="color:var(--acc)">Read the privacy notice</a>.</span></label>
     <div id="rf_err" class="banner warn hide"></div>
     <button class="btn primary block rg-cta" id="rf_go" type="submit">Reserve my seat ${ico("arrow",18)}</button>
     <div class="row" style="justify-content:center;gap:6px;color:var(--muted)" >${ico("shield",14)}<span class="tiny">Free · approval-based · your QR pass arrives by email</span></div>
@@ -505,9 +530,9 @@ async function renderRegister(){
       <g fill="#fff" fill-opacity=".18">${Array.from({length:42},(_,i)=>`<circle cx="${40+(i%7)*22}" cy="${40+Math.floor(i/7)*22}" r="2"/>`).join("")}</g>
     </svg>
     <div class="wrap rg-hwrap">
-      <div class="row between"><div class="rg-brand"><i>C</i><span>Cavitak <b>Tech Week</b></span></div>
+      <div class="row between"><div class="rg-brand"><i>C</i><span>Cavitak <b>Tech Week</b></span>${brands.filter(b=>b.logo).map(b=>`<span class="rg-blogo"><img src="${esc(b.logo)}" alt="${esc(b.name)}"></span>`).join("")}</div>
         ${d.open&&seatsTot?`<span class="rg-pill">🔥 ${seatsLeft} of ${seatsTot} seats left</span>`:""}</div>
-      <div class="rg-kicker">${bs?"Cavitak × BrightSign · ":""}Partner training · ${esc(v.city)}</div>
+      <div class="rg-kicker">${brands.length?"Cavitak × "+esc(brands.map(b=>b.name).join(" · "))+" · ":bs?"Cavitak × BrightSign · ":""}Partner training · ${esc(v.city)}</div>
       <h1 class="rg-title">${esc(ev.title)}</h1>
       ${ev.description?`<p class="rg-lead">${esc(ev.description)}</p>`:""}
       <div class="rg-facts">
@@ -820,6 +845,7 @@ async function renderDisplay(){
    CONSOLE
    ============================================================= */
 const ICONS={
+  partners:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg>',
   dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
   events:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
   approvals:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
@@ -833,6 +859,7 @@ const TAB_DEF=[
   {id:"approvals",label:"Approvals",roles:["super","approver"]},
   {id:"checkin",label:"Check-in",roles:["super","approver","checkin"]},
   {id:"reports",label:"Reports",roles:["super","approver","marketing"]},
+  {id:"partners",label:"Partners",roles:["super","approver","marketing"]},
   {id:"admin",label:"Admin",roles:["super","approver"]},
 ];
 const can=(...roles)=>S.user && roles.includes(S.user.role);
@@ -890,7 +917,7 @@ function go(tab){
   $$("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
   const v=$("#view"); window.scrollTo(0,0);
   if(window._scanner){ try{ window._scanner.stop() }catch(e){} window._scanner=null }
-  ({dash:viewDash,events:viewEvents,approvals:viewApprovals,checkin:viewCheckin,reports:viewReports,admin:viewAdmin}[tab])(v);
+  ({dash:viewDash,events:viewEvents,approvals:viewApprovals,checkin:viewCheckin,reports:viewReports,partners:viewPartners,admin:viewAdmin}[tab])(v);
 }
 function accountMenu(){
   modal(`<h3>${esc(S.user.full_name)}</h3><div class="muted small" style="margin-top:-8px;margin-bottom:12px">@${esc(S.user.username)} · ${esc(S.user.role)}</div>
@@ -969,6 +996,7 @@ function viewDash(v){
   if(tot.pending && can("super","approver")) todo.push({icon:"check",tone:"amber",t:`${tot.pending} registration${tot.pending>1?"s":""} waiting for approval`,s:"Approve to send their QR pass",act:"approvals"});
   if(emailWarn) todo.push({icon:"alert",tone:"red",t:`${st.failed} email${st.failed>1?"s":""} failed`,s:"Open the email log and retry",act:"email"});
   if(today.length && can("super","approver","checkin")) todo.push({icon:"scan",tone:"green",t:`${today.length} session${today.length>1?"s":""} today`,s:today.map(x=>x.e.city+" · "+x.s.label).join(", "),act:"checkin"});
+  if((S.ov.brands||[]).length) ev.filter(e=>!(e.brand_ids||[]).length&&e.status!=="closed").forEach(e=>can("super")&&todo.push({icon:"tag",tone:"blue",t:`“${e.title}” has no brand`,s:"Tag a brand so the page, emails and reports are branded",act:"edit:"+e.id}));
   ev.filter(e=>e.status==="draft").forEach(e=>can("super")&&todo.push({icon:"edit",tone:"grey",t:`“${e.title}” is still a draft`,s:"Open registrations so the link works",act:"edit:"+e.id}));
   ev.filter(e=>e.status==="open"&&e.capacity).forEach(e=>{ const f=allSlots().find(x=>x.e.id===e.id&&new Date(x.s.starts_at)>now); if(!f) return;
     const days=(new Date(f.s.starts_at)-now)/864e5, fill=(e.counts.approved+e.counts.pending)/e.capacity;
@@ -1042,7 +1070,7 @@ function eventCard(e){
       <div class="rg-date ev-date">${d0?`<span>${d0.toLocaleDateString("en-IN",{month:"short"}).toUpperCase()}</span><b>${d0.getDate()}</b>`:`<span>—</span><b>?</b>`}</div>
       <div class="grow">
         <div class="row" style="gap:6px">${live?'<span class="chip live">● Live now</span>':done?'<span class="chip closed">Completed</span>':`<span class="chip ${e.status}">${e.status==="open"?"● Registrations open":e.status==="draft"?"Draft":"Closed"}</span>`}
-          <span class="small muted row" style="gap:4px">${ico("pin",14)} ${esc(e.city)} · ${esc(e.venue_name)}</span></div>
+          <span class="small muted row" style="gap:4px">${ico("pin",14)} ${esc(e.city)} · ${esc(e.venue_name)}</span>${brandChips(e.brand_ids)}</div>
         <h3>${esc(e.title)}</h3>
         <div class="small muted row" style="gap:12px"><span class="row" style="gap:4px">${ico("cal",14)} ${esc(evDates(e))}</span><span class="row" style="gap:4px">${ico("clock",14)} ${sl.length} session${sl.length===1?"":"s"}</span></div>
       </div>
@@ -1063,7 +1091,7 @@ function eventCard(e){
       ${can("super","approver","marketing")?`<button class="btn sm" data-inv="${e.id}">${ico("mail",15)} Invites</button>`:""}
       ${can("super","approver","checkin")?`<button class="btn sm" data-door="${e.id}">${ico("qr",15)} Room QR & screen</button>`:""}
       ${can("super","approver","marketing")?`<button class="btn sm" data-sess="${e.id}">${ico("layers",15)} Sessions</button>`:""}
-      ${can("super")?`<button class="btn sm" data-edit="${e.id}">${ico("edit",15)} Edit</button>`:""}
+      ${can("super")?`<button class="btn sm" data-edit="${e.id}">${ico("edit",15)} Edit</button><button class="btn sm" data-clone="${e.id}">${ico("copy",15)} Clone to another city</button>`:""}
     </div></div>`;
 }
 function bindEventCards(root){
@@ -1073,6 +1101,7 @@ function bindEventCards(root){
   $$("[data-sess]",root).forEach(b=>b.onclick=()=>sessionsView(evById(b.dataset.sess)));
   $$("[data-door]",root).forEach(b=>b.onclick=()=>doorKit(evById(b.dataset.door)));
   $$("[data-inv]",root).forEach(b=>b.onclick=()=>invitesKit(evById(b.dataset.inv)));
+  $$("[data-clone]",root).forEach(b=>b.onclick=()=>cloneEvent(evById(b.dataset.clone)));
 }
 async function invitesKit(e){
   const box=modal(`<h3>Invitations — ${esc(e.title)}</h3><div class="stack" id="iv_body"><div class="empty"><span class="spin dark"></span></div></div>`);
@@ -1144,11 +1173,46 @@ async function doorKit(e){
   });
 }
 function sessionsView(e){
-  modal(`<h3>${esc(e.title)} — sessions</h3><div class="tscroll"><table class="t"><thead><tr><th>Date</th><th>Slot</th><th>Seats</th><th>Pending</th><th>Waitlist</th><th>In</th></tr></thead><tbody>
-    ${e.slots.map(s=>`<tr style="${s.is_active?"":"opacity:.45"}"><td>${esc(s.date_label)}</td><td><b>${esc(s.label)}</b><div class="tiny muted">${esc(s.time_label)}</div></td>
+  const ed=can("super","approver");
+  modal(`<h3>${esc(e.title)} — sessions & trainers</h3>
+    <div class="small muted" style="margin-bottom:8px">The trainer's name shows on the registration page. With an email, they get a briefing the day before with the confirmed attendee list.</div>
+    <div class="tscroll"><table class="t"><thead><tr><th>Session</th><th>Seats</th><th>Pend.</th><th>In</th><th>Trainer</th></tr></thead><tbody>
+    ${e.slots.map(s=>`<tr style="${s.is_active?"":"opacity:.45"}"><td><b>${esc(s.date_label)}</b><div class="small">${esc(s.label)} · <span class="muted">${esc(s.time_label)}</span></div></td>
       <td><b>${s.approved}</b>/${s.capacity}<div class="bar" style="width:70px;margin-top:4px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%"></i></div></td>
-      <td>${s.pending}</td><td>${s.waitlisted}</td><td>${s.checked_in}</td></tr>`).join("")}</tbody></table></div>
-    <div class="row" style="margin-top:12px"><button class="btn" data-close>Close</button></div>`);
+      <td>${s.pending}</td><td>${s.checked_in}</td>
+      <td style="min-width:230px">${ed&&s.is_active?`<div class="stack" style="gap:4px"><input class="in" data-tn="${s.id}" value="${esc(s.trainer_name||"")}" placeholder="Trainer name" style="min-height:34px">
+        <div class="row" style="gap:4px;flex-wrap:nowrap"><input class="in" data-tt="${s.id}" value="${esc(s.trainer_title||"")}" placeholder="Title" style="min-height:34px"><input class="in" data-te="${s.id}" value="${esc(s.trainer_email||"")}" placeholder="Email" type="email" style="min-height:34px"></div></div>`
+        :esc([s.trainer_name,s.trainer_title].filter(Boolean).join(" · ")||"—")}</td></tr>`).join("")}</tbody></table></div>
+    <div class="row" style="margin-top:12px">${ed?`<button class="btn primary" id="tr_save">Save trainers</button><button class="btn" id="tr_all">Same trainer for all</button>`:""}<button class="btn" data-close>Close</button></div>`, m=>{
+    $("#tr_all") && ($("#tr_all").onclick=()=>{ const f=$("[data-tn]",m); if(!f) return; const n=f.value, t=$(`[data-tt="${f.dataset.tn}"]`).value, em=$(`[data-te="${f.dataset.tn}"]`).value;
+      $$("[data-tn]",m).forEach(x=>{ x.value=n; $(`[data-tt="${x.dataset.tn}"]`).value=t; $(`[data-te="${x.dataset.tn}"]`).value=em }); toast("Copied from the first session") });
+    $("#tr_save") && ($("#tr_save").onclick=async()=>{ const b=$("#tr_save"); busy(b,true);
+      const rows=$$("[data-tn]",m).map(x=>({id:x.dataset.tn,name:x.value,title:$(`[data-tt="${x.dataset.tn}"]`).value,email:$(`[data-te="${x.dataset.tn}"]`).value}));
+      const r=await rpc("tw_set_trainers",{p_token:S.token,p_rows:rows}).catch(x=>({ok:false,error:x.message})); busy(b,false);
+      if(!r.ok) return toast(r.error,true); toast("Trainers saved"); closeModal(true); await loadOverview(); go(S.tab) });
+  });
+}
+function cloneEvent(e){
+  const vs=(S.ov.venues||[]).filter(v=>v.is_active);
+  const sl=e.slots.filter(s=>s.is_active).sort((a,b)=>a.starts_at.localeCompare(b.starts_at));
+  if(!sl.length) return toast("This event has no sessions to copy",true);
+  modal(`<h3>Clone “${esc(e.title)}”</h3><form class="stack" id="clf">
+    <div class="small muted">Copies the title, description, agenda, brands and the session pattern (${sl.length} sessions). You can adjust everything before saving. The copy starts as a draft.</div>
+    <div class="grid g2"><div><label class="f">New venue / experience center</label><select class="in" id="cl_v">${vs.map(v=>`<option value="${v.id}">${esc(v.city)} — ${esc(v.name)} (${v.capacity} seats)</option>`).join("")}</select></div>
+      <div><label class="f">First day of the new event</label><input class="in" type="date" id="cl_d" min="${todayStr()}" required><div class="tiny muted" id="cl_dl">Original first day: ${esc(dayLabel(sl[0].local_date))}</div></div></div>
+    <div><label class="f">New title</label><input class="in" id="cl_t" value="${esc(e.title)}"></div>
+    <div class="row"><button class="btn primary">Continue to edit</button><button type="button" class="btn" data-close>Cancel</button></div></form>`, m=>{
+    const other=vs.find(v=>v.id!==e.venue_id); if(other) $("#cl_v").value=other.id;
+    const retitle=()=>{ const v=vs.find(x=>x.id===$("#cl_v").value); if(v&&e.city&&e.title.includes(e.city)) $("#cl_t").value=e.title.split(e.city).join(v.city) };
+    $("#cl_v").onchange=retitle; retitle();
+    $("#cl_d").onchange=()=>$("#cl_dl").textContent=dayLabel($("#cl_d").value);
+    $("#clf").onsubmit=ev=>{ ev.preventDefault(); const nd=$("#cl_d").value; if(!nd) return toast("Pick the first day",true);
+      const v=vs.find(x=>x.id===$("#cl_v").value)||{}; const off=Math.round((new Date(nd+"T00:00:00")-new Date(sl[0].local_date+"T00:00:00"))/864e5);
+      const shift=ds=>{ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()+off); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") };
+      const copyE={title:$("#cl_t").value,description:e.description,agenda:e.agenda,program_id:e.program_id,venue_id:v.id,status:"draft",auto_approve:e.auto_approve,brand_ids:e.brand_ids||[],
+        slots:sl.map(s=>({local_date:shift(s.local_date),label:s.label,local_start:s.local_start,local_end:s.local_end,capacity:Math.min(s.capacity,v.capacity||s.capacity),approved:0,is_active:true}))};
+      closeModal(true); editEvent(copyE); toast("Review the copied sessions, then save") };
+  });
 }
 
 /* ---------------- Share kit ---------------- */
@@ -1227,7 +1291,7 @@ function viewEvents(v){
 }
 function editEvent(e){
   if(!(S.ov.venues||[]).length){ toast("Add a venue first (Admin → Venues)"); return editVenue(null, ()=>editEvent(e)) }
-  const isNew=!e; e=e||{status:"draft",auto_approve:false,slots:[],program_id:(S.ov.programs[0]||{}).id,venue_id:(S.ov.venues[0]||{}).id};
+  const isNew=!e||!e.id; e=e||{status:"draft",auto_approve:false,slots:[],program_id:(S.ov.programs[0]||{}).id,venue_id:(S.ov.venues[0]||{}).id};
   let slots=(e.slots||[]).map(s=>({id:s.id,date:s.local_date,label:s.label,start:s.local_start,end:s.local_end,capacity:s.capacity,approved:s.approved||0,is_active:s.is_active}));
   const venueCap=()=>((S.ov.venues.find(x=>x.id===$("#e_venue").value)||{}).capacity)||8;
   const closesLocal = e.closes_at ? new Date(new Date(e.closes_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16) : "";
@@ -1237,6 +1301,8 @@ function editEvent(e){
       <div><label class="f">Venue / experience center</label><div class="row" style="flex-wrap:nowrap"><select class="in" id="e_venue">${S.ov.venues.filter(x=>x.is_active||x.id===e.venue_id).map(x=>`<option value="${x.id}" ${x.id===e.venue_id?"selected":""}>${esc(x.city)} — ${esc(x.name)} (${x.capacity} seats)</option>`).join("")}</select><button type="button" class="btn sm" id="e_nv" title="Add venue">+</button></div></div>
     </div>
     <div><label class="f">Event title</label><input class="in" id="e_title" value="${esc(e.title||"")}" placeholder="Cavitak Tech Week — Mumbai"></div>
+    <div><label class="f">Brands in this event</label><div class="row" style="gap:8px">${(S.ov.brands||[]).filter(b=>b.is_active||(e.brand_ids||[]).includes(b.id)).map(b=>`<label class="bpick"><input type="checkbox" class="e_b" value="${b.id}" ${(e.brand_ids||[]).includes(b.id)?"checked":""}><span style="--bc:${esc(b.color1)}">${esc(b.name)}</span></label>`).join("")||'<span class="small muted">No brands yet — add them in Admin → Brands.</span>'}</div>
+      <div class="tiny muted" style="margin-top:4px">The first ticked brand sets the page colours, perks and certificate line. Tick several for a multi-brand day.</div></div>
     <div class="grid g2"><div><label class="f">Link name (slug)</label><input class="in" id="e_slug" value="${esc(e.slug||"")}" placeholder="auto from title"></div>
       <div><label class="f">Registrations close <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" type="datetime-local" id="e_close" value="${closesLocal}"></div></div>
     <div><label class="f">Short description (shown on the registration page)</label><textarea class="in" id="e_desc">${esc(e.description||"")}</textarea></div>
@@ -1326,6 +1392,7 @@ function editEvent(e){
           slug:$("#e_slug").value,description:$("#e_desc").value,agenda:$("#e_agenda").value,status:$("#e_status").value,auto_approve:$("#e_auto").value==="true",
           closes_at:cl?new Date(cl).toISOString():"",slots:slots.map(s=>({id:s.id||"",date:s.date,label:s.label,start:s.start,end:s.end,capacity:+s.capacity||8,remove:!!s.remove}))}});
         busy(b,false); if(!r.ok) return showErr(esc(r.error));
+        if($$(".e_b").length) await rpc("tw_event_meta",{p_token:S.token,p_id:r.id,p_data:{brand_ids:$$(".e_b:checked").map(x=>x.value)}}).catch(()=>{});
         const nt=(r.notified_changed||0)+(r.notified_cancelled||0);
         toast(nt?`Event saved · ${r.notified_changed?r.notified_changed+" told about new timings":""}${r.notified_changed&&r.notified_cancelled?", ":""}${r.notified_cancelled?r.notified_cancelled+" told their session is cancelled":""}`:"Event saved");
         closeModal(); await loadOverview(); go(S.tab);
@@ -1591,9 +1658,13 @@ async function viewReports(v){
   v.innerHTML=`${pageHead(ICONS.reports,"Reports","Attendees, partner coverage, channel performance and feedback")}
     <div class="stack">
       <div class="grid g2"><select class="in" id="rp_ev"><option value="">All events</option>${(S.ov.events||[]).map(e=>`<option value="${e.id}" ${e.id===S.repEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}</option>`).join("")}</select>
-        <select class="in" id="rp_st"><option value="attended">Attended (checked in)</option><option value="approved">Approved</option><option value="noshow">No-shows (approved, past, not checked in)</option><option value="all">All registrations</option></select></div>
+        <select class="in" id="rp_st"><option value="attended">Attended (checked in)</option><option value="approved">Approved</option><option value="noshow">No-shows (approved, past, not checked in)</option><option value="all">All registrations</option></select>
+        <select class="in" id="rp_br"><option value="">All brands</option>${(S.ov.brands||[]).map(b=>`<option value="${b.id}" ${b.id===S.repBrand?"selected":""}>${esc(b.name)}</option>`).join("")}<option value="none" ${S.repBrand==="none"?"selected":""}>No brand</option></select>
+        <select class="in" id="rp_pd">${PERIODS.map(([k,l])=>`<option value="${k}" ${k===(S.repPeriod||"all")?"selected":""}>${l}</option>`).join("")}</select></div>
       <div id="rp_kpi"></div>
       <div class="card"><div class="pad row between"><div class="b">Attendee list</div><button class="btn sm primary" id="rp_x">${ico("download",15)} Export Excel</button></div><div class="tscroll" id="rp_tbl"></div></div>
+      <div class="card" id="rp_leads"></div>
+      <div class="card pad stack" id="rp_brands"><div class="b">Brand comparison</div><div class="empty"><span class="spin dark"></span></div></div>
       <div class="grid g2"><div class="card pad"><div class="b" style="margin-bottom:6px">Registrations by channel</div><div class="minibars" id="rp_src"></div></div>
         <div class="card pad"><div class="b" style="margin-bottom:6px">Attendance by organisation type</div><div class="minibars" id="rp_type"></div></div></div>
       <div class="card pad stack" id="rp_fb"><div class="b">Feedback</div><div class="empty"><span class="spin dark"></span></div></div>
@@ -1604,6 +1675,8 @@ async function viewReports(v){
     </div>`;
   $("#rp_ev").onchange=()=>{ S.repEvent=$("#rp_ev").value; drawReport(); drawFeedback() };
   $("#rp_st").onchange=drawReport;
+  $("#rp_br").onchange=()=>{ S.repBrand=$("#rp_br").value; drawReport(); drawLeads() };
+  $("#rp_pd").onchange=()=>{ S.repPeriod=$("#rp_pd").value; drawReport(); drawLeads(); drawBrands() };
   $("#rp_x").onclick=exportExcel;
   $("#cv_p").onchange=()=>{ S.repProg=$("#cv_p").value; drawCoverage() };
   $("#cv_f").onchange=uploadTargets;
@@ -1612,11 +1685,11 @@ async function viewReports(v){
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Targets"); XLSX.writeFile(wb,"tech-week-target-partners.xlsx") };
   S.repEvent=S.repEvent||"";
   try{ await loadRegs(null) }catch(e){ toast(e.message,true) }
-  drawReport(); drawCoverage(); drawFeedback();
+  drawReport(); drawCoverage(); drawFeedback(); drawLeads(); drawBrands();
 }
 function repRows(){
   const st=$("#rp_st").value, now=new Date();
-  return S.regs.filter(r=>(!S.repEvent||r.event_id===S.repEvent)&&(
+  return S.regs.filter(r=>repMatch(r)&&(
     st==="all"||(st==="attended"&&r.checked_in_at)||(st==="approved"&&r.status==="approved")||(st==="noshow"&&r.status==="approved"&&!r.checked_in_at&&new Date(r.slot_starts_at)<now)));
 }
 async function drawFeedback(){
@@ -1638,7 +1711,7 @@ async function drawFeedback(){
       ${x.liked?`<div class="small"><b>Liked:</b> ${esc(x.liked)}</div>`:""}${x.improve?`<div class="small"><b>Improve:</b> ${esc(x.improve)}</div>`:""}${x.next_topics?`<div class="small"><b>Next topics:</b> ${esc(x.next_topics)}</div>`:""}</div>`).join("")}</div></details>`;
 }
 function drawReport(){
-  const base=S.regs.filter(r=>!S.repEvent||r.event_id===S.repEvent), rows=repRows();
+  const base=S.regs.filter(repMatch), rows=repRows();
   const appr=base.filter(r=>r.status==="approved").length, inn=base.filter(r=>r.checked_in_at).length;
   const orgs=new Set(base.filter(r=>r.checked_in_at).map(r=>r.organization.toLowerCase().trim())).size;
   const pastAppr=base.filter(r=>r.status==="approved"&&new Date(r.slot_starts_at)<new Date()), pastIn=pastAppr.filter(r=>r.checked_in_at).length;
@@ -1659,9 +1732,9 @@ function drawReport(){
 async function exportExcel(){
   try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js") }catch(e){ return toast(e.message,true) }
   const rows=repRows();
-  const head=["Name","Designation","Organisation","Org type","Email","Mobile","Participant city","Event","Experience center","City","Session date","Slot","Time","Status","Checked in at","Checked in by","Walk-in","Source","Interests","Registered at","Decided by"];
-  const data=rows.map(r=>[r.full_name,r.designation||"",r.organization,r.partner_type||"",r.email,r.phone,r.participant_city||"",r.event_title,r.venue,r.city,r.slot_date,r.slot_label,r.slot_time,STATUS_LABEL[r.status]||r.status,
-    r.checked_in_at?new Date(r.checked_in_at).toLocaleString("en-IN"):"",r.checked_in_by||"",r.walk_in?"Yes":"",r.source||"direct",r.interests||"",new Date(r.created_at).toLocaleString("en-IN"),r.decided_by||""]);
+  const head=["Name","Designation","Organisation","Org type","Email","Mobile","Participant city","Event","Brands","Experience center","City","Session date","Slot","Time","Trainer","Status","Checked in at","Checked in by","Walk-in","Source","Interests","Rating","Lead","Lead owner","Next step","Value (INR)","Registered at","Decided by"];
+  const data=rows.map(r=>[r.full_name,r.designation||"",r.organization,r.partner_type||"",r.email,r.phone,r.participant_city||"",r.event_title,brandNames(r.brand_ids),r.venue,r.city,r.slot_date,r.slot_label,r.slot_time,r.trainer||"",STATUS_LABEL[r.status]||r.status,
+    r.checked_in_at?new Date(r.checked_in_at).toLocaleString("en-IN"):"",r.checked_in_by||"",r.walk_in?"Yes":"",r.source||"direct",r.interests||"",r.rating||"",LEAD_LABEL[r.lead_level]||"",r.lead_owner||"",r.lead_next||"",r.lead_value||"",new Date(r.created_at).toLocaleString("en-IN"),r.decided_by||""]);
   const ws=XLSX.utils.aoa_to_sheet([head,...data]);
   const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}},alignment:{vertical:"center"},border:{bottom:{style:"thin",color:{rgb:"A51B23"}}}};
   head.forEach((_,i)=>{ const c=XLSX.utils.encode_cell({r:0,c:i}); ws[c].s=hs });
@@ -1673,6 +1746,10 @@ async function exportExcel(){
     const fd=S.fbRows.map(x=>[x.full_name,x.designation||"",x.organization,x.email||"",x.phone||"",x.event_title,x.city,x.slot,x.rating,x.usefulness||"",x.liked||"",x.improve||"",x.next_topics||"",x.wants_demo?"Yes":"",x.wants_quote?"Yes":"",new Date(x.at).toLocaleString("en-IN")]);
     const fws=XLSX.utils.aoa_to_sheet([fh,...fd]); fh.forEach((_,i)=>{ fws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); fws["!cols"]=fh.map(()=>({wch:18}));
     XLSX.utils.book_append_sheet(wb,fws,"Feedback") }
+  if((S.brandRows||[]).length){ const bh=["Brand","Events","Sessions","Registrations","Approved","Attended","Show-up %","Avg rating","Companies","Hot leads","Warm leads","Pipeline (INR)"];
+    const bd=S.brandRows.map(x=>[x.brand,x.events,x.sessions,x.registrations,x.approved,x.attended,x.show_up??"",x.rating??"",x.orgs,x.hot,x.warm,x.pipeline]);
+    const bws=XLSX.utils.aoa_to_sheet([bh,...bd]); bh.forEach((_,i)=>{ bws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); bws["!cols"]=bh.map(()=>({wch:14}));
+    XLSX.utils.book_append_sheet(wb,bws,"Brand summary") }
   const e=evById(S.repEvent); const name=("tech-week-"+(e?e.city+"-":"")+$("#rp_st").value+"-"+new Date().toISOString().slice(0,10)).toLowerCase().replace(/[^a-z0-9-]+/g,"-");
   XLSX.writeFile(wb,name+".xlsx"); toast("Excel downloaded");
 }
@@ -1710,12 +1787,12 @@ async function uploadTargets(ev){
 
 /* ---------------- Admin ---------------- */
 function viewAdmin(v){
-  const tabs=can("super")?[["users","Users"],["venues","Venues"],["programs","Programs"],["settings","Settings"],["email","Email log"],["audit","Audit log"]]:[["email","Email log"],["audit","Audit log"]];
+  const tabs=can("super")?[["users","Users"],["brands","Brands"],["venues","Venues"],["programs","Programs"],["settings","Settings"],["privacy","Privacy & data"],["backup","Backup"],["email","Email log"],["audit","Audit log"]]:[["email","Email log"],["audit","Audit log"]];
   if(!tabs.find(t=>t[0]===S.adminTab)) S.adminTab=tabs[0][0];
-  const AT_IC={users:"users",venues:"building",programs:"layers",settings:"key",email:"mail",audit:"history"};
+  const AT_IC={users:"users",brands:"tag",venues:"building",programs:"layers",settings:"key",privacy:"shield",backup:"download",email:"mail",audit:"history"};
   v.innerHTML=`${pageHead(ICONS.admin,"Admin","Team, venues, programs, email settings and logs")}<div class="seg segi" style="margin-bottom:12px">${tabs.map(t=>`<button data-at="${t[0]}" class="${t[0]===S.adminTab?"on":""}">${ico(AT_IC[t[0]],15)} ${t[1]}</button>`).join("")}</div><div id="ad_body"></div>`;
   $$("[data-at]",v).forEach(b=>b.onclick=()=>{ S.adminTab=b.dataset.at; viewAdmin(v) });
-  ({users:adUsers,venues:adVenues,programs:adPrograms,settings:adSettings,email:adEmail,audit:adAudit}[S.adminTab])($("#ad_body"));
+  ({users:adUsers,brands:adBrands,venues:adVenues,programs:adPrograms,settings:adSettings,privacy:adPrivacy,backup:adBackup,email:adEmail,audit:adAudit}[S.adminTab])($("#ad_body"));
 }
 const ROLE_INFO={super:"Everything: events, approvals, users, settings",approver:"Approve/reject, check-in, reports, email log",checkin:"Scan QR and check people in at the door",marketing:"See events, share links, reports (contact details masked), upload targets"};
 async function adUsers(b){
@@ -1815,7 +1892,7 @@ function adSettings(b){
     try{ const r=await rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:$("#s_url").value,notify_email:$("#s_ne").value,reply_to:$("#s_rt").value,from_name:$("#s_fn").value,from_email:$("#s_fe").value,brand_name:$("#s_bn").value,feedback_url:$("#s_fb").value,followup_url:$("#s_fu").value,cert_signer_name:$("#s_cn").value,cert_signer_title:$("#s_ct").value}});
       busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Settings saved"); await loadOverview() }catch(ex){ busy(bt,false); toast(ex.message,true) } };
 }
-const KIND_LABEL={received:"Request received",approved:"Confirmation + QR",waitlisted:"Waitlisted",promoted:"Seat opened",rejected:"Rejected",cancelled:"Cancelled",moved:"Session changed",event_cancelled:"Event cancelled",session_cancelled:"Session cancelled",reminder:"Reminder",thankyou:"Thank-you",admin_new:"Admin alert"};
+const KIND_LABEL={trainer_brief:"Trainer briefing",invite:"Invitation",reminder_soon:"2-hour reminder",noshow:"No-show follow-up",received:"Request received",approved:"Confirmation + QR",waitlisted:"Waitlisted",promoted:"Seat opened",rejected:"Rejected",cancelled:"Cancelled",moved:"Session changed",event_cancelled:"Event cancelled",session_cancelled:"Session cancelled",reminder:"Reminder",thankyou:"Thank-you",admin_new:"Admin alert"};
 async function adEmail(b){
   b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
   const r=await rpc("tw_outbox_list",{p_token:S.token,p_limit:300}).catch(e=>({rows:[]}));
@@ -1834,6 +1911,270 @@ async function adAudit(b){
     <td class="tiny muted" style="max-width:340px">${esc(a.detail?JSON.stringify(a.detail).slice(0,200):"")}</td></tr>`).join("")||'<tr><td colspan="4" class="muted">No activity yet</td></tr>'}</tbody></table></div>`;
 }
 
+/* ---------------- Multi-brand helpers ---------------- */
+const tint=(hex,a)=>{ const n=parseInt(String(hex||"#C8232C").slice(1),16); return "#"+[n>>16&255,n>>8&255,n&255].map(v=>Math.round(v+(255-v)*a).toString(16).padStart(2,"0")).join("") };
+const brandById=id=>((S.ov&&S.ov.brands)||[]).find(b=>b.id===id);
+const brandNames=ids=>(ids||[]).map(id=>(brandById(id)||{}).name).filter(Boolean).join(", ");
+const brandChips=ids=>(ids||[]).map(brandById).filter(Boolean).map(b=>`<span class="bchip" style="--bc:${esc(b.color1)}">${esc(b.name)}</span>`).join("");
+const LEAD_LABEL={hot:"Hot",warm:"Warm",cold:"Cold",none:"No interest"};
+const PERIODS=[["all","All time"],["q","This quarter"],["lq","Last quarter"],["fy","This financial year"],["lfy","Last financial year"]];
+function periodRange(k){
+  const d=new Date(), y=d.getFullYear(), m=d.getMonth(); const iso=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
+  const qs=Math.floor(m/3)*3;
+  if(k==="q") return [iso(new Date(y,qs,1)),iso(new Date(y,qs+3,0))];
+  if(k==="lq") return [iso(new Date(y,qs-3,1)),iso(new Date(y,qs,0))];
+  const fy=m>=3?y:y-1;
+  if(k==="fy") return [fy+"-04-01",(fy+1)+"-03-31"];
+  if(k==="lfy") return [(fy-1)+"-04-01",fy+"-03-31"];
+  return [null,null];
+}
+function repMatch(r){
+  if(S.repEvent&&r.event_id!==S.repEvent) return false;
+  if(S.repBrand==="none"&&(r.brand_ids||[]).length) return false;
+  if(S.repBrand&&S.repBrand!=="none"&&!(r.brand_ids||[]).includes(S.repBrand)) return false;
+  const [a,b]=periodRange(S.repPeriod||"all"); const d=String(r.slot_starts_at||"").slice(0,10);
+  if(a&&d<a) return false; if(b&&d>b) return false;
+  return true;
+}
+async function drawBrands(){
+  const box=$("#rp_brands"); if(!box) return;
+  const [a,b]=periodRange(S.repPeriod||"all");
+  let r; try{ r=await rpc("tw_brand_report",{p_token:S.token,p_from:a,p_to:b}) }catch(e){ box.innerHTML=`<div class="b">Brand comparison</div><div class="small muted">${esc(e.message)}</div>`; return }
+  const rows=r.rows||[]; S.brandRows=rows;
+  const fmtINR=n=>n?"₹"+Number(n).toLocaleString("en-IN"):"—";
+  box.innerHTML=`<div class="row between"><div><div class="b">Brand comparison</div><div class="small muted">${esc((PERIODS.find(x=>x[0]===(S.repPeriod||"all"))||[])[1]||"")} · all events you can see · a multi-brand event counts for each of its brands</div></div></div>
+    ${rows.length?`<div class="bgrid">${rows.map(x=>`<div class="bcard" style="--bc:${esc(x.color)}"><div class="row between"><span class="bchip" style="--bc:${esc(x.color)}">${esc(x.brand)}</span><span class="tiny muted">${x.events} event${x.events==1?"":"s"} · ${x.sessions} sessions</span></div>
+      <div class="bnums"><div><b>${x.registrations}</b><small>registered</small></div><div><b style="color:var(--green)">${x.attended}</b><small>attended</small></div><div><b>${x.show_up!=null?x.show_up+"%":"—"}</b><small>show-up</small></div><div><b>${x.rating!=null?x.rating+"★":"—"}</b><small>rating</small></div></div>
+      <div class="bnums"><div><b>${x.orgs}</b><small>companies</small></div><div><b style="color:var(--red)">${x.hot}</b><small>hot leads</small></div><div><b>${fmtINR(x.pipeline)}</b><small>pipeline</small></div></div>
+      ${(x.cities||[]).length?`<div class="tiny muted">${x.cities.map(c=>`${esc(c.city)} ${c.attended}/${c.registrations}`).join(" · ")}</div>`:""}</div>`).join("")}</div>`
+      :'<div class="small muted">No registrations in this period yet.</div>'}`;
+}
+function drawLeads(){
+  const box=$("#rp_leads"); if(!box) return;
+  const all=S.regs.filter(repMatch).filter(r=>r.checked_in_at||r.lead_level);
+  S.leadF=S.leadF||"all";
+  const rows=all.filter(r=>S.leadF==="all"||(S.leadF==="open"&&!r.lead_level)||r.lead_level===S.leadF);
+  const owners=[...new Set(S.regs.map(r=>r.lead_owner).filter(Boolean).concat(S.user.full_name))];
+  const pipe=all.reduce((a,r)=>a+(+r.lead_value||0),0);
+  box.innerHTML=`<div class="pad"><div class="row between"><div><div class="b row" style="gap:6px">${ico("target",18)} Lead follow-up</div><div class="small muted">Mark each attendee after the session — sales owner, next step and expected value. Saved as you type.</div></div></div>
+    <div class="row" style="gap:8px;margin-top:10px">${[["Hot","hot","var(--red)"],["Warm","warm","var(--amber)"],["Cold","cold","var(--blue)"],["Not marked","open","var(--muted)"]].map(([l,k,c])=>`<span class="ev-stats" style="margin:0"><span><b style="color:${c}">${k==="open"?all.filter(r=>!r.lead_level).length:all.filter(r=>r.lead_level===k).length}</b> ${l}</span></span>`).join("")}
+      <span class="ev-stats" style="margin:0"><span><b>${pipe?"₹"+pipe.toLocaleString("en-IN"):"₹0"}</b> pipeline</span></span></div>
+    <div class="seg" style="margin-top:10px">${[["all","All"],["open","Not marked"],["hot","Hot"],["warm","Warm"],["cold","Cold"]].map(([k,l])=>`<button data-lf="${k}" class="${S.leadF===k?"on":""}">${l}</button>`).join("")}</div></div>
+    <datalist id="ld_owners">${owners.map(o=>`<option value="${esc(o)}">`).join("")}</datalist>
+    <div class="tscroll">${rows.length?`<table class="t"><thead><tr><th>Attendee</th><th>Session</th><th>Rating</th><th>Lead</th><th>Sales owner</th><th>Next step</th><th>Value (₹)</th></tr></thead><tbody>${rows.map(r=>`<tr>
+      <td class="b">${esc(r.full_name)}<div class="tiny muted">${esc(r.organization)}${r.designation?" · "+esc(r.designation):""}</div></td>
+      <td class="small">${esc(r.city)} · ${esc(r.slot_date)}<div class="tiny muted">${esc(r.slot_label)}${(r.brand_ids||[]).length?" · "+esc(brandNames(r.brand_ids)):""}</div></td>
+      <td>${r.rating?r.rating+"★":"—"}</td>
+      <td><select class="in ldl lead-${esc(r.lead_level||"")}" data-ld="${r.id}" data-k="lead_level" style="min-height:34px;min-width:110px"><option value="">—</option>${Object.entries(LEAD_LABEL).map(([k,l])=>`<option value="${k}" ${r.lead_level===k?"selected":""}>${l}</option>`).join("")}</select></td>
+      <td><input class="in" list="ld_owners" data-ld="${r.id}" data-k="lead_owner" value="${esc(r.lead_owner||"")}" style="min-height:34px;min-width:130px"></td>
+      <td><input class="in" data-ld="${r.id}" data-k="lead_next" value="${esc(r.lead_next||"")}" placeholder="e.g. Demo on 5 Dec" style="min-height:34px;min-width:180px"></td>
+      <td><input class="in" inputmode="numeric" data-ld="${r.id}" data-k="lead_value" value="${esc(r.lead_value||"")}" style="min-height:34px;width:110px"></td></tr>`).join("")}</tbody></table>`
+      :'<div class="empty">No attendees here yet — leads appear once people are checked in.</div>'}</div>`;
+  $$("[data-lf]",box).forEach(b=>b.onclick=()=>{ S.leadF=b.dataset.lf; drawLeads() });
+  const timers={};
+  $$("[data-ld]",box).forEach(x=>{ const save=async()=>{ const r=S.regs.find(y=>y.id===x.dataset.ld); const k=x.dataset.k; const val=x.value.trim();
+      const res=await rpc("tw_set_lead",{p_token:S.token,p_ids:[x.dataset.ld],p_data:{[k]:val}}).catch(e=>({ok:false,error:e.message}));
+      if(!res.ok) return toast(res.error,true); if(r) r[k]=k==="lead_value"?(val?+val.replace(/[^0-9.]/g,""):null):(val||null);
+      x.classList.add("saved"); setTimeout(()=>x.classList.remove("saved"),900); if(k==="lead_level") drawLeads() };
+    if(x.tagName==="SELECT") x.onchange=save; else x.oninput=()=>{ clearTimeout(timers[x.dataset.ld+x.dataset.k]); timers[x.dataset.ld+x.dataset.k]=setTimeout(save,700) } });
+}
+
+/* ---------------- Partners ---------------- */
+async function viewPartners(v){
+  v.innerHTML=`${pageHead(ICONS.partners,"Partners","Every company and person across all Tech Weeks and brands",'<button class="btn sm" id="pt_x">'+ico("download",15)+' Export Excel</button>')}
+    <div class="stack"><div class="rg-in" style="max-width:460px">${ico("users",18)}<input class="in" id="pt_q" placeholder="Search company, person or email" value="${esc(S.ptQ||"")}"></div>
+      <div id="pt_kpi"></div>
+      <div class="seg" id="pt_seg">${[["all","All"],["att","Attended"],["reg","Registered, never attended"],["rep","Repeat (2+ events)"],["hot","Hot leads"],["tgt","On target list"]].map(([k,l])=>`<button data-pf="${k}" class="${(S.ptF||"all")===k?"on":""}">${l}</button>`).join("")}</div>
+      <div class="card tscroll" id="pt_tbl"><div class="empty"><span class="spin dark"></span></div></div></div>`;
+  let t; $("#pt_q").oninput=()=>{ clearTimeout(t); t=setTimeout(()=>{ S.ptQ=$("#pt_q").value; loadPartners() },300) };
+  $$("[data-pf]",v).forEach(b=>b.onclick=()=>{ S.ptF=b.dataset.pf; $$("[data-pf]",v).forEach(x=>x.classList.toggle("on",x===b)); drawPartners() });
+  $("#pt_x").onclick=exportPartners;
+  loadPartners();
+}
+async function loadPartners(){
+  try{ const r=await rpc("tw_partners",{p_token:S.token,p_q:S.ptQ||null}); S.partners=r.rows||[] }catch(e){ $("#pt_tbl").innerHTML=`<div class="banner warn">${esc(e.message)}</div>`; return }
+  drawPartners();
+}
+function drawPartners(){
+  const all=S.partners||[], f=S.ptF||"all";
+  const rows=all.filter(x=>f==="all"||(f==="att"&&x.attended>0)||(f==="reg"&&!x.attended)||(f==="rep"&&x.events>1)||(f==="hot"&&x.hot>0)||(f==="tgt"&&x.targeted));
+  const byName=n=>((S.ov.brands||[]).find(b=>b.name===n)||{});
+  $("#pt_kpi").innerHTML=`<div class="kgrid">${kpiTile("building","blue","Companies",all.length,`${all.filter(x=>x.targeted).length} on a target list`)}
+    ${kpiTile("users","blue","People",all.reduce((a,x)=>a+x.people,0),"")}${kpiTile("scan","green","Companies attended",all.filter(x=>x.attended>0).length,all.length?Math.round(all.filter(x=>x.attended>0).length/all.length*100)+"% of companies":"")}
+    ${kpiTile("history","amber","Repeat companies",all.filter(x=>x.events>1).length,"came to 2+ events")}</div>`;
+  $("#pt_tbl").innerHTML=rows.length?`<table class="t"><thead><tr><th>Company</th><th>People</th><th>Registered</th><th>Attended</th><th>Events</th><th>Brands</th><th>Last session</th><th>Hot</th></tr></thead><tbody>${rows.map(x=>`<tr class="clk" data-org="${x.id}">
+    <td class="b">${esc(x.name)} ${x.targeted?'<span class="chip waitlisted">Target</span>':""}<div class="tiny muted">${esc([x.type,x.city].filter(Boolean).join(" · "))}</div></td>
+    <td>${x.people}</td><td>${x.registrations}</td><td>${x.attended?`<span class="chip approved">${x.attended}</span>`:'<span class="muted">0</span>'}</td><td>${x.events}</td>
+    <td>${(x.brands||[]).map(n=>`<span class="bchip" style="--bc:${esc(byName(n).color1||"#6B7480")}">${esc(n)}</span>`).join(" ")}</td>
+    <td class="small">${x.last_seen?esc(fmtD(x.last_seen)):""}</td><td>${x.hot?`<b style="color:var(--red)">${x.hot}</b>`:""}</td></tr>`).join("")}</tbody></table>`
+    :`<div class="empty">${S.ptQ?"No match for “"+esc(S.ptQ)+"”.":"No partners yet — they appear as people register."}</div>`;
+  $$("[data-org]").forEach(tr=>tr.onclick=()=>partnerDetail(tr.dataset.org));
+}
+async function partnerDetail(id){
+  const box=modal(`<div id="pd"><div class="empty"><span class="spin dark"></span></div></div>`);
+  const r=await rpc("tw_partner_detail",{p_token:S.token,p_org:id}).catch(e=>({ok:false,error:e.message}));
+  if(!r.ok){ $("#pd").innerHTML=`<div class="banner warn">${esc(r.error)}</div>`; return }
+  const o=r.org, ppl=r.people||[], hist=r.history||[];
+  $("#pd").innerHTML=`<div class="phead"><span class="pico">${ICONS.partners}</span><div class="grow"><h2>${esc(o.name)}</h2><div class="small muted">${esc([o.partner_type,o.city].filter(Boolean).join(" · "))}</div></div></div>
+    <div class="ev-stats"><span>${ico("users",15)}<b>${ppl.length}</b> people</span><span>${ico("cal",15)}<b>${hist.length}</b> registrations</span><span class="g">${ico("scan",15)}<b>${hist.filter(x=>x.attended).length}</b> attended</span></div>
+    <div class="sech">${ico("users",18)} People</div>
+    <div class="tscroll"><table class="t"><thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Reg.</th><th>Attended</th></tr></thead><tbody>${ppl.map(p=>`<tr><td class="b">${esc(p.name)}<div class="tiny muted">${esc(p.designation||"")}</div></td><td class="small">${esc(p.email||"")}</td><td class="small">${esc(p.phone||"")}</td><td>${p.registrations}</td><td>${p.attended}</td></tr>`).join("")}</tbody></table></div>
+    <div class="sech" style="margin-top:14px">${ico("history",18)} History</div>
+    <div class="tscroll"><table class="t"><thead><tr><th>Date</th><th>Event</th><th>Person</th><th>Status</th><th>Rating</th><th>Lead</th></tr></thead><tbody>${hist.map(x=>`<tr><td class="small">${esc(x.date)}<div class="tiny muted">${esc(x.slot)}</div></td>
+      <td>${esc(x.event)}<div class="tiny muted">${esc(x.city)}${(x.brands||[]).length?" · "+esc(x.brands.join(", ")):""}</div></td><td>${esc(x.person)}</td>
+      <td>${x.attended?'<span class="chip in">Attended</span>':chip(x.status)}</td><td>${x.rating?x.rating+"★":""}</td><td>${x.lead?esc(LEAD_LABEL[x.lead]||x.lead):""}${x.owner?`<div class="tiny muted">${esc(x.owner)}</div>`:""}</td></tr>`).join("")}</tbody></table></div>
+    <div class="row" style="margin-top:12px"><button class="btn" data-close>Close</button></div>`;
+}
+async function exportPartners(){
+  try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js") }catch(e){ return toast(e.message,true) }
+  const head=["Company","Type","City","People","Registered","Attended","Events","Brands","Last session","Hot leads","On target list"];
+  const data=(S.partners||[]).map(x=>[x.name,x.type||"",x.city||"",x.people,x.registrations,x.attended,x.events,(x.brands||[]).join(", "),x.last_seen?fmtD(x.last_seen):"",x.hot,x.targeted?"Yes":""]);
+  const ws=XLSX.utils.aoa_to_sheet([head,...data]); const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}}};
+  head.forEach((_,i)=>{ ws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); ws["!cols"]=head.map((h,i)=>({wch:i===0?34:14}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Partners"); XLSX.writeFile(wb,"tech-week-partners-"+todayStr()+".xlsx"); toast("Excel downloaded");
+}
+
+/* ---------------- Admin: brands ---------------- */
+const PERK_ICONS=["cpu","monitor","chat","award","bulb","layers","users","star","zap","target","qr","cal","shield","building"];
+function adBrands(b){
+  const bs=S.ov.brands||[];
+  b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Each brand sets the colours, logo, “what you'll experience” cards and certificate line for its events.</div><button class="btn primary sm" id="nb">+ Add brand</button></div>
+    <div class="bgrid">${bs.map(x=>`<div class="bcard" style="--bc:${esc(x.color1)}">
+      <div class="bswatch" style="background:linear-gradient(135deg,${esc(x.color2)},${esc(x.color1)})">${x.logo?`<span class="rg-blogo"><img src="${esc(x.logo)}" alt=""></span>`:`<b>${esc(x.name)}</b>`}</div>
+      <div class="row between"><div class="b">${esc(x.name)}</div><div class="row" style="gap:4px">${x.approved?'<span class="chip approved">OEM approved</span>':'<span class="chip pending">Awaiting OEM OK</span>'}${x.is_active?"":'<span class="chip cancelled">Inactive</span>'}</div></div>
+      <div class="small muted">${esc(x.tagline||"")}</div>
+      <div class="tiny muted">${(S.ov.events||[]).filter(e=>(e.brand_ids||[]).includes(x.id)).length} events · certificate: “${esc(x.cert_line||"with "+x.name)}”</div>
+      <div><button class="btn sm" data-b="${x.id}">Edit</button></div></div>`).join("")||'<div class="card empty">No brands yet.</div>'}</div>`;
+  $("#nb").onclick=()=>editBrand(null);
+  $$("[data-b]",b).forEach(x=>x.onclick=()=>editBrand(bs.find(y=>y.id===x.dataset.b)));
+}
+function editBrand(br){
+  const isNew=!br; br=br||{color1:"#C8232C",color2:"#8E1219",perks:[],approved:false,is_active:true};
+  const perks=[0,1,2,3].map(i=>(br.perks||[])[i]||{icon:PERK_ICONS[i],title:"",text:""});
+  let logo=br.logo||"";
+  modal(`<h3>${isNew?"Add brand":"Edit "+esc(br.name)}</h3><form class="stack" id="bf">
+    <div class="grid g2"><div><label class="f">Brand name</label><input class="in" id="b_n" value="${esc(br.name||"")}" placeholder="e.g. BrightSign"></div>
+      <div><label class="f">Tagline</label><input class="in" id="b_t" value="${esc(br.tagline||"")}" placeholder="Digital signage media players"></div></div>
+    <div class="grid g2"><div><label class="f">Main colour (buttons, accents)</label><div class="row" style="flex-wrap:nowrap"><input type="color" id="b_c1" value="${esc(br.color1)}" class="cpick"><input class="in" id="b_c1t" value="${esc(br.color1)}"></div></div>
+      <div><label class="f">Dark colour (page header)</label><div class="row" style="flex-wrap:nowrap"><input type="color" id="b_c2" value="${esc(br.color2)}" class="cpick"><input class="in" id="b_c2t" value="${esc(br.color2)}"></div></div></div>
+    <div class="bswatch big" id="b_prev"></div>
+    <div><label class="f">Logo <span class="muted" style="font-weight:400">(PNG/SVG/JPG on a transparent or white background; shown only after OEM approval)</span></label>
+      <div class="row"><label class="btn sm">${ico("upload",15)} Upload logo<input type="file" id="b_lf" accept="image/*" hidden></label><button type="button" class="btn sm ghost" id="b_lr">Remove</button></div></div>
+    <div><label class="f">“What you'll experience” cards on the registration page</label>
+      <div class="stack" style="gap:6px">${perks.map((p,i)=>`<div class="row" style="flex-wrap:nowrap;gap:6px"><select class="in" data-pi="${i}" style="max-width:120px">${PERK_ICONS.map(k=>`<option ${k===p.icon?"selected":""}>${k}</option>`).join("")}</select>
+        <input class="in" data-pt="${i}" value="${esc(p.title)}" placeholder="Title" style="max-width:190px"><input class="in" data-px="${i}" value="${esc(p.text)}" placeholder="One line description"></div>`).join("")}</div></div>
+    <div><label class="f">Certificate line</label><input class="in" id="b_cl" value="${esc(br.cert_line||"")}" placeholder="in association with ${esc(br.name||"Brand")}"></div>
+    <label class="small row" style="gap:8px"><input type="checkbox" id="b_ap" ${br.approved?"checked":""}> The brand (OEM) has approved use of its logo and colours</label>
+    ${!isNew?`<label class="small row" style="gap:8px"><input type="checkbox" id="b_ac" ${br.is_active?"checked":""}> Active (can be picked for new events)</label>`:""}
+    <div class="row"><button class="btn primary" id="b_go">Save brand</button><button type="button" class="btn" data-close>Cancel</button><div class="grow"></div>${!isNew?'<button type="button" class="btn ghost" id="b_del" style="color:var(--red)">Delete</button>':""}</div></form>`, m=>{
+    const prev=()=>{ $("#b_prev").style.background=`linear-gradient(135deg,${$("#b_c2").value},${$("#b_c1").value})`;
+      $("#b_prev").innerHTML=`${logo?`<span class="rg-blogo"><img src="${esc(logo)}" alt=""></span>`:""}<b>${esc($("#b_n").value||"Brand")}</b><span class="bprev-btn" style="background:#fff;color:${$("#b_c1").value}">Reserve my seat</span>` };
+    [["b_c1","b_c1t"],["b_c2","b_c2t"]].forEach(([a,t])=>{ $("#"+a).oninput=()=>{ $("#"+t).value=$("#"+a).value; prev() }; $("#"+t).oninput=()=>{ if(/^#[0-9a-f]{6}$/i.test($("#"+t).value)){ $("#"+a).value=$("#"+t).value; prev() } } });
+    $("#b_n").oninput=prev; prev();
+    $("#b_lf").onchange=async ev=>{ const f=ev.target.files[0]; if(!f) return;
+      if(f.type==="image/svg+xml"&&f.size<200000){ logo=await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(f) }); return prev() }
+      const img=new Image(); img.onload=()=>{ const s=Math.min(1,480/img.width,160/img.height); const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height); logo=c.toDataURL("image/png"); URL.revokeObjectURL(img.src); prev() };
+      img.src=URL.createObjectURL(f) };
+    $("#b_lr").onclick=()=>{ logo=""; prev() };
+    $("#b_del") && ($("#b_del").onclick=async()=>{ if(!confirm(`Delete brand "${br.name}"? If events use it, it will be made inactive instead.`)) return;
+      const r=await rpc("tw_delete_brand",{p_token:S.token,p_id:br.id}).catch(e=>({ok:false,error:e.message})); if(!r.ok) return toast(r.error,true);
+      toast(r.deactivated?"Brand is used by events — made inactive":"Brand deleted"); closeModal(); await loadOverview(); go("admin") });
+    $("#bf").onsubmit=async ev=>{ ev.preventDefault(); const bt=$("#b_go"); busy(bt,true);
+      const pk=[0,1,2,3].map(i=>({icon:$(`[data-pi="${i}"]`).value,title:$(`[data-pt="${i}"]`).value.trim(),text:$(`[data-px="${i}"]`).value.trim()})).filter(x=>x.title);
+      const r=await rpc("tw_save_brand",{p_token:S.token,p_data:{id:br.id||"",name:$("#b_n").value,tagline:$("#b_t").value,color1:$("#b_c1t").value,color2:$("#b_c2t").value,logo,perks:pk,cert_line:$("#b_cl").value,
+        approved:$("#b_ap").checked,is_active:isNew?true:$("#b_ac").checked}}).catch(e=>({ok:false,error:e.message}));
+      busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Brand saved"); closeModal(); await loadOverview(); go("admin") };
+  });
+}
+
+/* ---------------- Admin: privacy & data ---------------- */
+async function adPrivacy(b){
+  const s=S.settings||{};
+  b.innerHTML=`<div class="stack">
+    <form class="card pad stack" id="pf"><div class="sech">${ico("shield",18)} Privacy notice</div>
+      <div class="small muted">Shown at <a href="${esc(baseUrl())}?privacy=1" target="_blank" rel="noopener">${esc(baseUrl())}?privacy=1</a>, linked from the registration form and every email. India's DPDP Rules apply most business duties from 13 May 2027.</div>
+      <div class="grid g2"><div><label class="f">Company name</label><input class="in" id="p_co" value="${esc(s.company_name||"Cavitak Marketing Pvt. Ltd.")}"></div>
+        <div><label class="f">Privacy contact email</label><input class="in" id="p_em" value="${esc(s.dpo_email||"")}" placeholder="privacy@cavitak.com"></div>
+        <div><label class="f">Keep personal data for</label><select class="in" id="p_rm">${[12,18,24,36].map(n=>`<option value="${n}" ${String(n)===String(s.retention_months||24)?"selected":""}>${n} months after a person's last session</option>`).join("")}</select></div>
+        <div><label class="f">Notice version</label><input class="in" id="p_v" value="${esc(s.privacy_version||"1.0")}"><div class="tiny muted">Stored with each new consent. Change it when you change the text.</div></div></div>
+      <div><label class="f">Custom notice text <span class="muted" style="font-weight:400">(optional — leave empty to use the standard notice; ask legal to approve either)</span></label><textarea class="in" id="p_tx" style="min-height:120px">${esc(s.privacy_text||"")}</textarea></div>
+      <div class="row"><button class="btn primary" id="p_go">Save</button><a class="btn" href="${esc(baseUrl())}?privacy=1" target="_blank" rel="noopener">${ico("eye",15)} Preview notice</a></div></form>
+    <div class="card pad stack"><div class="sech">${ico("trash",18)} Delete a person's data</div>
+      <div class="small muted">Participants can delete their own data with the link in any email. Use this when someone asks you by phone or email. Their registrations are anonymised (attendance counts stay), their contact details are removed everywhere, and an entry is logged without the email.</div>
+      <div class="row"><input class="in grow" id="p_er" type="email" placeholder="person@company.com" style="max-width:360px"><button class="btn" id="p_erb" style="color:var(--red)">${ico("trash",15)} Delete their data</button></div></div>
+    <div class="card pad stack" id="p_log"><div class="sech">${ico("history",18)} Deletion log</div><div class="empty"><span class="spin dark"></span></div></div>
+    <div class="card pad stack"><div class="sech">${ico("alert",18)} If there is a data breach</div>
+      <ol class="small" style="margin:0;padding-left:18px;line-height:1.7"><li>Stop the leak: reset passwords (Admin → Users) and rotate the email app password.</li><li>Note what happened, when, which data and how many people.</li>
+      <li>Inform Cavitak management and legal the same day.</li><li>Within 72 hours: notify the Data Protection Board and the affected people, with what happened and what they should do.</li><li>Record the fix and the lessons in the audit log notes.</li></ol></div></div>`;
+  $("#pf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#p_go"); busy(bt,true);
+    const r=await rpc("tw_settings_save",{p_token:S.token,p_data:{company_name:$("#p_co").value,dpo_email:$("#p_em").value,retention_months:$("#p_rm").value,privacy_version:$("#p_v").value,privacy_text:$("#p_tx").value}}).catch(x=>({ok:false,error:x.message}));
+    busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Saved"); await loadOverview() };
+  $("#p_erb").onclick=async()=>{ const em=$("#p_er").value.trim(); if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return toast("Enter a valid email",true);
+    if(!confirm(`Permanently remove all personal data for ${em}?\n\nThis cannot be undone. Future sessions they booked will be cancelled.`)) return;
+    const r=await rpc("tw_admin_erase",{p_token:S.token,p_email:em}).catch(x=>({ok:false,error:x.message})); if(!r.ok) return toast(r.error,true);
+    toast(r.erased?`Done — ${r.erased} registration${r.erased>1?"s":""} anonymised`:"No registrations found; contact records cleared"); $("#p_er").value=""; adPrivacy(b) };
+  const r=await rpc("tw_erasure_log",{p_token:S.token}).catch(e=>({ok:false,error:e.message}));
+  $("#p_log").innerHTML=`<div class="sech">${ico("history",18)} Deletion log</div>`+(!r.ok?`<div class="small muted">${esc(r.error)}</div>`:
+    `${r.retention_due?`<div class="banner info small">${r.retention_due} registrations are past the retention period and will be anonymised automatically tonight.</div>`:""}
+     ${(r.rows||[]).length?`<table class="t"><thead><tr><th>When</th><th>Type</th><th>Registrations</th><th>By</th></tr></thead><tbody>${r.rows.map(x=>`<tr><td class="small">${esc(fmtDT(x.at))}</td><td>${x.kind==="self"?"Participant request":x.kind==="admin"?"Admin request":"Retention clean-up"}</td><td>${x.count}</td><td class="small">${esc(x.actor||"")}</td></tr>`).join("")}</tbody></table>`:'<div class="small muted">No deletions yet.</div>'}`);
+}
+
+/* ---------------- Admin: backup & reliability ---------------- */
+async function adBackup(b){
+  const s=S.settings||{};
+  b.innerHTML=`<div class="stack"><div class="card pad stack"><div class="sech">${ico("download",18)} Full backup</div>
+    <div class="small muted">Downloads every table (events, sessions, registrations, feedback, invites, targets, partners, brands, users without passwords) as one Excel file. Do this weekly and keep it on the Cavitak drive.</div>
+    <div class="row"><button class="btn primary" id="bk_go">${ico("download",15)} Download full backup</button><span class="small muted">${s.last_backup_at?"Last backup "+esc(fmtDT(s.last_backup_at)):"No backup taken yet"}</span></div></div>
+    <div class="card pad stack" id="bk_chk"><div class="sech">${ico("shield",18)} Reliability checklist</div><div class="empty"><span class="spin dark"></span></div></div></div>`;
+  $("#bk_go").onclick=async()=>{ const bt=$("#bk_go"); busy(bt,true);
+    try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
+      const r=await rpc("tw_export_all",{p_token:S.token}); if(!r.ok) throw new Error(r.error);
+      const wb=XLSX.utils.book_new();
+      Object.keys(r).filter(k=>Array.isArray(r[k])).forEach(k=>{ const rows=r[k].map(o=>Object.fromEntries(Object.entries(o).map(([a,v])=>[a,v!==null&&typeof v==="object"?JSON.stringify(v):v])));
+        XLSX.utils.book_append_sheet(wb,rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([["(empty)"]]),k.slice(0,31)) });
+      XLSX.writeFile(wb,"tech-week-backup-"+todayStr()+".xlsx"); busy(bt,false); toast("Backup downloaded"); await loadOverview(); adBackup(b) }
+    catch(e){ busy(bt,false); toast(e.message,true) } };
+  const u=await rpc("tw_users_list",{p_token:S.token}).catch(()=>({rows:[]}));
+  const supers=(u.rows||[]).filter(x=>x.role==="super"&&x.is_active).length;
+  const lastB=s.last_backup_at?new Date(s.last_backup_at):null, fresh=lastB&&(Date.now()-lastB)<8*864e5;
+  const item=(ok,t,x)=>`<div class="todo-i" style="cursor:default"><span class="tico ${ok?"t-green":"t-amber"}">${ico(ok?"check":"alert",18)}</span><span class="grow"><b>${t}</b><small>${x}</small></span></div>`;
+  $("#bk_chk").innerHTML=`<div class="sech">${ico("shield",18)} Reliability checklist</div><div class="todo">
+    ${item(supers>=2,"Two super admins",supers>=2?`${supers} active super admins`:"Only one super admin — add a second in Admin → Users so access never depends on one person")}
+    ${item(fresh,"Weekly backup",fresh?"Taken in the last 7 days":"Download a backup above")}
+    ${item(false,"Paid database plan","Supabase's free plan pauses after 7 days of low activity. A daily keep-alive is on, but the Pro plan (about USD 25/month) removes the risk — upgrade in the Supabase dashboard → Billing.")}
+    ${item(!!(s.from_email&&!/gmail\.com$/i.test(s.from_email||"")),"Company email sender","Free Gmail sends about 500 emails a day; Google Workspace about 2,000. Use a Cavitak Workspace mailbox for large invite runs.")}</div>`;
+}
+
+/* ---------------- Public: privacy notice + delete my data ---------------- */
+async function renderPrivacy(){
+  const app=$("#app"); let d; try{ d=await rpc("tw_privacy",{}) }catch(e){ d={ok:false} }
+  const co=esc(d.company||"Cavitak Marketing Pvt. Ltd."), months=esc(d.retention_months||"24"), contact=d.contact?`<a href="mailto:${esc(d.contact)}">${esc(d.contact)}</a>`:"the email address in any event email";
+  document.title="Privacy notice — Tech Week";
+  const std=`<h3>Who we are</h3><p>${co} (“Cavitak”) runs Tech Week partner training sessions at its Experience Centers, often together with the brands it distributes.</p>
+    <h3>What we collect</h3><p>Your name, designation, organisation and its type, work email, mobile number, city and what you want to learn. When you attend, we record your check-in time, your feedback and any follow-up notes from our team.</p>
+    <h3>Why we use it</h3><ul><li>To manage your registration: approval, QR entry pass, calendar invite and reminders.</li><li>To record attendance and issue your certificate.</li><li>To follow up on your interest in the products shown, and to plan future sessions.</li></ul>
+    <h3>Who sees it</h3><p>The Cavitak team running the program. For a brand's session, that brand may receive reports and, if you attended, your name and organisation for follow-up on that training. We do not sell your data.</p>
+    <h3>How long we keep it</h3><p>Up to ${months} months after your last session. After that your details are removed automatically and only anonymous counts remain.</p>
+    <h3>Your choices</h3><ul><li>Delete your data at any time with the “Delete my data” link at the bottom of any event email.</li><li>Ask for a copy, a correction or deletion by writing to ${contact}.</li><li>Withdraw consent the same way; we will stop using your details for new purposes.</li></ul>`;
+  app.innerHTML=publicShell(`<div class="card pad prose"><div class="row" style="gap:10px;margin-bottom:6px"><span class="pico sm">${ico("shield",18)}</span><h2 style="font-size:22px">Privacy notice</h2></div>
+    <div class="small muted" style="margin-bottom:10px">Tech Week registrations · version ${esc(d.version||"1.0")}</div>
+    ${d.text?esc(d.text).split(/\n\n+/).map(x=>"<p>"+x.replace(/\n/g,"<br>")+"</p>").join(""):std}</div>`);
+}
+async function renderErase(){
+  const tok=params.get("x"), app=$("#app"); document.title="Delete my data — Tech Week";
+  let d; try{ d=await rpc("tw_erase",{p_pass:tok,p_confirm:false}) }catch(e){ d={ok:false,error:e.message} }
+  if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Link not valid</h2><p>${esc(d.error||"")}</p></div>`); return }
+  if(d.done){ app.innerHTML=publicShell(`<div class="card pad empty"><div style="font-size:40px">✓</div><h2 style="color:var(--ink)">Your data has been deleted</h2><p>We have removed your personal details from Tech Week.</p></div>`); return }
+  app.innerHTML=publicShell(`<div class="card pad stack"><div class="row" style="gap:10px"><span class="pico sm">${ico("trash",18)}</span><h2 style="font-size:22px">Delete my data</h2></div>
+    <p>This removes the personal details of <b>${esc(d.name)}</b> (${esc(d.email)}) from all Tech Week registrations (${d.registrations}), including <b>${esc(d.event)}</b>.</p>
+    <ul class="small"><li>Any upcoming session you booked will be cancelled.</li><li>Your QR pass and certificate links will stop working.</li><li>This cannot be undone.</li></ul>
+    <div class="row"><button class="btn primary" id="er_go" style="background:var(--red)">Yes, delete my data</button><a class="btn" href="?p=${esc(tok)}">Keep my registration</a></div>
+    <div class="tiny muted"><a href="?privacy=1">Privacy notice</a></div></div>`);
+  $("#er_go").onclick=async()=>{ const b=$("#er_go"); busy(b,true); const r=await rpc("tw_erase",{p_pass:tok,p_confirm:true}).catch(e=>({ok:false,error:e.message}));
+    if(!r.ok){ busy(b,false); return toast(r.error,true) } renderErase() };
+}
+
 /* ---------------- start ---------------- */
 if(params.has("e")) renderRegister();
 else if(params.has("p")) renderPass();
@@ -1841,6 +2182,8 @@ else if(params.has("c")) renderSelfCheckin();
 else if(params.has("d")) renderDisplay();
 else if(params.has("f")) renderFeedback();
 else if(params.has("v")) renderVerify();
+else if(params.has("privacy")) renderPrivacy();
+else if(params.has("x")) renderErase();
 else bootConsole();
 </script>
 </body>
