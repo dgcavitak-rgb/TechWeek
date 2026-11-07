@@ -207,6 +207,16 @@ main.console{padding:16px 0 96px}
 .kpi2{min-width:0}@media(max-width:600px){.kpi.kpi2 .kico{display:none}.kpi.kpi2 .l{padding-right:0}}
 
 /* ---------- multi-brand ---------- */
+.hbtn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;font-weight:800;color:var(--ink-2);cursor:pointer;margin-right:8px;flex:none}.hbtn:hover{background:var(--grey-50)}
+.hgrid{display:grid;gap:10px;grid-template-columns:1fr}@media(min-width:760px){.hgrid{grid-template-columns:repeat(3,1fr)}}
+.hcard.hon{border-color:var(--red);box-shadow:0 0 0 2px var(--red-50)}.hlist{margin:0;padding-left:18px;font-size:14px;line-height:1.6;color:var(--ink-2)}
+.hsteps{display:grid;gap:12px}@media(min-width:760px){.hsteps{grid-template-columns:1fr 1fr}}
+.hstep{display:flex;gap:10px;align-items:flex-start}.hstep>span{width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.htl{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}@media(min-width:760px){.htl{grid-template-columns:repeat(6,1fr)}}
+.htl div{border-top:3px solid var(--red);background:var(--grey-50);border-radius:8px;padding:8px}.htl b{display:block;font-size:13px}.htl small{font-size:12px;color:var(--muted)}
+.hfaq{display:grid;gap:12px}@media(min-width:760px){.hfaq{grid-template-columns:1fr 1fr}}
+@media print{.top,.bnav,.hbtn,#hp_pr,.toast{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}.hgrid,.hsteps,.hfaq{grid-template-columns:1fr 1fr}.htl{grid-template-columns:repeat(3,1fr)}}
+
 .cal-h,.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal-h div{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:2px 4px}
 .cal-c{min-height:86px;border:1px solid var(--line-2);border-radius:8px;padding:4px;display:flex;flex-direction:column;gap:3px;background:#fff}.cal-c.off{background:transparent;border:0}.cal-c.wk{background:#FAFAFB}
 .cal-c.today{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}.cal-d{font-size:12px;font-weight:700;color:var(--muted)}
@@ -313,7 +323,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.2.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -912,12 +922,14 @@ async function bootConsole(){
     <div class="logo"><i>C</i><span>Tech Week</span></div>
     <nav class="tabs">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span>${t.id==="approvals"&&pendTot()?`<em class="nbadge">${pendTot()}</em>`:""}</button>`).join("")}</nav>
     <div class="grow"></div>
+    <button class="hbtn" id="hlp" title="Quick guide" aria-label="Quick guide">?</button>
     <button class="acct" id="me" title="Account"><span class="av">${esc(initials(S.user.full_name))}</span><span class="acct-t"><b>${esc(S.user.full_name.split(" ")[0])}</b><small>${esc(ROLE_NAME[S.user.role]||S.user.role)}</small></span></button>
   </div></header>
   <main class="console"><div class="wrap" id="view"></div></main>
   <nav class="bnav">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span>${t.id==="approvals"&&pendTot()?`<em class="nbadge">${pendTot()}</em>`:""}</button>`).join("")}</nav>`;
   $$("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab));
   $("#me").onclick=accountMenu;
+  $("#hlp").onclick=()=>{ $$("[data-tab]").forEach(b=>b.classList.remove("on")); go("help") };
   go(S.tab);
 }
 async function loadOverview(){
@@ -933,7 +945,7 @@ function go(tab){
   $$("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
   const v=$("#view"); window.scrollTo(0,0);
   if(window._scanner){ try{ window._scanner.stop() }catch(e){} window._scanner=null }
-  ({dash:viewDash,events:viewEvents,approvals:viewApprovals,checkin:viewCheckin,reports:viewReports,partners:viewPartners,admin:viewAdmin}[tab])(v);
+  ({dash:viewDash,events:viewEvents,approvals:viewApprovals,checkin:viewCheckin,reports:viewReports,partners:viewPartners,admin:viewAdmin,help:viewHelp}[tab])(v);
 }
 function accountMenu(){
   modal(`<h3>${esc(S.user.full_name)}</h3><div class="muted small" style="margin-top:-8px;margin-bottom:12px">@${esc(S.user.username)} · ${esc(S.user.role)}</div>
@@ -2312,6 +2324,63 @@ function printBadges(list,e){
 }
 const regLinkPass=tok=>baseUrl().split("?")[0]+"?p="+tok;
 
+/* ---------------- Help / quick reference ---------------- */
+function viewHelp(v){
+  const role=S.user.role;
+  const card=(icon,title,lines,on)=>`<div class="card pad hcard ${on?"hon":""}"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico(icon,20)}</span><b>${title}</b>${on?'<span class="chip approved">You</span>':""}</div><ul class="hlist">${lines.map(l=>`<li>${l}</li>`).join("")}</ul></div>`;
+  const step=(n,t,x)=>`<div class="hstep"><span>${n}</span><div><b>${t}</b><div class="small muted">${x}</div></div></div>`;
+  v.innerHTML=`${pageHead(ico("bulb",22),"Quick guide","Everything you need to run a Tech Week — print it or keep it open on your phone",'<button class="btn sm" id="hp_pr">'+ico("printer",15)+' Print / save PDF</button>')}
+  <div class="stack">
+    <div class="sech">${ico("users",18)} What each login can do</div>
+    <div class="hgrid">
+      ${card("key","Super admin",["Create events, brands, venues and logins","Approve, check in, see everything","Budget, privacy, backup"],role==="super")}
+      ${card("check","Approver",["Approve / waitlist / move requests","Check people in at the door","Reports for their centres"],role==="approver")}
+      ${card("scan","Check-in staff",["Scan QR passes on the day","Tap a name or add a walk-in","Print badges and visitor list"],role==="checkin")}
+      ${card("share","Marketing",["Share registration links (WhatsApp kit)","Send invites, upload target lists","Reports and leads — contacts masked"],role==="marketing")}
+      ${card("tag","Brand / OEM manager",["Sees only their brand's events","Brand report, partners, feedback","Contacts and budgets hidden"],role==="brand")}
+    </div>
+
+    <div class="sech">${ico("cal",18)} Run a Tech Week in 8 steps</div>
+    <div class="card pad hsteps">
+      ${step(1,"Create the event","Events → New event (or Clone to another city). Pick the centre, brand, dates and sessions. Save as Draft.")}
+      ${step(2,"Open registrations","Edit → Status: Open. Add trainers in Sessions — their names show on the page.")}
+      ${step(3,"Share the link","Share link → copy the WhatsApp message or send email invites to your partner list.")}
+      ${step(4,"Approve requests","Approvals tab (you also get a 9 AM email). Approving sends the QR pass by email automatically.")}
+      ${step(5,"Day before","Reminders go out by themselves. Trainer gets the attendee list. Print the visitor list for security.")}
+      ${step(6,"On the day","Put the Room QR on the screen. Check people in (see below). Add walk-ins.")}
+      ${step(7,"After the session","Thank-you email with certificate and feedback link goes automatically. No-shows get a catch-up email.")}
+      ${step(8,"Follow up","Reports → Lead follow-up: mark hot / warm / cold, owner and next step. Export Excel or claim pack.")}
+    </div>
+
+    <div class="sech">${ico("scan",18)} How check-in works</div>
+    <div class="hgrid">
+      <div class="card pad hcard"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico("qr",20)}</span><b>A · Partner shows their QR pass</b></div>
+        <ol class="hlist"><li>Partner opens the confirmation email (or <i>Open my pass</i>) on their phone.</li><li>Staff opens <b>Check-in</b> on any phone → <b>Start scanning</b> → points at the QR.</li><li>Green tick = checked in. The QR is unique to that one registration.</li></ol></div>
+      <div class="card pad hcard"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico("monitor",20)}</span><b>B · Partner scans the room QR</b></div>
+        <ol class="hlist"><li>Event card → <b>Room QR & screen</b> → show it on the TV or print the standee.</li><li>Partner scans it with their phone camera and types the <b>email or mobile</b> they registered with.</li><li>The system finds their approved registration for that event and checks them in. Works from 45 min before the session until it ends.</li></ol></div>
+      <div class="card pad hcard"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico("userplus",20)}</span><b>C · No phone, no pass</b></div>
+        <ol class="hlist"><li>In <b>Check-in</b>, search the name and tap <b>Check in</b>.</li><li>Not registered? <b>Walk-in</b> → name, company, email → checked in straight away.</li><li>Pending person at the door? An approver can approve and check in in one tap.</li></ol></div>
+    </div>
+    <div class="banner info small">How matching works: every registration has its own secret pass code. The QR in the email carries that code, so a scan always finds exactly one person. On the room QR, the email or the last 10 digits of the mobile are matched against that event's registrations — someone who isn't approved, or comes on the wrong day, is politely sent to the reception desk.</div>
+
+    <div class="sech">${ico("mail",18)} What partners receive automatically</div>
+    <div class="card pad"><div class="htl">${[["Registered","Request received + link to status"],["Approved","QR pass, calendar invite, map"],["Day before","Reminder with QR"],["2 hours before","Today reminder"],["After attending","Thank-you, certificate PDF, feedback, content pack"],["Didn't come","Catch-up email with other dates"]].map(([a,b])=>`<div><b>${a}</b><small>${b}</small></div>`).join("")}</div>
+      <div class="small muted" style="margin-top:8px">Also sent when needed: waitlist, seat opened, moved session, rejected, cancelled. Every email has <i>Privacy notice</i> and <i>Delete my data</i> links.</div></div>
+
+    <div class="sech">${ico("alert",18)} Quick fixes</div>
+    <div class="card pad"><div class="hfaq">
+      ${[["Partner didn't get the email","Ask them to check spam/Promotions. Admin → Email log shows sent/failed; Approvals → ⋯ → Resend."],
+         ["Lost the QR at the door","Use the room QR with their email or mobile, or search their name in Check-in."],
+         ["Need to change a date or time","Edit the event. Approved people get the new details and calendar invite automatically."],
+         ["Session is full","New sign-ups go to the waitlist. When a seat frees up, the next person is promoted and emailed."],
+         ["Brand manager can't see an event","Edit the event and tick their brand."],
+         ["Someone asks to delete their data","They can use the link in any email, or Admin → Privacy & data → Delete their data."],
+         ["Somebody forgot their password","Admin → Users → Reset password, then share the temporary password privately."]].map(([q,a])=>`<div><b>${q}</b><div class="small muted">${a}</div></div>`).join("")}
+    </div></div>
+    <div class="tiny muted" style="text-align:center">Tech Week console v${APP_VERSION} · Cavitak Marketing Pvt. Ltd.</div>
+  </div>`;
+  $("#hp_pr").onclick=()=>window.print();
+}
 /* ---------------- start ---------------- */
 if(params.has("e")) renderRegister();
 else if(params.has("p")) renderPass();
