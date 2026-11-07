@@ -158,6 +158,10 @@ function contentPack(p: any) {
   const fu = (p.settings?.followup_url ?? "").trim();
   return fu ? { url: fu, note: "Slides & resources" } : null;
 }
+function signoff(p: any) {
+  const bs = brandsOf(p);
+  return `<p style="margin-top:22px">Warm regards,<br><strong>Team ${esc(p.settings?.brand_name || "Cavitak")}</strong>${bs.length ? `<br><span style="color:${MUTED};font-size:13px">in association with ${bs.map((b: any) => esc(b.name)).join(" & ")}</span>` : ""}</p>`;
+}
 function publicBase(p: any) { return (p.settings?.public_url ?? "").trim().split("?")[0]; }
 function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
   const bs = brandsOf(p);
@@ -214,26 +218,29 @@ async function build(p: any): Promise<Mail> {
 
   switch (kind) {
     case "received":
-      subject = `Request received — ${e.title} · ${when}`;
-      headline = "We've received your request";
-      pre = `Your request for ${when} is under review.`;
-      body = `<p>Hi ${first},</p><p>Thank you for registering. Seats are limited, so each request is reviewed by our team.
-        You'll receive a confirmation email with your <strong>entry QR pass</strong> once approved.</p>
+      subject = `Registration received — ${e.title}`;
+      headline = "Thank you for registering";
+      pre = `We have received your registration for ${when}.`;
+      body = `<p>Dear ${first},</p>
+        <p>Thank you for registering for <strong>${esc(e.title)}</strong>. We have received your request for the session below.</p>
+        <p>As seating is limited, every registration is reviewed by our team. You will receive a confirmation email as soon as your seat is confirmed, usually within one working day.</p>
         ${detailsBlock(p, { showAgenda: true })}
-        <p style="margin-top:18px">${linkBtn(pass, "View request status")}</p>`;
+        <p style="margin-top:18px">${linkBtn(pass, "View registration status")}</p>${signoff(p)}`;
       break;
     case "approved":
     case "moved":
-      subject = kind === "moved" ? `Session updated — ${e.title} · ${when}` : `You're confirmed — ${e.title} · ${when}`;
-      headline = kind === "moved" ? "Your session has been updated" : "You're confirmed!";
-      pre = `${when} at ${v.name}, ${v.city}. Show the QR at reception.`;
-      body = `<p>Hi ${first},</p><p>${kind === "moved" ? "Your Tech Week session details have changed (date, time or venue). Your seat is still confirmed — here are the updated details and a fresh calendar invite." :
-        "Great news — your seat is confirmed for Tech Week."} Please show the QR code below at the reception for a quick check-in.</p>
-        ${await qrBlock("Your entry pass")}
+      subject = kind === "moved" ? `Updated session details — ${e.title}` : `Your seat is confirmed — ${e.title}, ${s.date_label}`;
+      headline = kind === "moved" ? "Your session details have been updated" : "Your seat is confirmed";
+      pre = `${when} at ${v.name}, ${v.city}.`;
+      body = `<p>Dear ${first},</p>
+        <p>${kind === "moved" ? `Please note that the details of your session at <strong>${esc(e.title)}</strong> have been updated. Your seat remains confirmed; the latest details are below and an updated calendar invitation is attached.`
+          : `We are pleased to confirm your seat at <strong>${esc(e.title)}</strong>. We look forward to welcoming you.`}</p>
         ${detailsBlock(p, { showAgenda: true })}
-        <p style="margin-top:18px">${btn(pass, "Open my pass")}${linkBtn(v.map_url, "Directions")}</p>
+        <div style="border-left:3px solid ${headColor(p)};background:#FAFBFC;padding:10px 14px;margin:16px 0;font-size:14px">
+          <strong>Your entry pass</strong> — a personal QR code and entry code will be emailed to you on the morning of the session. A calendar invitation is attached for your convenience.</div>
         ${kind === "approved" ? extraText(p, "confirm") : ""}
-        <p style="font-size:13px;color:${MUTED}">A calendar invite is attached. If you can no longer attend, please cancel from your pass page so the seat can go to another partner.</p>`;
+        <p style="margin-top:6px">${linkBtn(pass, "View my registration")}${linkBtn(v.map_url, "Directions")}</p>
+        <p style="font-size:13px;color:${MUTED}">If your plans change, we would be grateful if you could cancel from your registration page so that we can offer the seat to another partner.</p>${signoff(p)}`;
       addIcs();
       break;
     case "waitlisted":
@@ -280,56 +287,76 @@ async function build(p: any): Promise<Mail> {
       addIcs(true);
       break;
     case "reminder":
-      subject = `Reminder: ${e.title} · ${when}`;
-      headline = "See you soon!";
-      pre = `Your session is on ${s.date_label}, ${s.time_label}.`;
-      body = `<p>Hi ${first},</p><p>A quick reminder that your Tech Week session is coming up. Please keep this QR code ready at the reception.</p>
-        ${await qrBlock("Your entry pass")}${detailsBlock(p)}
-        <p style="margin-top:18px">${btn(pass, "Open my pass")}${linkBtn(v.map_url, "Directions")}</p>`;
+      subject = `See you tomorrow — ${e.title}, ${s.label} at ${String(s.time_label).split(" – ")[0]}`;
+      headline = "We look forward to welcoming you tomorrow";
+      pre = `A gentle reminder: your session is tomorrow, ${s.time_label}.`;
+      body = `<p>Dear ${first},</p>
+        <p>This is a gentle reminder that your session at <strong>${esc(e.title)}</strong> is scheduled for <strong>tomorrow</strong>. Our team is preparing a hands-on experience for you, and we look forward to hosting you.</p>
+        ${detailsBlock(p)}
+        <p style="margin:16px 0 6px"><strong>A few helpful notes</strong></p>
+        <ul style="padding-left:18px;margin:0 0 12px;line-height:1.6">
+          <li>Please plan to arrive 10–15 minutes before the start time.</li>
+          <li>Your personal entry pass will be emailed to you tomorrow morning.</li>
+        </ul>
+        <p>${btn(v.map_url, "Get directions")}${linkBtn(pass, "View my registration")}</p>
+        <p style="font-size:13px;color:${MUTED}">If you are unable to attend, kindly cancel from your registration page so that another partner may take the seat.</p>${signoff(p)}`;
       break;
     case "thankyou": {
       const ext = (p.settings?.feedback_url ?? "").trim();
       const base = (p.settings?.public_url ?? "").trim().split("?")[0];
       const fb = ext || (base ? `${base}?f=${r.pass_token}` : "");
-      subject = `Thank you for attending ${e.title} — your certificate`;
-      headline = "Thank you for joining us";
-      pre = "Your certificate of attendance is attached.";
-      const cert = r.checked_in ? await certBytes(r.pass_token) : null;
+      const withCert = String(p.settings?.cert_attach || "off").toLowerCase() === "on";
+      subject = `Thank you for participating — ${e.title}`;
+      headline = "Thank you for your participation";
+      pre = "We appreciate you joining us.";
+      const cert = withCert && r.checked_in ? await certBytes(r.pass_token) : null;
       if (cert) attachments.push({ filename: "Cavitak-Tech-Week-Certificate.pdf", content: b64(cert), type: "application/pdf" });
-      body = `<p>Hi ${first},</p><p>Thank you for attending <strong>${esc(e.title)}</strong> at ${esc(v.name)}, ${esc(v.city)}.
-        We hope the hands-on session was useful for your upcoming projects.</p>
+      body = `<p>Dear ${first},</p>
+        <p>Thank you for participating in <strong>${esc(e.title)}</strong> at ${esc(v.name)}, ${esc(v.city)} on ${esc(s.date_label)}. This email confirms your successful participation in the session.</p>
+        <p>We hope the session was valuable for your upcoming projects, and we truly appreciate the time you spent with us.</p>
         ${cert ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
-          <div style="font-weight:700">🎓 Your certificate of attendance</div>
+          <div style="font-weight:700">Certificate of participation</div>
           <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">Attached as a PDF · Certificate ID ${esc(r.cert_code)}</div>
           ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : ""}
-        ${fb ? `<p><strong>How was the session?</strong> Two minutes of feedback helps us plan the next one.</p><p>${btn(fb, "Rate the session ★★★★★")}</p>` : ""}
-        ${contentPack(p) ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC"><div style="font-weight:700">📁 Your content pack</div>
-          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${esc(contentPack(p)!.note)}</div>${btn(contentPack(p)!.url, "Open content pack")}</div>` : ""}
+        ${contentPack(p) ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC"><div style="font-weight:700">Session resources</div>
+          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${esc(contentPack(p)!.note)}</div>${btn(contentPack(p)!.url, "Open resources")}</div>` : ""}
+        ${fb ? `<p><strong>Your feedback matters.</strong> Two minutes of your time will help us make the next session even better.</p><p>${btn(fb, "Share feedback")}</p>` : ""}
         ${extraText(p, "thankyou")}
-        <p>For demos, project support or pricing, simply reply to this email.</p>`;
+        <p>Should you need a demo, project support or pricing, please simply reply to this email — our team will be glad to assist.</p>${signoff(p)}`;
       break;
     }
     case "noshow": {
       const fu = contentPack(p)?.url || "";
       const more = (p.next_slots || []).slice(0, 6);
       subject = `We missed you at ${e.title}`;
-      headline = "We missed you today";
-      pre = "Here's how to catch up.";
-      body = `<p>Hi ${first},</p><p>We were sorry not to see you at <strong>${esc(e.title)}</strong> on ${esc(when)}.</p>
-        ${fu ? `<p>You can catch up with the slides and resources here:</p><p>${btn(fu, "Slides & resources")}</p>` : ""}
-        ${more.length ? `<p>Would another session suit you better? Upcoming sessions at ${esc(v.name)}:</p>
+      headline = "We missed you";
+      pre = "We hope to welcome you at another session.";
+      body = `<p>Dear ${first},</p><p>We noticed that you were unable to join us for <strong>${esc(e.title)}</strong> on ${esc(when)}. We understand that schedules can change at short notice.</p>
+        ${fu ? `<p>The session resources are available here for your reference:</p><p>${btn(fu, "Session resources")}</p>` : ""}
+        ${more.length ? `<p>If convenient, we would be happy to reserve a seat for you in one of the upcoming sessions at ${esc(v.name)}:</p>
           <ul style="padding-left:18px;margin:0 0 12px">${more.map((x: any) => `<li>${esc(x.date_label)} — ${esc(x.label)}, ${esc(x.time_label)}</li>`).join("")}</ul>
-          <p>Just <strong>reply to this email</strong> with the one you prefer and we'll move your seat.</p>` : `<p>Reply to this email and we'll let you know about the next session in ${esc(v.city)}.</p>`}`;
+          <p>Simply <strong>reply to this email</strong> with your preferred session and we will arrange it.</p>` : `<p>Please reply to this email and we will keep you informed about the next session in ${esc(v.city)}.</p>`}${signoff(p)}`;
       break;
     }
-    case "reminder_soon":
-      subject = `Today at ${String(s.time_label).split(" – ")[0]}: ${e.title}`;
-      headline = "See you in a couple of hours";
-      pre = `${s.label} session today, ${s.time_label} at ${v.name}.`;
-      body = `<p>Hi ${first},</p><p>Your session starts <strong>today, ${esc(s.time_label)}</strong>. Keep this QR ready at the reception — or scan the QR on the room screen and confirm with your email.</p>
+    case "reminder_soon": {
+      const code = String(r.pass_token || "").slice(0, 6).toUpperCase();
+      subject = `Your entry pass for today — ${e.title}, ${String(s.time_label).split(" – ")[0]}`;
+      headline = "Your entry pass for today";
+      pre = `Entry code ${code} · ${s.label}, ${s.time_label} at ${v.name}.`;
+      body = `<p>Dear ${first},</p><p>Good morning! We look forward to welcoming you today. Please find your personal entry pass below.</p>
         ${await qrBlock("Your entry pass")}
-        <p>${btn(v.map_url, "Get directions")}${linkBtn(pass, "Open my pass")}</p>${detailsBlock(p)}`;
+        <div style="text-align:center;margin:-6px 0 18px"><div style="font-size:12px;color:${MUTED};letter-spacing:.12em;text-transform:uppercase">Entry code</div>
+          <div style="font-size:30px;font-weight:800;letter-spacing:.25em;color:${INK}">${esc(code)}</div></div>
+        <p style="margin:0 0 6px"><strong>Checking in takes a few seconds</strong></p>
+        <ol style="padding-left:18px;margin:0 0 14px;line-height:1.7">
+          <li>At the venue, scan the check-in QR code displayed on the screen with your phone camera.</li>
+          <li>Enter your entry code <strong>${esc(code)}</strong> (or your registered email or mobile number).</li>
+          <li>You are checked in — please take your seat. You may also simply show this QR code at the reception.</li>
+        </ol>
+        ${detailsBlock(p)}
+        <p style="margin-top:16px">${btn(v.map_url, "Get directions")}${linkBtn(pass, "Open my pass")}</p>${signoff(p)}`;
       break;
+    }
     case "invite": {
       const base = (p.settings?.public_url ?? "").trim().split("?")[0];
       const link = base ? `${base}?e=${encodeURIComponent(e.slug)}&src=invite&i=${r.invite_token}` : "";

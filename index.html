@@ -323,7 +323,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -665,7 +665,7 @@ async function renderPass(){
     <div class="card pad stack" style="text-align:center">
       <div>${d.checked_in_at?'<span class="chip in">✓ Checked in '+esc(fmtDT(d.checked_in_at))+'</span>':chip(d.status)}</div>
       <div class="b">${esc(stMsg)}</div>
-      ${d.status==="approved"?`<div class="qrbox" id="qr"></div>`:""}
+      ${d.status==="approved"?`<div class="qrbox" id="qr"></div><div style="text-align:center;margin-top:6px"><div class="tiny muted" style="letter-spacing:.12em;text-transform:uppercase">Entry code</div><div style="font-size:26px;font-weight:800;letter-spacing:.25em">${esc(String(tok).slice(0,6).toUpperCase())}</div></div>`:""}
       <div><div style="font-size:20px;font-weight:800">${esc(p.full_name)}</div><div class="muted">${esc([p.designation,p.organization].filter(Boolean).join(" · "))}</div></div>
       ${d.reason?`<div class="small muted">${esc(d.reason)}</div>`:""}
     </div>
@@ -782,8 +782,8 @@ async function renderSelfCheckin(){
       <button class="btn primary block" id="sc_me" style="min-height:54px;font-size:17px">✓ Check me in</button>
       <button class="btn ghost block small" id="sc_other">Not you? Check in with email or mobile</button>`:""}
     <form id="sc_form" class="stack ${me?"hide":""}">
-      <div><label class="f" for="sc_id">Email or mobile you registered with</label>
-        <input class="in" id="sc_id" autocomplete="email" inputmode="email" placeholder="name@company.com or 98765 43210" style="min-height:50px;font-size:16px"></div>
+      <div><label class="f" for="sc_id">Entry code, or the email / mobile you registered with</label>
+        <input class="in" id="sc_id" autocomplete="email" inputmode="email" placeholder="7F3A9C · name@company.com · 98765 43210" style="min-height:50px;font-size:16px"></div>
       <button class="btn primary block" id="sc_go" style="min-height:54px;font-size:17px">Check in</button>
     </form>
     <div id="sc_err" class="banner warn hide"></div>
@@ -1601,7 +1601,7 @@ async function viewCheckin(v){
     <div class="card pad" style="text-align:center"><div id="ci_count" class="b" style="font-size:18px"></div>
       <div id="reader" class="hide" style="margin-top:10px"></div>
       <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="ci_scan" style="min-height:52px;font-size:16px;padding:0 26px">📷 Start scanning</button></div>
-      <div class="row" style="margin-top:10px;flex-wrap:nowrap"><input class="in" id="ci_code" placeholder="…or paste pass link / code"><button class="btn" id="ci_go">Check</button></div></div>
+      <div class="row" style="margin-top:10px;flex-wrap:nowrap"><input class="in" id="ci_code" placeholder="…or type the 6-letter entry code"><button class="btn" id="ci_go">Check</button></div></div>
     <div id="ci_res"></div>
     <div class="card"><div class="pad row between" style="padding-bottom:6px"><div class="b">Attendee list</div><input class="in" id="ci_q" placeholder="Search" style="max-width:200px;min-height:36px"></div><div id="ci_list"><div class="empty"><span class="spin dark"></span></div></div></div>
    </div>`;
@@ -1926,12 +1926,14 @@ function adSettings(b){
       <div><label class="f">External feedback form <span class="muted" style="font-weight:400">(leave empty to use the built-in one)</span></label><input class="in" id="s_fb" value="${esc(s.feedback_url||"")}" placeholder="optional — https://forms.gle/…"></div>
       <div><label class="f">Slides / resources link <span class="muted" style="font-weight:400">(in thank-you & no-show emails)</span></label><input class="in" id="s_fu" value="${esc(s.followup_url||"")}" placeholder="https://drive.google.com/…"></div>
       <div><label class="f">Certificate signed by</label><input class="in" id="s_cn" value="${esc(s.cert_signer_name||"")}"></div>
-      <div><label class="f">Signer title</label><input class="in" id="s_ct" value="${esc(s.cert_signer_title||"")}"></div></div>
+      <div><label class="f">Signer title</label><input class="in" id="s_ct" value="${esc(s.cert_signer_title||"")}"></div>
+      <div><label class="f">Certificate PDF in the thank-you email</label><select class="in" id="s_ca"><option value="off" ${s.cert_attach!=="on"?"selected":""}>Off — send thank-you only</option><option value="on" ${s.cert_attach==="on"?"selected":""}>On — attach certificate PDF</option></select></div></div>
+    <div class="banner info small"><b>Email schedule (venue time):</b> registration received → instantly · seat confirmed → on approval · reminder → 10:00 AM the day before · entry pass with QR + entry code → 7:30 AM on the day · thank-you → 10:00 AM the next day · missed-you → 11:00 AM the next day.</div>
     <div class="banner ${st.failed?"warn":"info"} small"><b>Email status (30 days):</b> ${st.sent||0} sent · ${st.failed||0} failed · ${st.queued||0} waiting.
       ${s.email_last_ok?"Last success "+esc(fmtDT(s.email_last_ok))+".":""} ${s.email_last_error?"<br>Last error: "+esc(s.email_last_error):""}</div>
     <div class="row"><button class="btn primary" id="s_go">Save settings</button></div></form>`;
   $("#sf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#s_go"); busy(bt,true);
-    try{ const r=await rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:$("#s_url").value,notify_email:$("#s_ne").value,reply_to:$("#s_rt").value,from_name:$("#s_fn").value,from_email:$("#s_fe").value,brand_name:$("#s_bn").value,feedback_url:$("#s_fb").value,followup_url:$("#s_fu").value,cert_signer_name:$("#s_cn").value,cert_signer_title:$("#s_ct").value}});
+    try{ const r=await rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:$("#s_url").value,cert_attach:$("#s_ca").value,notify_email:$("#s_ne").value,reply_to:$("#s_rt").value,from_name:$("#s_fn").value,from_email:$("#s_fe").value,brand_name:$("#s_bn").value,feedback_url:$("#s_fb").value,followup_url:$("#s_fu").value,cert_signer_name:$("#s_cn").value,cert_signer_title:$("#s_ct").value}});
       busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Settings saved"); await loadOverview() }catch(ex){ busy(bt,false); toast(ex.message,true) } };
 }
 const KIND_LABEL={trainer_brief:"Trainer briefing",invite:"Invitation",reminder_soon:"2-hour reminder",noshow:"No-show follow-up",received:"Request received",approved:"Confirmation + QR",waitlisted:"Waitlisted",promoted:"Seat opened",rejected:"Rejected",cancelled:"Cancelled",moved:"Session changed",event_cancelled:"Event cancelled",session_cancelled:"Session cancelled",reminder:"Reminder",thankyou:"Thank-you",admin_new:"Admin alert"};
@@ -2346,25 +2348,25 @@ function viewHelp(v){
       ${step(2,"Open registrations","Edit → Status: Open. Add trainers in Sessions — their names show on the page.")}
       ${step(3,"Share the link","Share link → copy the WhatsApp message or send email invites to your partner list.")}
       ${step(4,"Approve requests","Approvals tab (you also get a 9 AM email). Approving sends the QR pass by email automatically.")}
-      ${step(5,"Day before","Reminders go out by themselves. Trainer gets the attendee list. Print the visitor list for security.")}
+      ${step(5,"Day before","Polite reminder goes at 10 AM by itself. Trainer gets the attendee list. Print the visitor list for security.")}
       ${step(6,"On the day","Put the Room QR on the screen. Check people in (see below). Add walk-ins.")}
-      ${step(7,"After the session","Thank-you email with certificate and feedback link goes automatically. No-shows get a catch-up email.")}
+      ${step(7,"Day after","Thank-you email confirming participation goes at 10 AM (certificate PDF optional — Admin → Settings). No-shows get a polite note.")}
       ${step(8,"Follow up","Reports → Lead follow-up: mark hot / warm / cold, owner and next step. Export Excel or claim pack.")}
     </div>
 
     <div class="sech">${ico("scan",18)} How check-in works</div>
     <div class="hgrid">
       <div class="card pad hcard"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico("qr",20)}</span><b>A · Partner shows their QR pass</b></div>
-        <ol class="hlist"><li>Partner opens the confirmation email (or <i>Open my pass</i>) on their phone.</li><li>Staff opens <b>Check-in</b> on any phone → <b>Start scanning</b> → points at the QR.</li><li>Green tick = checked in. The QR is unique to that one registration.</li></ol></div>
+        <ol class="hlist"><li>Partner opens the <b>entry pass email</b> sent at 7:30 AM on the session day (or <i>Open my pass</i>).</li><li>Staff opens <b>Check-in</b> on any phone → <b>Start scanning</b> → points at the QR.</li><li>Green tick = checked in. The QR is unique to that one registration.</li></ol></div>
       <div class="card pad hcard"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico("monitor",20)}</span><b>B · Partner scans the room QR</b></div>
-        <ol class="hlist"><li>Event card → <b>Room QR & screen</b> → show it on the TV or print the standee.</li><li>Partner scans it with their phone camera and types the <b>email or mobile</b> they registered with.</li><li>The system finds their approved registration for that event and checks them in. Works from 45 min before the session until it ends.</li></ol></div>
+        <ol class="hlist"><li>Event card → <b>Room QR & screen</b> → show it on the TV or print the standee.</li><li>Partner scans it with their phone camera and types the <b>entry code</b> from their morning email (or their email / mobile).</li><li>The system finds their approved registration for that event and checks them in. Works from 45 min before the session until it ends.</li></ol></div>
       <div class="card pad hcard"><div class="row" style="gap:10px;margin-bottom:8px"><span class="qico">${ico("userplus",20)}</span><b>C · No phone, no pass</b></div>
         <ol class="hlist"><li>In <b>Check-in</b>, search the name and tap <b>Check in</b>.</li><li>Not registered? <b>Walk-in</b> → name, company, email → checked in straight away.</li><li>Pending person at the door? An approver can approve and check in in one tap.</li></ol></div>
     </div>
-    <div class="banner info small">How matching works: every registration has its own secret pass code. The QR in the email carries that code, so a scan always finds exactly one person. On the room QR, the email or the last 10 digits of the mobile are matched against that event's registrations — someone who isn't approved, or comes on the wrong day, is politely sent to the reception desk.</div>
+    <div class="banner info small">How matching works: every registration has its own secret pass code. The QR in the email carries that code, so a scan always finds exactly one person; the 6-letter entry code is the start of the same code. On the room QR, the entry code, email or last 10 digits of the mobile are matched against that event's registrations — someone who isn't approved, or comes on the wrong day, is politely sent to the reception desk.</div>
 
     <div class="sech">${ico("mail",18)} What partners receive automatically</div>
-    <div class="card pad"><div class="htl">${[["Registered","Request received + link to status"],["Approved","QR pass, calendar invite, map"],["Day before","Reminder with QR"],["2 hours before","Today reminder"],["After attending","Thank-you, certificate PDF, feedback, content pack"],["Didn't come","Catch-up email with other dates"]].map(([a,b])=>`<div><b>${a}</b><small>${b}</small></div>`).join("")}</div>
+    <div class="card pad"><div class="htl">${[["On registering","Registration received"],["On approval","Seat confirmed + calendar invite"],["Day before, 10 AM","Polite reminder"],["Session day, 7:30 AM","Entry pass: QR + 6-letter entry code"],["Next day, 10 AM","Thank-you, feedback, resources (certificate optional)"],["Next day, 11 AM","Missed-you note with other dates"]].map(([a,b])=>`<div><b>${a}</b><small>${b}</small></div>`).join("")}</div>
       <div class="small muted" style="margin-top:8px">Also sent when needed: waitlist, seat opened, moved session, rejected, cancelled. Every email has <i>Privacy notice</i> and <i>Delete my data</i> links.</div></div>
 
     <div class="sech">${ico("alert",18)} Quick fixes</div>
