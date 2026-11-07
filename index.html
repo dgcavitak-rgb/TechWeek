@@ -138,6 +138,73 @@ main.console{padding:16px 0 96px}
 .minibars .r span:first-child{width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .minibars .r .bar{flex:1}
 
+
+/* ---------- console polish ---------- */
+:root{--acc:#C8232C;--acc-50:#FDF1F2}
+.top{background:rgba(255,255,255,.92);backdrop-filter:blur(10px)}
+.tabs button{display:inline-flex;align-items:center;gap:7px;position:relative}.tabs button svg{width:17px;height:17px}
+.tabs button:hover{background:var(--grey-50);color:var(--ink)}
+.nbadge{font-style:normal;background:var(--red);color:#fff;border-radius:999px;font-size:10.5px;font-weight:700;padding:1px 6px;line-height:1.5}
+.bnav button{position:relative}.bnav .nbadge{position:absolute;top:3px;left:calc(50% + 6px)}
+.btn .nbadge{margin-left:2px}
+.acct{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer}
+.acct:hover{background:var(--grey-50)}.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red),#7C1219);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.acct-t{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}.acct-t b{font-size:13px}.acct-t small{font-size:11px;color:var(--muted)}
+@media(max-width:520px){.acct-t{display:none}.acct{padding:3px}}
+.btn svg{flex:none}
+.phead{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.phead h2{font-size:22px}
+.pico{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(135deg,var(--red),#7C1219);box-shadow:0 6px 16px rgba(200,35,44,.25)}
+.pico svg{width:22px;height:22px}.pico.sm{width:34px;height:34px;border-radius:10px}.pico.sm svg{width:18px;height:18px}
+.segi button{display:inline-flex;align-items:center;gap:6px}
+.dhero{position:relative;overflow:hidden;border-radius:18px;color:#fff;padding:22px;margin-bottom:14px;display:grid;gap:16px;
+  background:radial-gradient(600px 300px at 90% 0%,rgba(255,255,255,.16),transparent 60%),linear-gradient(135deg,#1A0B0D 0%,#8E1219 50%,#C8232C 100%)}
+@media(min-width:760px){.dhero{grid-template-columns:1fr 320px;align-items:center}}
+.dh-art{position:absolute;right:-30px;top:-10px;width:420px;opacity:.8;pointer-events:none}
+.dh-in{position:relative}.dh-k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;font-weight:600}
+.dhero h2{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0}.dh-s{opacity:.85;font-size:14px}
+.dh-btn{margin-top:14px;background:#fff;color:#8E1219;border:0}.dh-btn:hover{background:#FDF1F2}
+.dh-next{position:relative;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:14px;backdrop-filter:blur(8px)}
+.dh-nk{display:flex;gap:6px;align-items:center;font-size:12px;font-weight:600;opacity:.85;margin-bottom:4px}
+.dh-seat{margin-top:10px;font-size:13px}.dh-bar{height:6px;border-radius:9px;background:rgba(255,255,255,.25);margin-top:4px;overflow:hidden}.dh-bar i{display:block;height:100%;background:#fff;border-radius:9px}
+.kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}@media(min-width:900px){.kgrid{grid-template-columns:repeat(4,1fr)}}
+.kpi2{position:relative;padding:14px 16px}.kpi2 .v{font-size:28px;font-weight:800;letter-spacing:-.02em}.kpi2 .of{font-size:15px;color:var(--muted);font-weight:600}
+.kpi2 .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding-right:44px}
+.kico{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:11px;display:grid;place-items:center}
+.t-blue .kico,.tico.t-blue{background:var(--blue-50);color:var(--blue)}.t-amber .kico,.tico.t-amber{background:var(--amber-50);color:var(--amber)}
+.t-red .kico,.tico.t-red{background:var(--red-50);color:var(--red)}.t-green .kico,.tico.t-green{background:var(--green-50);color:var(--green)}
+.t-grey .kico,.tico.t-grey{background:var(--grey-50);color:var(--ink-2)}
+.t-amber .v{color:var(--amber)}.t-green .v{color:var(--green)}
+.dcols{display:grid;gap:14px;margin-bottom:14px}@media(min-width:900px){.dcols{grid-template-columns:1.2fr 1fr}}
+.sech{display:flex;gap:8px;align-items:center;font-weight:700;margin-bottom:10px}.sech svg{color:var(--red)}
+.todo{display:grid;gap:6px}.todo-i{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;width:100%}
+.todo-i:hover{background:var(--grey-50);border-color:var(--line)}.todo-i b{display:block;font-size:14px}.todo-i small{display:block;color:var(--muted);font-size:12px}.todo-i>svg{color:var(--muted);flex:none}
+.tico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:none}
+.allclear{display:flex;gap:12px;align-items:center;padding:14px;border-radius:12px;background:var(--green-50);color:var(--green)}.allclear b{color:var(--ink)}
+.qa{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}@media(min-width:520px){.qa{grid-template-columns:repeat(3,1fr)}}
+.qa-i{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:12px;cursor:pointer}
+.qa-i:hover{border-color:var(--red);background:var(--red-50)}.qa-i b{font-size:14px;margin-top:6px}.qa-i small{color:var(--muted);font-size:12px}
+.qico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--red-50);color:var(--red)}
+.tl{display:grid;gap:10px}@media(min-width:760px){.tl{grid-template-columns:1fr 1fr}}
+.tl-i{display:flex;gap:12px;align-items:center;padding:8px;border-radius:12px;background:var(--grey-50)}
+.rg-date{width:46px;border-radius:10px;overflow:hidden;text-align:center;border:1px solid var(--line);background:#fff;flex:none}
+.rg-date span{display:block;background:var(--acc,var(--red));color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;padding:2px 0}.rg-date b{display:block;font-size:19px;padding:2px 0}
+.ev2{padding:16px}.ev-top{display:flex;gap:14px;align-items:flex-start}.ev-date{width:54px}.ev-date b{font-size:22px}
+.ev2 h3{margin:6px 0 4px;font-size:17px}
+.chip.live{background:var(--red);color:#fff;animation:pulse 1.6s ease-in-out infinite}@keyframes pulse{50%{opacity:.7}}
+.ev-ring{--p:0;flex:none;width:66px;height:66px;border-radius:50%;display:grid;place-content:center;text-align:center;line-height:1.05;
+  background:radial-gradient(closest-side,#fff 76%,transparent 78% 100%),conic-gradient(var(--red) calc(var(--p)*1%),var(--line-2) 0)}
+.ev-ring b{font-size:15px}.ev-ring small{font-size:10px;color:var(--muted)}
+@media(max-width:520px){.ev-ring{width:54px;height:54px}.ev-ring b{font-size:13px}}
+.ev-stats{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 10px}
+.ev-stats span{display:inline-flex;align-items:center;gap:5px;font-size:13px;background:var(--grey-50);border-radius:999px;padding:4px 10px}
+.ev-stats .a{background:var(--amber-50);color:var(--amber)}.ev-stats .w{background:var(--blue-50);color:var(--blue)}.ev-stats .g{background:var(--green-50);color:var(--green)}
+.ev-days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:4px}
+.ev-day{min-width:108px;flex:1;background:var(--grey-50);border-radius:10px;padding:8px;display:grid;gap:5px}
+.ev-sl{position:relative;height:20px;border-radius:6px;background:#fff;overflow:hidden;border:1px solid var(--line-2)}
+.ev-sl i{position:absolute;inset:0 auto 0 0;opacity:.18}.ev-sl span{position:relative;font-size:11px;font-weight:600;padding-left:6px;line-height:18px}
+.ev-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line-2)}
+.card.empty svg{color:var(--muted)}
+.kpi2{min-width:0}@media(max-width:600px){.kpi.kpi2 .kico{display:none}.kpi.kpi2 .l{padding-right:0}}
 /* ---------- participant registration page ---------- */
 body.rg{--acc:#C8232C;--acc2:#8E1219;--acc-50:#FDF1F2;background:#F6F5FA}
 body.rg-bs{--acc:#7C3AED;--acc2:#312E81;--acc-50:#F3EEFF}
@@ -216,7 +283,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.7.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -330,6 +397,34 @@ const IC={
   shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
   arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
   nav:'<path d="M3 11 22 2l-9 19-2-8-8-2z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+  send:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+  key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/>',
+  layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
+  userplus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  chart:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+  alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  star:'<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
+  printer:'<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  move:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  history:'<path d="M3 3v5h5"/><path d="M3.1 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/>',
+  zap:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+  more:'<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>',
   share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>',
 };
 const ico=(n,s=20,sw=2)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||""}</svg>`;
@@ -772,12 +867,12 @@ async function bootConsole(){
   $("#app").innerHTML=`
   <header class="top"><div class="wrap">
     <div class="logo"><i>C</i><span>Tech Week</span></div>
-    <nav class="tabs">${allowed.map(t=>`<button data-tab="${t.id}">${t.label}</button>`).join("")}</nav>
+    <nav class="tabs">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span>${t.id==="approvals"&&pendTot()?`<em class="nbadge">${pendTot()}</em>`:""}</button>`).join("")}</nav>
     <div class="grow"></div>
-    <button class="btn ghost sm" id="me" title="Account">${esc(S.user.full_name.split(" ")[0])} <span class="chip">${esc(S.user.role)}</span></button>
+    <button class="acct" id="me" title="Account"><span class="av">${esc(initials(S.user.full_name))}</span><span class="acct-t"><b>${esc(S.user.full_name.split(" ")[0])}</b><small>${esc(ROLE_NAME[S.user.role]||S.user.role)}</small></span></button>
   </div></header>
   <main class="console"><div class="wrap" id="view"></div></main>
-  <nav class="bnav">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span></button>`).join("")}</nav>`;
+  <nav class="bnav">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span>${t.id==="approvals"&&pendTot()?`<em class="nbadge">${pendTot()}</em>`:""}</button>`).join("")}</nav>`;
   $$("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab));
   $("#me").onclick=accountMenu;
   go(S.tab);
@@ -799,7 +894,7 @@ function go(tab){
 }
 function accountMenu(){
   modal(`<h3>${esc(S.user.full_name)}</h3><div class="muted small" style="margin-top:-8px;margin-bottom:12px">@${esc(S.user.username)} · ${esc(S.user.role)}</div>
-    <div class="stack"><button class="btn block" id="cp">Change password</button><button class="btn block" id="lo">Sign out</button><button class="btn ghost block" data-close>Close</button>
+    <div class="stack"><button class="btn block" id="cp">${ico("key",17)} Change password</button><button class="btn block" id="lo">${ico("logout",17)} Sign out</button><button class="btn ghost block" data-close>Close</button>
     <div class="tiny muted" style="text-align:center">Tech Week Console v${APP_VERSION}</div></div>`);
   $("#cp").onclick=()=>changePassword(false);
   $("#lo").onclick=async()=>{ try{ await rpc("tw_logout",{p_token:S.token}) }catch(e){} store.set("tw_token",null); S.token=null; closeModal(); renderLogin() };
@@ -818,12 +913,45 @@ function changePassword(forced){
     catch(ex){ busy(b,false); toast(ex.message,true) }
   };
 }
+
+/* ---------- icon decorator for buttons and KPI tiles across the console ---------- */
+const BTN_IC=[[/^(\+\s*)?(new|add)\b/i,"plus"],[/walk-?in/i,"userplus"],[/share/i,"share"],[/^approve/i,"check"],[/^reject/i,"x"],[/waitlist/i,"clock"],[/^move/i,"move"],
+ [/check(ed)?[\s-]?in|undo/i,"scan"],[/scan|camera/i,"scan"],[/whatsapp/i,""],[/copy/i,"copy"],[/resend|^send|retry|invite/i,"send"],[/export|download|template|\.ics|pdf/i,"download"],
+ [/upload|import/i,"upload"],[/delete|remove|purge/i,"trash"],[/^edit|details/i,"edit"],[/refresh|reload/i,"refresh"],[/^save|update/i,"save"],[/print|poster/i,"printer"],
+ [/open|view|preview|screen|display/i,"eye"],[/reset|password/i,"key"],[/session/i,"layers"],[/certificate/i,"award"],[/email|mail/i,"mail"],[/qr/i,"qr"],[/link/i,"link"]];
+const KPI_IC=[[/pending/i,"clock","amber"],[/wait/i,"list","blue"],[/no-?show|absent/i,"alert","red"],[/check|attend|show/i,"scan","green"],[/approv|confirm/i,"check","red"],[/rating|feedback|score/i,"star","amber"],
+ [/target/i,"target","blue"],[/invite|sent/i,"mail","blue"],[/contact|regist|people|total/i,"users","blue"],[/org|compan|partner/i,"building","blue"],[/.*/,"chart","grey"]];
+function decorateIcons(root){
+  root.querySelectorAll(".btn:not([data-ic]), .kpi:not([data-ic])").forEach(el=>{
+    el.dataset.ic=1;
+    if(el.classList.contains("kpi")){ const l=el.querySelector(".l"); if(!l||el.querySelector(".kico")) return; const m=KPI_IC.find(([r])=>r.test(l.textContent));
+      el.classList.add("kpi2","t-"+m[2]); el.insertAdjacentHTML("afterbegin",`<span class="kico">${ico(m[1],18)}</span>`); return }
+    if(el.querySelector("svg,.spin,img")||el.closest(".rg-hero,.rg-main,.rg-done")) return;
+    const txt=el.textContent.trim(); if(!txt||/^\p{Extended_Pictographic}/u.test(txt)||/^(cancel|close|no|back|ok)$/i.test(txt)) return;
+    const m=BTN_IC.find(([r])=>r.test(txt)); if(!m||!m[1]) return;
+    const tn=[...el.childNodes].find(n=>n.nodeType===3&&n.textContent.trim()); if(tn) tn.textContent=tn.textContent.replace(/^\s*[+⬆⬇↻✎🗑✓✕→]\s*/u,"");
+    el.insertAdjacentHTML("afterbegin",ico(m[1],15));
+  });
+  root.querySelectorAll("#view h2:not([data-ic])").forEach(h2=>{ h2.dataset.ic=1; if(h2.closest(".phead,.dhero")) return;
+    const ic=ICONS[S.tab]; if(ic&&h2.parentElement){ h2.style.display="flex"; h2.style.alignItems="center"; h2.style.gap="10px"; h2.insertAdjacentHTML("afterbegin",`<span class="pico sm">${ic}</span>`) } });
+}
+let _decoQ=false;
+new MutationObserver(()=>{ if(_decoQ) return; _decoQ=true; requestAnimationFrame(()=>{ _decoQ=false; if(document.body.classList.contains("rg")) return; decorateIcons(document.body) }) }).observe(document.documentElement,{childList:true,subtree:true});
+
 const evById=id=>(S.ov.events||[]).find(e=>e.id===id);
 function evDates(e){ const sl=(e.slots||[]).filter(s=>s.is_active); if(!sl.length) return "No sessions yet";
   const a=sl[0], b=sl[sl.length-1]; const f=s=>s.date_label.split(",").slice(1).join(",").trim().replace(/ \d{4}$/,"");
   return a.local_date===b.local_date?f(a):f(a)+" – "+f(b); }
 
 /* ---------------- Dashboard ---------------- */
+const ROLE_NAME={super:"Super admin",approver:"Approver",checkin:"Check-in staff",marketing:"Marketing"};
+const initials=n=>String(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("");
+const pendTot=()=>(S.ov&&S.ov.events||[]).reduce((a,e)=>a+(e.counts.pending||0),0);
+const kpiTile=(icon,tone,label,value,sub,extra="")=>`<div class="card kpi2 t-${tone}"><span class="kico">${ico(icon,20)}</span><div class="l">${label}</div><div class="v">${value}</div>${sub?`<div class="tiny muted">${sub}</div>`:""}${extra}</div>`;
+function pageHead(icon,title,sub,actions=""){ return `<div class="phead"><span class="pico">${typeof icon==="string"&&icon.startsWith("<svg")?icon:ico(icon,22)}</span><div class="grow"><h2>${title}</h2>${sub?`<div class="small muted">${sub}</div>`:""}</div>${actions?`<div class="row">${actions}</div>`:""}</div>` }
+function allSlots(){ const out=[]; (S.ov.events||[]).forEach(e=>(e.slots||[]).filter(s=>s.is_active).forEach(s=>out.push({e,s}))); return out.sort((a,b)=>new Date(a.s.starts_at)-new Date(b.s.starts_at)) }
+function relWhen(d){ const ms=new Date(d)-Date.now(), m=Math.round(ms/60000);
+  if(ms<0) return "in progress"; if(m<60) return `in ${m} min`; const hr=Math.round(m/60); if(hr<24) return `in ${hr} h`; const dy=Math.round(hr/24); return `in ${dy} day${dy>1?"s":""}` }
 function viewDash(v){
   const ev=S.ov.events||[], tot={total:0,pending:0,approved:0,waitlisted:0,checked_in:0}, cap=ev.reduce((a,e)=>a+e.capacity,0);
   ev.forEach(e=>Object.keys(tot).forEach(k=>tot[k]+=e.counts[k]||0));
@@ -831,39 +959,111 @@ function viewDash(v){
   ev.forEach(e=>e.slots.forEach(s=>{ if(new Date(s.ends_at)<new Date()){ pastApproved+=s.approved; pastIn+=s.checked_in } }));
   const showRate=pastApproved>0 ? Math.round(pastIn/pastApproved*100)+"%" : "—";
   const st=S.ov.email_stats||{}, emailWarn = can("super","approver") && st.failed>0;
+  const hr=new Date().getHours(), greet=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening";
+  const now=Date.now(), upcoming=allSlots().filter(x=>new Date(x.s.ends_at)>now), next=upcoming[0];
+  const todayKey=new Date().toLocaleDateString("en-CA");
+  const today=upcoming.filter(x=>x.s.local_date===todayKey);
+  const cities=[...new Set(ev.map(e=>e.city))].filter(Boolean);
+  // what needs attention
+  const todo=[];
+  if(tot.pending && can("super","approver")) todo.push({icon:"check",tone:"amber",t:`${tot.pending} registration${tot.pending>1?"s":""} waiting for approval`,s:"Approve to send their QR pass",act:"approvals"});
+  if(emailWarn) todo.push({icon:"alert",tone:"red",t:`${st.failed} email${st.failed>1?"s":""} failed`,s:"Open the email log and retry",act:"email"});
+  if(today.length && can("super","approver","checkin")) todo.push({icon:"scan",tone:"green",t:`${today.length} session${today.length>1?"s":""} today`,s:today.map(x=>x.e.city+" · "+x.s.label).join(", "),act:"checkin"});
+  ev.filter(e=>e.status==="draft").forEach(e=>can("super")&&todo.push({icon:"edit",tone:"grey",t:`“${e.title}” is still a draft`,s:"Open registrations so the link works",act:"edit:"+e.id}));
+  ev.filter(e=>e.status==="open"&&e.capacity).forEach(e=>{ const f=allSlots().find(x=>x.e.id===e.id&&new Date(x.s.starts_at)>now); if(!f) return;
+    const days=(new Date(f.s.starts_at)-now)/864e5, fill=(e.counts.approved+e.counts.pending)/e.capacity;
+    if(days<14&&fill<.5) todo.push({icon:"share",tone:"blue",t:`${e.city}: only ${Math.round(fill*100)}% seats filled`,s:`Starts ${relWhen(f.s.starts_at)} — share the link again`,act:"share:"+e.id}) });
+  if(!S.settings.public_url&&can("super")) todo.push({icon:"link",tone:"blue",t:"Set the public link of this console",s:"Admin → Settings, so emails carry working links",act:"settings"});
+
+  const qa=[
+    can("super")&&["plus","New event","Schedule a city / EC","newev"],
+    can("super","approver")&&["check","Approvals",tot.pending?`${tot.pending} waiting`:"All caught up","approvals"],
+    can("super","approver","checkin")&&["scan","Check-in","Scan QR passes","checkin"],
+    can("super","approver","marketing")&&["chart","Reports","Attendees & coverage","reports"],
+    can("super","approver")&&["mail","Email log",`${st.sent||0} sent`,"email"],
+    can("super")&&["users","Team","Logins & roles","users"],
+  ].filter(Boolean);
+
   v.innerHTML=`
-  <div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Dashboard</h2><div class="small muted">All Tech Week events across cities</div></div>
-    ${can("super")?'<button class="btn primary" id="newev">+ New event</button>':""}</div>
-  ${emailWarn?`<div class="banner warn" style="margin-bottom:12px"><b>Emails need attention.</b> ${st.failed||0} failed, ${st.queued||0} waiting. Open the email log to see why and retry. <a href="#" id="toemail">Open email log</a></div>`:""}
-  ${!S.settings.public_url&&can("super")?`<div class="banner info" style="margin-bottom:12px">Set the public link of this console in <b>Admin → Settings</b> so emails carry working pass links.</div>`:""}
-  <div class="grid g4" style="grid-template-columns:repeat(2,1fr);margin-bottom:14px">
-    <div class="card kpi"><div class="l">Registrations</div><div class="v">${tot.total}</div><div class="tiny muted">${ev.length} event${ev.length===1?"":"s"}</div></div>
-    <div class="card kpi"><div class="l">Pending approval</div><div class="v" style="color:${tot.pending?"var(--amber)":"inherit"}">${tot.pending}</div><div class="tiny muted">${tot.waitlisted} waitlisted</div></div>
-    <div class="card kpi"><div class="l">Approved seats</div><div class="v">${tot.approved}<span class="muted" style="font-size:15px;font-weight:600"> / ${cap}</span></div><div class="bar" style="margin-top:6px"><i style="width:${cap?Math.min(100,tot.approved/cap*100):0}%"></i></div></div>
-    <div class="card kpi"><div class="l">Checked in</div><div class="v" style="color:var(--green)">${tot.checked_in}</div><div class="tiny muted">Show-up rate ${showRate}</div></div>
+  <section class="dhero">
+    <svg class="dh-art" viewBox="0 0 400 200" aria-hidden="true"><g fill="none" stroke="#fff" stroke-opacity=".28"><rect x="200" y="20" width="170" height="100" rx="10"/><rect x="214" y="34" width="142" height="72" rx="4" stroke-opacity=".18"/><path d="M285 120v24M260 146h50" stroke-width="3"/><rect x="120" y="96" width="110" height="68" rx="8"/></g>
+      <g fill="#fff" fill-opacity=".16">${Array.from({length:24},(_,i)=>`<circle cx="${30+(i%6)*16}" cy="${30+Math.floor(i/6)*16}" r="1.8"/>`).join("")}</g></svg>
+    <div class="dh-in">
+      <div class="dh-k">${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}</div>
+      <h2>${greet}, ${esc(S.user.full_name.split(" ")[0])}</h2>
+      <div class="dh-s">${ev.length} event${ev.length===1?"":"s"}${cities.length?` · ${cities.length} cit${cities.length>1?"ies":"y"}: ${esc(cities.join(", "))}`:""}</div>
+      ${can("super")?`<button class="btn dh-btn" id="newev">${ico("plus",17)} New event</button>`:""}
+    </div>
+    ${next?`<div class="dh-next"><div class="dh-nk">${ico("clock",15)} Next session · ${esc(relWhen(next.s.starts_at))}</div>
+      <div class="b">${esc(next.e.city)} — ${esc(next.s.label)}</div><div class="small">${esc(next.s.date_label)}</div><div class="small" style="opacity:.85">${esc(next.s.time_label)}</div>
+      <div class="dh-seat"><div><b>${next.s.approved}</b>/${next.s.capacity} confirmed</div><div class="dh-bar"><i style="width:${Math.min(100,next.s.approved/next.s.capacity*100)}%"></i></div></div></div>`:""}
+  </section>
+  <div class="kgrid">
+    ${kpiTile("users","blue","Registrations",tot.total,`${ev.length} event${ev.length===1?"":"s"}`)}
+    ${kpiTile("clock","amber","Pending approval",tot.pending,`${tot.waitlisted} on waitlist`)}
+    ${kpiTile("check","red","Approved seats",`${tot.approved}<span class="of"> / ${cap}</span>`,"",`<div class="bar" style="margin-top:8px"><i style="width:${cap?Math.min(100,tot.approved/cap*100):0}%"></i></div>`)}
+    ${kpiTile("scan","green","Checked in",tot.checked_in,`Show-up rate ${showRate}`)}
   </div>
-  <div class="stack">${ev.length?ev.map(eventCard).join(""):`<div class="card empty">No events yet.${can("super")?" Create your first Tech Week event.":""}</div>`}</div>`;
+  <div class="dcols">
+    <div class="card pad"><div class="sech">${ico("bell",18)} Needs your attention</div>
+      ${todo.length?`<div class="todo">${todo.slice(0,6).map((t,i)=>`<button class="todo-i" data-todo="${i}"><span class="tico t-${t.tone}">${ico(t.icon,18)}</span><span class="grow"><b>${esc(t.t)}</b><small>${esc(t.s)}</small></span>${ico("arrow",16)}</button>`).join("")}</div>`
+        :`<div class="allclear">${ico("check",22)}<div><b>All clear</b><div class="small muted">Nothing is waiting on you right now.</div></div></div>`}</div>
+    <div class="card pad"><div class="sech">${ico("zap",18)} Quick actions</div>
+      <div class="qa">${qa.map(([i,t,s,a])=>`<button class="qa-i" data-qa="${a}"><span class="qico">${ico(i,20)}</span><b>${t}</b><small>${esc(s)}</small></button>`).join("")}</div></div>
+  </div>
+  ${upcoming.length?`<div class="card pad" style="margin-bottom:14px"><div class="sech">${ico("cal",18)} Upcoming sessions</div>
+    <div class="tl">${upcoming.slice(0,6).map(({e,s})=>{ const dd=new Date(s.local_date+"T00:00:00"), pct=Math.min(100,s.approved/s.capacity*100);
+      return `<div class="tl-i"><div class="rg-date"><span>${dd.toLocaleDateString("en-IN",{month:"short"}).toUpperCase()}</span><b>${dd.getDate()}</b></div>
+        <div class="grow"><div class="b">${esc(e.city)} · ${esc(s.label)} <span class="tiny muted">${esc(s.time_label)}</span></div>
+          <div class="row" style="gap:8px;flex-wrap:nowrap"><div class="bar grow" style="height:6px"><i style="width:${pct}%;background:${pct>=100?"var(--green)":"var(--red)"}"></i></div><span class="tiny b" style="white-space:nowrap">${s.approved}/${s.capacity}</span></div>
+          <div class="tiny muted">${s.pending?`<span style="color:var(--amber)">${s.pending} pending</span> · `:""}${s.checked_in?`${s.checked_in} checked in · `:""}${esc(relWhen(s.starts_at))}</div></div></div>` }).join("")}</div></div>`:""}
+  <div class="sech" style="margin:4px 0 10px">${ico("layers",18)} Events</div>
+  <div class="stack">${ev.length?ev.map(eventCard).join(""):`<div class="card empty">${ico("cal",34,1.5)}<div style="margin-top:8px">No events yet.${can("super")?" Create your first Tech Week event.":""}</div></div>`}</div>`;
   $("#newev") && ($("#newev").onclick=()=>editEvent(null));
-  $("#toemail") && ($("#toemail").onclick=e=>{ e.preventDefault(); S.adminTab="email"; go("admin") });
+  $$("[data-todo]",v).forEach(b=>b.onclick=()=>{ const a=todo[+b.dataset.todo].act;
+    if(a==="email"||a==="settings"){ S.adminTab=a; return go("admin") }
+    if(a.startsWith("edit:")) return editEvent(evById(a.slice(5)));
+    if(a.startsWith("share:")) return shareKit(evById(a.slice(6)));
+    if(a==="approvals"){ S.apprStatus="pending"; S.apprEvent=(ev.find(e=>e.counts.pending)||{}).id }
+    go(a) });
+  $$("[data-qa]",v).forEach(b=>b.onclick=()=>{ const a=b.dataset.qa;
+    if(a==="newev") return editEvent(null);
+    if(a==="email"||a==="users"){ S.adminTab=a; return go("admin") }
+    go(a) });
   bindEventCards(v);
 }
 function eventCard(e){
-  const c=e.counts;
-  return `<div class="card ev">
-    <div class="row between" style="align-items:flex-start"><div class="grow">
-      <div class="row" style="gap:6px"><span class="chip ${e.status}">${e.status==="open"?"● Registrations open":e.status==="draft"?"Draft":"Closed"}</span><span class="small muted">${esc(e.city)} · ${esc(e.venue_name)}</span></div>
-      <h3 style="margin-top:6px">${esc(e.title)}</h3><div class="small muted">${esc(evDates(e))} · ${e.slots.filter(s=>s.is_active).length} sessions</div></div></div>
-    <div class="row" style="margin:10px 0 6px;gap:14px;font-size:13px">
-      <span><b>${c.approved}</b>/${e.capacity} approved</span><span style="color:var(--amber)"><b>${c.pending}</b> pending</span>
-      <span style="color:var(--blue)"><b>${c.waitlisted}</b> waitlist</span><span style="color:var(--green)"><b>${c.checked_in}</b> checked in</span></div>
-    <div class="bar"><i style="width:${e.capacity?Math.min(100,c.approved/e.capacity*100):0}%"></i></div>
-    <div class="row" style="margin-top:12px">
-      <button class="btn sm primary" data-share="${e.id}">Share link</button>
-      ${can("super","approver")?`<button class="btn sm" data-appr="${e.id}">Approvals${c.pending?` (${c.pending})`:""}</button>`:""}
-      ${can("super","approver","marketing")?`<button class="btn sm" data-inv="${e.id}">Invites</button>`:""}
-      ${can("super","approver","checkin")?`<button class="btn sm" data-door="${e.id}">Room QR & screen</button>`:""}
-      ${can("super","approver","marketing")?`<button class="btn sm" data-sess="${e.id}">Sessions</button>`:""}
-      ${can("super")?`<button class="btn sm" data-edit="${e.id}">Edit</button>`:""}
+  const c=e.counts, sl=e.slots.filter(s=>s.is_active), d0=sl[0]?new Date(sl[0].local_date+"T00:00:00"):null;
+  const fill=e.capacity?Math.min(100,c.approved/e.capacity*100):0;
+  const now=Date.now(), live=sl.some(s=>new Date(s.starts_at)<=now&&new Date(s.ends_at)>now), done=sl.length&&sl.every(s=>new Date(s.ends_at)<now);
+  const days={}; sl.forEach(s=>(days[s.local_date]=days[s.local_date]||[]).push(s));
+  return `<div class="card ev2">
+    <div class="ev-top">
+      <div class="rg-date ev-date">${d0?`<span>${d0.toLocaleDateString("en-IN",{month:"short"}).toUpperCase()}</span><b>${d0.getDate()}</b>`:`<span>—</span><b>?</b>`}</div>
+      <div class="grow">
+        <div class="row" style="gap:6px">${live?'<span class="chip live">● Live now</span>':done?'<span class="chip closed">Completed</span>':`<span class="chip ${e.status}">${e.status==="open"?"● Registrations open":e.status==="draft"?"Draft":"Closed"}</span>`}
+          <span class="small muted row" style="gap:4px">${ico("pin",14)} ${esc(e.city)} · ${esc(e.venue_name)}</span></div>
+        <h3>${esc(e.title)}</h3>
+        <div class="small muted row" style="gap:12px"><span class="row" style="gap:4px">${ico("cal",14)} ${esc(evDates(e))}</span><span class="row" style="gap:4px">${ico("clock",14)} ${sl.length} session${sl.length===1?"":"s"}</span></div>
+      </div>
+      <div class="ev-ring" style="--p:${fill}"><b>${Math.round(fill)}%</b><small>filled</small></div>
+    </div>
+    <div class="ev-stats">
+      <span>${ico("check",15)}<b>${c.approved}</b>/${e.capacity} approved</span>
+      <span class="a">${ico("clock",15)}<b>${c.pending}</b> pending</span>
+      <span class="w">${ico("list",15)}<b>${c.waitlisted}</b> waitlist</span>
+      <span class="g">${ico("scan",15)}<b>${c.checked_in}</b> checked in</span>
+    </div>
+    ${sl.length?`<div class="ev-days">${Object.keys(days).sort().map(k=>{ const dd=new Date(k+"T00:00:00");
+      return `<div class="ev-day"><div class="tiny b">${dd.toLocaleDateString("en-IN",{weekday:"short",day:"numeric"})}</div>${days[k].map(s=>{ const p=Math.min(100,s.approved/s.capacity*100);
+        return `<div class="ev-sl" title="${esc(s.label)} · ${s.approved}/${s.capacity} approved${s.pending?` · ${s.pending} pending`:""}"><i style="width:${p}%;background:${p>=100?"var(--green)":"var(--red)"}"></i><span>${esc(s.label.slice(0,3))} ${s.approved}/${s.capacity}</span></div>` }).join("")}</div>` }).join("")}</div>`:""}
+    <div class="ev-act">
+      <button class="btn sm primary" data-share="${e.id}">${ico("share",15)} Share link</button>
+      ${can("super","approver")?`<button class="btn sm" data-appr="${e.id}">${ico("check",15)} Approvals${c.pending?` <em class="nbadge">${c.pending}</em>`:""}</button>`:""}
+      ${can("super","approver","marketing")?`<button class="btn sm" data-inv="${e.id}">${ico("mail",15)} Invites</button>`:""}
+      ${can("super","approver","checkin")?`<button class="btn sm" data-door="${e.id}">${ico("qr",15)} Room QR & screen</button>`:""}
+      ${can("super","approver","marketing")?`<button class="btn sm" data-sess="${e.id}">${ico("layers",15)} Sessions</button>`:""}
+      ${can("super")?`<button class="btn sm" data-edit="${e.id}">${ico("edit",15)} Edit</button>`:""}
     </div></div>`;
 }
 function bindEventCards(root){
@@ -1020,8 +1220,7 @@ function shareKit(e){
 /* ---------------- Events ---------------- */
 function viewEvents(v){
   const ev=S.ov.events||[];
-  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Events</h2><div class="small muted">One event per city / experience center. Each has its own room capacity, dates and slots.</div></div>
-    ${can("super")?'<button class="btn primary" id="newev">+ New event</button>':""}</div>
+  v.innerHTML=`${pageHead(ICONS.events,"Events","One event per city / experience center — each with its own room capacity, dates and slots.",can("super")?'<button class="btn primary" id="newev">'+ico("plus",17)+' New event</button>':"")}
     <div class="stack">${ev.length?ev.map(eventCard).join(""):'<div class="card empty">No events yet.</div>'}</div>`;
   $("#newev") && ($("#newev").onclick=()=>editEvent(null));
   bindEventCards(v);
@@ -1167,7 +1366,7 @@ async function viewApprovals(v){
   if(!ev.length){ v.innerHTML='<div class="card empty">No events yet.</div>'; return }
   if(!S.apprEvent || !evById(S.apprEvent)) S.apprEvent=(ev.find(e=>e.counts.pending)||ev.find(e=>e.status==="open")||ev[0]).id;
   S.apprStatus=S.apprStatus||"pending";
-  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><h2 style="font-size:22px">Approvals</h2><button class="btn sm" id="ap_ref">Refresh</button></div>
+  v.innerHTML=`${pageHead(ICONS.approvals,"Approvals","Approve, waitlist or move registrations — the partner gets an email automatically.",'<button class="btn sm" id="ap_ref">'+ico("refresh",15)+' Refresh</button>')}
     <div class="stack"><select class="in" id="ap_ev">${ev.map(e=>`<option value="${e.id}" ${e.id===S.apprEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}${e.counts.pending?` (${e.counts.pending} pending)`:""}</option>`).join("")}</select>
     <div id="ap_body"><div class="empty"><span class="spin dark"></span></div></div></div>`;
   $("#ap_ev").onchange=()=>{ S.apprEvent=$("#ap_ev").value; S.apprSlot=""; drawApprovals() };
@@ -1294,7 +1493,7 @@ async function viewCheckin(v){
   const nearest=(e)=>{ const sl=e.slots.filter(s=>s.is_active); return sl.find(s=>new Date(s.ends_at)>now-3600e3) || sl[sl.length-1] };
   if(!S.ciEvent||!evById(S.ciEvent)){ S.ciEvent=(ev.map(e=>({e,s:nearest(e)})).filter(x=>x.s).sort((a,b)=>Math.abs(new Date(a.s.starts_at)-now)-Math.abs(new Date(b.s.starts_at)-now))[0]||{e:ev[0]}).e.id }
   const e=evById(S.ciEvent); if(!S.ciSlot||!e.slots.find(s=>s.id===S.ciSlot)) S.ciSlot=(nearest(e)||{}).id;
-  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><h2 style="font-size:22px">Check-in</h2><div class="row"><button class="btn sm" id="ci_door">Room QR & screen</button><button class="btn sm" id="ci_walk">+ Walk-in</button></div></div>
+  v.innerHTML=`${pageHead(ICONS.checkin,"Check-in","Scan a partner's QR pass, tap their name, or add a walk-in.",'<button class="btn sm" id="ci_door">'+ico("qr",15)+' Room QR & screen</button><button class="btn sm" id="ci_walk">'+ico("userplus",15)+' Walk-in</button>')}
    <div class="stack">
     <div class="grid g2"><select class="in" id="ci_ev">${ev.map(x=>`<option value="${x.id}" ${x.id===S.ciEvent?"selected":""}>${esc(x.city)} — ${esc(x.title)}</option>`).join("")}</select>
       <select class="in" id="ci_sl">${e.slots.filter(s=>s.is_active).map(s=>`<option value="${s.id}" ${s.id===S.ciSlot?"selected":""}>${esc(s.date_label)} · ${esc(s.label)}</option>`).join("")}</select></div>
@@ -1389,12 +1588,12 @@ function walkIn(){
 async function viewReports(v){
   const progs=S.ov.programs||[];
   S.repProg=S.repProg||(progs[0]||{}).id||"";
-  v.innerHTML=`<div class="row between" style="margin-bottom:12px"><div><h2 style="font-size:22px">Reports</h2><div class="small muted">Attendees, partner coverage and channel performance</div></div></div>
+  v.innerHTML=`${pageHead(ICONS.reports,"Reports","Attendees, partner coverage, channel performance and feedback")}
     <div class="stack">
       <div class="grid g2"><select class="in" id="rp_ev"><option value="">All events</option>${(S.ov.events||[]).map(e=>`<option value="${e.id}" ${e.id===S.repEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}</option>`).join("")}</select>
         <select class="in" id="rp_st"><option value="attended">Attended (checked in)</option><option value="approved">Approved</option><option value="noshow">No-shows (approved, past, not checked in)</option><option value="all">All registrations</option></select></div>
       <div id="rp_kpi"></div>
-      <div class="card"><div class="pad row between"><div class="b">Attendee list</div><button class="btn sm primary" id="rp_x">Export Excel</button></div><div class="tscroll" id="rp_tbl"></div></div>
+      <div class="card"><div class="pad row between"><div class="b">Attendee list</div><button class="btn sm primary" id="rp_x">${ico("download",15)} Export Excel</button></div><div class="tscroll" id="rp_tbl"></div></div>
       <div class="grid g2"><div class="card pad"><div class="b" style="margin-bottom:6px">Registrations by channel</div><div class="minibars" id="rp_src"></div></div>
         <div class="card pad"><div class="b" style="margin-bottom:6px">Attendance by organisation type</div><div class="minibars" id="rp_type"></div></div></div>
       <div class="card pad stack" id="rp_fb"><div class="b">Feedback</div><div class="empty"><span class="spin dark"></span></div></div>
@@ -1513,7 +1712,8 @@ async function uploadTargets(ev){
 function viewAdmin(v){
   const tabs=can("super")?[["users","Users"],["venues","Venues"],["programs","Programs"],["settings","Settings"],["email","Email log"],["audit","Audit log"]]:[["email","Email log"],["audit","Audit log"]];
   if(!tabs.find(t=>t[0]===S.adminTab)) S.adminTab=tabs[0][0];
-  v.innerHTML=`<h2 style="font-size:22px;margin-bottom:12px">Admin</h2><div class="seg" style="margin-bottom:12px">${tabs.map(t=>`<button data-at="${t[0]}" class="${t[0]===S.adminTab?"on":""}">${t[1]}</button>`).join("")}</div><div id="ad_body"></div>`;
+  const AT_IC={users:"users",venues:"building",programs:"layers",settings:"key",email:"mail",audit:"history"};
+  v.innerHTML=`${pageHead(ICONS.admin,"Admin","Team, venues, programs, email settings and logs")}<div class="seg segi" style="margin-bottom:12px">${tabs.map(t=>`<button data-at="${t[0]}" class="${t[0]===S.adminTab?"on":""}">${ico(AT_IC[t[0]],15)} ${t[1]}</button>`).join("")}</div><div id="ad_body"></div>`;
   $$("[data-at]",v).forEach(b=>b.onclick=()=>{ S.adminTab=b.dataset.at; viewAdmin(v) });
   ({users:adUsers,venues:adVenues,programs:adPrograms,settings:adSettings,email:adEmail,audit:adAudit}[S.adminTab])($("#ad_body"));
 }
