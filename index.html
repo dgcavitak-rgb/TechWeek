@@ -207,6 +207,14 @@ main.console{padding:16px 0 96px}
 .kpi2{min-width:0}@media(max-width:600px){.kpi.kpi2 .kico{display:none}.kpi.kpi2 .l{padding-right:0}}
 
 /* ---------- multi-brand ---------- */
+.cal-h,.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal-h div{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:2px 4px}
+.cal-c{min-height:86px;border:1px solid var(--line-2);border-radius:8px;padding:4px;display:flex;flex-direction:column;gap:3px;background:#fff}.cal-c.off{background:transparent;border:0}.cal-c.wk{background:#FAFAFB}
+.cal-c.today{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}.cal-d{font-size:12px;font-weight:700;color:var(--muted)}
+.cal-i{display:flex;gap:4px;align-items:center;flex-wrap:wrap;text-align:left;border:0;border-left:3px solid var(--bc);background:color-mix(in srgb,var(--bc) 10%,#fff);border-radius:5px;padding:3px 5px;font-size:11px;cursor:pointer;line-height:1.25}
+.cal-i b{font-weight:700}.cal-i span{margin-left:auto;font-weight:700;color:var(--bc)}
+@media(max-width:700px){.cal-c{min-height:60px}.cal-i{font-size:10px}.cal-i span{display:none}}
+.rg-yn button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+
 .logo span,.tabs button{white-space:nowrap}.tabs button{padding:8px 10px}
 @media(min-width:900px) and (max-width:1220px){.acct-t{display:none}.acct{padding:3px}.tabs button svg{display:none}.tabs{margin-left:4px}}
 .bchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--bc) 12%,#fff);color:var(--bc);white-space:nowrap}
@@ -305,7 +313,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -491,6 +499,7 @@ async function renderRegister(){
           <div class="rg-meter"><i style="width:${dis?100:pct}%;background:${tone}"></i></div>
           <div class="seats" style="color:${tone}">${dis?"Session closed":full?"Full · join the waitlist":s.seats_left<=2?`Only ${s.seats_left} seat${s.seats_left>1?"s":""} left!`:`${s.seats_left} of ${s.capacity} seats left`}</div></button>` }).join("")}</div></div>` }).join("");
 
+  const qs=[]; brands.forEach(b=>(b.questions||[]).forEach(q=>{ if(q&&q.label&&!qs.find(x=>x.label===q.label)) qs.push(q) }));
   const field=(id,label,icon,attrs,req)=>`<div><label class="f" for="${id}">${label}${req?' <span style="color:var(--acc)">*</span>':""}</label><div class="rg-in">${ico(icon,18)}<input class="in" id="${id}" ${attrs}></div></div>`;
   const formHtml = !d.open ? `<div class="card pad empty"><div style="font-size:40px">🗓️</div><h3 style="color:var(--ink)">Registrations are closed</h3><p>Please contact your Cavitak representative for upcoming sessions.</p></div>` : `
   <form id="rf" class="card rg-form" novalidate>
@@ -507,6 +516,10 @@ async function renderRegister(){
       ${field("f_city","City","pin",'autocomplete="address-level2" maxlength="80" placeholder="Your city"',0)}
       ${field("f_int","What would you like to learn?","bulb",`maxlength="300" placeholder="${bs?"e.g. BSN.cloud, video walls, interactivity":"e.g. video walls, control, signage"}"`,0)}
     </div>
+    ${qs.length?`<div class="grid g2" style="margin-top:12px">${qs.map((q,i)=>`<div><label class="f" for="q_${i}">${esc(q.label)}${q.required?' <span style="color:var(--acc)">*</span>':""}</label>
+      ${q.type==="select"?`<div class="rg-in">${ico("list",18)}<select class="in" id="q_${i}"><option value="">Select</option>${(q.options||[]).map(o=>`<option>${esc(o)}</option>`).join("")}</select></div>`
+       :q.type==="yesno"?`<div class="seg rg-yn" data-q="${i}"><button type="button" data-v="Yes">Yes</button><button type="button" data-v="No">No</button><input type="hidden" id="q_${i}"></div>`
+       :`<div class="rg-in">${ico("chat",18)}<input class="in" id="q_${i}" maxlength="300"></div>`}</div>`).join("")}</div>`:""}
     <input class="hp" id="f_web" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="rg-step"><span>3</span><div><div class="b">Confirm</div></div></div>
     <div class="rg-sum hide" id="rf_sum"></div>
@@ -577,6 +590,7 @@ async function renderRegister(){
   let slotId=null;
   const sum=()=>{ const s=d.slots.find(x=>x.id===slotId); const box=$("#rf_sum"); if(!s){ box.classList.add("hide"); return }
     box.innerHTML=`<span class="rg-sico">${ico(slotIcon(s.label),18)}</span><div><div class="b">${esc(s.date_label)}</div><div class="small">${esc(s.label)} · ${esc(s.time_label)}</div><div class="tiny muted">${esc((v.name||"").split(" — ")[0])}, ${esc(v.city)}</div></div>`; box.classList.remove("hide") };
+  $$(".rg-yn").forEach(g=>$$("button",g).forEach(b=>b.onclick=()=>{ $$("button",g).forEach(x=>x.classList.toggle("on",x===b)); $("#q_"+g.dataset.q).value=b.dataset.v }));
   $$(".slot",app).forEach(b=>b.onclick=()=>{ if(b.disabled) return; $$(".slot",app).forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); slotId=b.dataset.id; sum() });
   formEl.onsubmit=async(e)=>{
     e.preventDefault(); const err=$("#rf_err"); err.classList.add("hide");
@@ -586,6 +600,7 @@ async function renderRegister(){
     if(!val("#f_name")||!val("#f_desig")||!val("#f_org")) return fail("Please fill in your name, designation and organisation.");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("#f_email"))) return fail("Please enter a valid email address.");
     if(val("#f_phone").replace(/\D/g,"").length<10) return fail("Please enter a valid 10-digit mobile number.");
+    const answers={}; for(let i=0;i<qs.length;i++){ const v=($("#q_"+i)||{}).value||""; if(qs[i].required&&!v.trim()) return fail("Please answer: "+qs[i].label); if(v.trim()) answers[qs[i].label]=v.trim() }
     if(!$("#f_consent").checked) return fail("Please accept the consent statement to continue.");
     const btn=$("#rf_go"); busy(btn,true);
     try{
@@ -595,6 +610,7 @@ async function renderRegister(){
         consent:true,source:src||(inviteTok?"invite":""),invite:inviteTok,website:$("#f_web").value }});
       if(!r.ok){ busy(btn,false); return fail(r.error) }
       if(r.token) store.set("tw_pass_"+ev.slug, r.token);
+      if(r.token&&!r.duplicate&&Object.keys(answers).length) rpc("tw_save_answers",{p_pass:r.token,p_answers:answers}).catch(()=>{});
       const s = d.slots.find(x=>x.id===slotId)||{};
       const msg = r.duplicate ? {h:"You're already registered",p:r.message,e:"📬"}
         : r.status==="approved" ? {h:"You're in! 🎉",p:"Your seat is confirmed. Your QR entry pass and calendar invite are on their way to your inbox.",e:"🎟️"}
@@ -854,12 +870,12 @@ const ICONS={
   admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
 };
 const TAB_DEF=[
-  {id:"dash",label:"Dashboard",roles:["super","approver","checkin","marketing"]},
-  {id:"events",label:"Events",roles:["super","approver","marketing"]},
+  {id:"dash",label:"Dashboard",roles:["super","approver","checkin","marketing","brand"]},
+  {id:"events",label:"Events",roles:["super","approver","marketing","brand"]},
   {id:"approvals",label:"Approvals",roles:["super","approver"]},
   {id:"checkin",label:"Check-in",roles:["super","approver","checkin"]},
-  {id:"reports",label:"Reports",roles:["super","approver","marketing"]},
-  {id:"partners",label:"Partners",roles:["super","approver","marketing"]},
+  {id:"reports",label:"Reports",roles:["super","approver","marketing","brand"]},
+  {id:"partners",label:"Partners",roles:["super","approver","marketing","brand"]},
   {id:"admin",label:"Admin",roles:["super","approver"]},
 ];
 const can=(...roles)=>S.user && roles.includes(S.user.role);
@@ -1007,7 +1023,7 @@ function viewDash(v){
     can("super")&&["plus","New event","Schedule a city / EC","newev"],
     can("super","approver")&&["check","Approvals",tot.pending?`${tot.pending} waiting`:"All caught up","approvals"],
     can("super","approver","checkin")&&["scan","Check-in","Scan QR passes","checkin"],
-    can("super","approver","marketing")&&["chart","Reports","Attendees & coverage","reports"],
+    can("super","approver","marketing","brand")&&["chart","Reports","Attendees & coverage","reports"],
     can("super","approver")&&["mail","Email log",`${st.sent||0} sent`,"email"],
     can("super")&&["users","Team","Logins & roles","users"],
   ].filter(Boolean);
@@ -1091,7 +1107,7 @@ function eventCard(e){
       ${can("super","approver","marketing")?`<button class="btn sm" data-inv="${e.id}">${ico("mail",15)} Invites</button>`:""}
       ${can("super","approver","checkin")?`<button class="btn sm" data-door="${e.id}">${ico("qr",15)} Room QR & screen</button>`:""}
       ${can("super","approver","marketing")?`<button class="btn sm" data-sess="${e.id}">${ico("layers",15)} Sessions</button>`:""}
-      ${can("super")?`<button class="btn sm" data-edit="${e.id}">${ico("edit",15)} Edit</button><button class="btn sm" data-clone="${e.id}">${ico("copy",15)} Clone to another city</button>`:""}
+      ${can("super")?`<button class="btn sm" data-edit="${e.id}">${ico("edit",15)} Edit</button><button class="btn sm" data-clone="${e.id}">${ico("copy",15)} Clone to another city</button><button class="btn sm" data-budget="${e.id}">${ico("tag",15)} Budget</button>`:""}
     </div></div>`;
 }
 function bindEventCards(root){
@@ -1102,6 +1118,7 @@ function bindEventCards(root){
   $$("[data-door]",root).forEach(b=>b.onclick=()=>doorKit(evById(b.dataset.door)));
   $$("[data-inv]",root).forEach(b=>b.onclick=()=>invitesKit(evById(b.dataset.inv)));
   $$("[data-clone]",root).forEach(b=>b.onclick=()=>cloneEvent(evById(b.dataset.clone)));
+  $$("[data-budget]",root).forEach(b=>b.onclick=()=>budgetKit(evById(b.dataset.budget)));
 }
 async function invitesKit(e){
   const box=modal(`<h3>Invitations — ${esc(e.title)}</h3><div class="stack" id="iv_body"><div class="empty"><span class="spin dark"></span></div></div>`);
@@ -1209,7 +1226,7 @@ function cloneEvent(e){
     $("#clf").onsubmit=ev=>{ ev.preventDefault(); const nd=$("#cl_d").value; if(!nd) return toast("Pick the first day",true);
       const v=vs.find(x=>x.id===$("#cl_v").value)||{}; const off=Math.round((new Date(nd+"T00:00:00")-new Date(sl[0].local_date+"T00:00:00"))/864e5);
       const shift=ds=>{ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()+off); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") };
-      const copyE={title:$("#cl_t").value,description:e.description,agenda:e.agenda,program_id:e.program_id,venue_id:v.id,status:"draft",auto_approve:e.auto_approve,brand_ids:e.brand_ids||[],
+      const copyE={title:$("#cl_t").value,description:e.description,agenda:e.agenda,program_id:e.program_id,venue_id:v.id,status:"draft",auto_approve:e.auto_approve,brand_ids:e.brand_ids||[],company_cap:e.company_cap,
         slots:sl.map(s=>({local_date:shift(s.local_date),label:s.label,local_start:s.local_start,local_end:s.local_end,capacity:Math.min(s.capacity,v.capacity||s.capacity),approved:0,is_active:true}))};
       closeModal(true); editEvent(copyE); toast("Review the copied sessions, then save") };
   });
@@ -1284,8 +1301,12 @@ function shareKit(e){
 /* ---------------- Events ---------------- */
 function viewEvents(v){
   const ev=S.ov.events||[];
+  S.evView=S.evView||"list";
   v.innerHTML=`${pageHead(ICONS.events,"Events","One event per city / experience center — each with its own room capacity, dates and slots.",can("super")?'<button class="btn primary" id="newev">'+ico("plus",17)+' New event</button>':"")}
-    <div class="stack">${ev.length?ev.map(eventCard).join(""):'<div class="card empty">No events yet.</div>'}</div>`;
+    <div class="seg segi" style="margin-bottom:12px"><button data-ev="list" class="${S.evView==="list"?"on":""}">${ico("list",15)} List</button><button data-ev="cal" class="${S.evView==="cal"?"on":""}">${ico("cal",15)} Calendar</button></div>
+    <div class="stack" id="ev_body">${S.evView==="cal"?"":ev.length?ev.map(eventCard).join(""):'<div class="card empty">No events yet.</div>'}</div>`;
+  $$("[data-ev]",v).forEach(b=>b.onclick=()=>{ S.evView=b.dataset.ev; viewEvents(v) });
+  if(S.evView==="cal") drawCalendar($("#ev_body"));
   $("#newev") && ($("#newev").onclick=()=>editEvent(null));
   bindEventCards(v);
 }
@@ -1303,6 +1324,7 @@ function editEvent(e){
     <div><label class="f">Event title</label><input class="in" id="e_title" value="${esc(e.title||"")}" placeholder="Cavitak Tech Week — Mumbai"></div>
     <div><label class="f">Brands in this event</label><div class="row" style="gap:8px">${(S.ov.brands||[]).filter(b=>b.is_active||(e.brand_ids||[]).includes(b.id)).map(b=>`<label class="bpick"><input type="checkbox" class="e_b" value="${b.id}" ${(e.brand_ids||[]).includes(b.id)?"checked":""}><span style="--bc:${esc(b.color1)}">${esc(b.name)}</span></label>`).join("")||'<span class="small muted">No brands yet — add them in Admin → Brands.</span>'}</div>
       <div class="tiny muted" style="margin-top:4px">The first ticked brand sets the page colours, perks and certificate line. Tick several for a multi-brand day.</div></div>
+    <div class="grid g2"><div><label class="f">Seats per company per session <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" id="e_cap" type="number" min="1" value="${esc(e.company_cap||"")}" placeholder="No limit"><div class="tiny muted">e.g. 2 — stops one partner filling a small room.</div></div></div>
     <div class="grid g2"><div><label class="f">Link name (slug)</label><input class="in" id="e_slug" value="${esc(e.slug||"")}" placeholder="auto from title"></div>
       <div><label class="f">Registrations close <span class="muted" style="font-weight:400">(optional)</span></label><input class="in" type="datetime-local" id="e_close" value="${closesLocal}"></div></div>
     <div><label class="f">Short description (shown on the registration page)</label><textarea class="in" id="e_desc">${esc(e.description||"")}</textarea></div>
@@ -1392,7 +1414,7 @@ function editEvent(e){
           slug:$("#e_slug").value,description:$("#e_desc").value,agenda:$("#e_agenda").value,status:$("#e_status").value,auto_approve:$("#e_auto").value==="true",
           closes_at:cl?new Date(cl).toISOString():"",slots:slots.map(s=>({id:s.id||"",date:s.date,label:s.label,start:s.start,end:s.end,capacity:+s.capacity||8,remove:!!s.remove}))}});
         busy(b,false); if(!r.ok) return showErr(esc(r.error));
-        if($$(".e_b").length) await rpc("tw_event_meta",{p_token:S.token,p_id:r.id,p_data:{brand_ids:$$(".e_b:checked").map(x=>x.value)}}).catch(()=>{});
+        await rpc("tw_event_meta",{p_token:S.token,p_id:r.id,p_data:{brand_ids:$$(".e_b:checked").map(x=>x.value),company_cap:$("#e_cap").value}}).catch(()=>{});
         const nt=(r.notified_changed||0)+(r.notified_cancelled||0);
         toast(nt?`Event saved · ${r.notified_changed?r.notified_changed+" told about new timings":""}${r.notified_changed&&r.notified_cancelled?", ":""}${r.notified_cancelled?r.notified_cancelled+" told their session is cancelled":""}`:"Event saved");
         closeModal(); await loadOverview(); go(S.tab);
@@ -1463,7 +1485,7 @@ async function drawApprovals(){
           <div class="small">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}${r.partner_type?` <span class="muted">(${esc(r.partner_type)})</span>`:""}</div>
           <div class="small muted">${esc(r.email)} · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>${r.participant_city?" · "+esc(r.participant_city):""}</div>
           <div class="tiny muted" style="margin-top:2px">${esc(r.slot_date)} · ${esc(r.slot_label)} · registered ${esc(fmtDT(r.created_at))}${r.source?" · via "+esc(r.source):""}${r.decided_by?" · by "+esc(r.decided_by):""}</div>
-          ${r.interests?`<div class="tiny" style="margin-top:2px">💬 ${esc(r.interests)}</div>`:""}${r.reason&&r.status!=="approved"?`<div class="tiny muted">Note: ${esc(r.reason)}</div>`:""}
+          ${r.interests?`<div class="tiny" style="margin-top:2px">💬 ${esc(r.interests)}</div>`:""}${answersLine(r)}${r.reason&&r.status!=="approved"?`<div class="tiny muted">Note: ${esc(r.reason)}</div>`:""}
         </div></div>`).join(""):`<div class="empty">Nothing ${st==="all"?"":"in "+STATUS_LABEL[st].toLowerCase()} here.</div>`}</div>
     <div class="card pad sticky-actions hide" id="ap_bar"><div class="row"><span class="b" id="ap_n"></span><div class="grow"></div>
       <button class="btn sm green" data-act="approve">Approve</button><button class="btn sm" data-act="waitlist">Waitlist</button>
@@ -1560,7 +1582,7 @@ async function viewCheckin(v){
   const nearest=(e)=>{ const sl=e.slots.filter(s=>s.is_active); return sl.find(s=>new Date(s.ends_at)>now-3600e3) || sl[sl.length-1] };
   if(!S.ciEvent||!evById(S.ciEvent)){ S.ciEvent=(ev.map(e=>({e,s:nearest(e)})).filter(x=>x.s).sort((a,b)=>Math.abs(new Date(a.s.starts_at)-now)-Math.abs(new Date(b.s.starts_at)-now))[0]||{e:ev[0]}).e.id }
   const e=evById(S.ciEvent); if(!S.ciSlot||!e.slots.find(s=>s.id===S.ciSlot)) S.ciSlot=(nearest(e)||{}).id;
-  v.innerHTML=`${pageHead(ICONS.checkin,"Check-in","Scan a partner's QR pass, tap their name, or add a walk-in.",'<button class="btn sm" id="ci_door">'+ico("qr",15)+' Room QR & screen</button><button class="btn sm" id="ci_walk">'+ico("userplus",15)+' Walk-in</button>')}
+  v.innerHTML=`${pageHead(ICONS.checkin,"Check-in","Scan a partner's QR pass, tap their name, or add a walk-in.",'<button class="btn sm" id="ci_door">'+ico("qr",15)+' Room QR & screen</button><button class="btn sm" id="ci_walk">'+ico("userplus",15)+' Walk-in</button><button class="btn sm" id="ci_vis">'+ico("shield",15)+' Visitor list</button><button class="btn sm" id="ci_badge">'+ico("printer",15)+' Badges</button>')}
    <div class="stack">
     <div class="grid g2"><select class="in" id="ci_ev">${ev.map(x=>`<option value="${x.id}" ${x.id===S.ciEvent?"selected":""}>${esc(x.city)} — ${esc(x.title)}</option>`).join("")}</select>
       <select class="in" id="ci_sl">${e.slots.filter(s=>s.is_active).map(s=>`<option value="${s.id}" ${s.id===S.ciSlot?"selected":""}>${esc(s.date_label)} · ${esc(s.label)}</option>`).join("")}</select></div>
@@ -1578,6 +1600,8 @@ async function viewCheckin(v){
   $("#ci_scan").onclick=toggleScanner;
   $("#ci_walk").onclick=walkIn;
   $("#ci_door").onclick=()=>doorKit(evById(S.ciEvent));
+  $("#ci_vis").onclick=()=>visitorList(evById(S.ciEvent));
+  $("#ci_badge").onclick=()=>printBadges(S.regs.filter(r=>r.slot_id===S.ciSlot&&r.status==="approved"),evById(S.ciEvent));
   clearInterval(window._ciPoll); window._ciPoll=setInterval(async()=>{ if(S.tab!=="checkin"||!$("#ci_list")) return clearInterval(window._ciPoll);
     try{ await loadRegs(S.ciEvent); drawCiList() }catch(e){} }, 20000); // picks up self check-ins from the room QR
   $("#ci_q").oninput=drawCiList;
@@ -1592,10 +1616,11 @@ function drawCiList(){
   $("#ci_count").innerHTML=`<span style="color:var(--green)">${inn}</span> / ${appr.length} checked in`;
   box.innerHTML=list.length?list.map(r=>`<div class="reg"><div class="grow"><div class="nm">${esc(r.full_name)} ${r.status!=="approved"?chip(r.status):""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
       <div class="small muted">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}</div>${r.checked_in_at?`<div class="tiny" style="color:var(--green)">✓ ${esc(fmtDT(r.checked_in_at))}${r.checked_in_by?" · "+esc(r.checked_in_by):""}</div>`:""}</div>
-      ${r.checked_in_at?`<button class="btn sm" data-undo="${r.id}">Undo</button>`:`<button class="btn sm green" data-in="${r.id}" ${r.status!=="approved"&&!can("super","approver")?"disabled":""}>Check in</button>`}</div>`).join("")
+      <button class="btn sm ghost" data-badge="${r.id}" title="Print badge">${ico("printer",15)}</button>${r.checked_in_at?`<button class="btn sm" data-undo="${r.id}">Undo</button>`:`<button class="btn sm green" data-in="${r.id}" ${r.status!=="approved"&&!can("super","approver")?"disabled":""}>Check in</button>`}</div>`).join("")
     :'<div class="empty">No approved registrations for this session yet.</div>';
   $$("[data-in]",box).forEach(b=>b.onclick=()=>setAtt(b.dataset.in,true,b));
   $$("[data-undo]",box).forEach(b=>b.onclick=()=>{ if(confirm("Undo check-in?")) setAtt(b.dataset.undo,false,b) });
+  $$("[data-badge]",box).forEach(b=>b.onclick=()=>printBadges([S.regs.find(r=>r.id===b.dataset.badge)],evById(S.ciEvent)));
 }
 async function setAtt(id, present, btn){
   const r=S.regs.find(x=>x.id===id);
@@ -1732,9 +1757,9 @@ function drawReport(){
 async function exportExcel(){
   try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js") }catch(e){ return toast(e.message,true) }
   const rows=repRows();
-  const head=["Name","Designation","Organisation","Org type","Email","Mobile","Participant city","Event","Brands","Experience center","City","Session date","Slot","Time","Trainer","Status","Checked in at","Checked in by","Walk-in","Source","Interests","Rating","Lead","Lead owner","Next step","Value (INR)","Registered at","Decided by"];
+  const head=["Name","Designation","Organisation","Org type","Email","Mobile","Participant city","Event","Brands","Experience center","City","Session date","Slot","Time","Trainer","Status","Checked in at","Checked in by","Walk-in","Source","Interests","Answers","Rating","Lead","Lead owner","Next step","Value (INR)","Registered at","Decided by"];
   const data=rows.map(r=>[r.full_name,r.designation||"",r.organization,r.partner_type||"",r.email,r.phone,r.participant_city||"",r.event_title,brandNames(r.brand_ids),r.venue,r.city,r.slot_date,r.slot_label,r.slot_time,r.trainer||"",STATUS_LABEL[r.status]||r.status,
-    r.checked_in_at?new Date(r.checked_in_at).toLocaleString("en-IN"):"",r.checked_in_by||"",r.walk_in?"Yes":"",r.source||"direct",r.interests||"",r.rating||"",LEAD_LABEL[r.lead_level]||"",r.lead_owner||"",r.lead_next||"",r.lead_value||"",new Date(r.created_at).toLocaleString("en-IN"),r.decided_by||""]);
+    r.checked_in_at?new Date(r.checked_in_at).toLocaleString("en-IN"):"",r.checked_in_by||"",r.walk_in?"Yes":"",r.source||"direct",r.interests||"",Object.entries(r.answers||{}).map(([k,v])=>k+": "+v).join(" | "),r.rating||"",LEAD_LABEL[r.lead_level]||"",r.lead_owner||"",r.lead_next||"",r.lead_value||"",new Date(r.created_at).toLocaleString("en-IN"),r.decided_by||""]);
   const ws=XLSX.utils.aoa_to_sheet([head,...data]);
   const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}},alignment:{vertical:"center"},border:{bottom:{style:"thin",color:{rgb:"A51B23"}}}};
   head.forEach((_,i)=>{ const c=XLSX.utils.encode_cell({r:0,c:i}); ws[c].s=hs });
@@ -1746,8 +1771,8 @@ async function exportExcel(){
     const fd=S.fbRows.map(x=>[x.full_name,x.designation||"",x.organization,x.email||"",x.phone||"",x.event_title,x.city,x.slot,x.rating,x.usefulness||"",x.liked||"",x.improve||"",x.next_topics||"",x.wants_demo?"Yes":"",x.wants_quote?"Yes":"",new Date(x.at).toLocaleString("en-IN")]);
     const fws=XLSX.utils.aoa_to_sheet([fh,...fd]); fh.forEach((_,i)=>{ fws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); fws["!cols"]=fh.map(()=>({wch:18}));
     XLSX.utils.book_append_sheet(wb,fws,"Feedback") }
-  if((S.brandRows||[]).length){ const bh=["Brand","Events","Sessions","Registrations","Approved","Attended","Show-up %","Avg rating","Companies","Hot leads","Warm leads","Pipeline (INR)"];
-    const bd=S.brandRows.map(x=>[x.brand,x.events,x.sessions,x.registrations,x.approved,x.attended,x.show_up??"",x.rating??"",x.orgs,x.hot,x.warm,x.pipeline]);
+  if((S.brandRows||[]).length){ const bh=["Brand","Events","Sessions","Registrations","Approved","Attended","Show-up %","Avg rating","Companies","Hot leads","Warm leads","Pipeline (INR)","Cost (INR)","Cost per attendee (INR)"];
+    const bd=S.brandRows.map(x=>[x.brand,x.events,x.sessions,x.registrations,x.approved,x.attended,x.show_up??"",x.rating??"",x.orgs,x.hot,x.warm,x.pipeline,x.cost||"",x.cost&&x.attended?Math.round(x.cost/x.attended):""]);
     const bws=XLSX.utils.aoa_to_sheet([bh,...bd]); bh.forEach((_,i)=>{ bws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); bws["!cols"]=bh.map(()=>({wch:14}));
     XLSX.utils.book_append_sheet(wb,bws,"Brand summary") }
   const e=evById(S.repEvent); const name=("tech-week-"+(e?e.city+"-":"")+$("#rp_st").value+"-"+new Date().toISOString().slice(0,10)).toLowerCase().replace(/[^a-z0-9-]+/g,"-");
@@ -1755,6 +1780,7 @@ async function exportExcel(){
 }
 async function drawCoverage(){
   const box=$("#cv_body"); if(!box) return;
+  if(can("brand")){ box.closest(".card").classList.add("hide"); return }
   if(!S.repProg){ box.innerHTML='<div class="small muted">Create a program first (Admin → Programs).</div>'; return }
   try{
     const r=await rpc("tw_coverage",{p_token:S.token,p_program_id:S.repProg});
@@ -1794,7 +1820,7 @@ function viewAdmin(v){
   $$("[data-at]",v).forEach(b=>b.onclick=()=>{ S.adminTab=b.dataset.at; viewAdmin(v) });
   ({users:adUsers,brands:adBrands,venues:adVenues,programs:adPrograms,settings:adSettings,privacy:adPrivacy,backup:adBackup,email:adEmail,audit:adAudit}[S.adminTab])($("#ad_body"));
 }
-const ROLE_INFO={super:"Everything: events, approvals, users, settings",approver:"Approve/reject, check-in, reports, email log",checkin:"Scan QR and check people in at the door",marketing:"See events, share links, reports (contact details masked), upload targets"};
+const ROLE_INFO={super:"Everything: events, approvals, users, settings",approver:"Approve/reject, check-in, reports, email log",checkin:"Scan QR and check people in at the door",marketing:"See events, share links, reports (contact details masked), upload targets",brand:"Brand / OEM manager: sees only their brand's events, reports and partners (contacts masked)"};
 async function adUsers(b){
   b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
   const r=await rpc("tw_users_list",{p_token:S.token}).catch(e=>({rows:[],err:e.message}));
@@ -1814,16 +1840,20 @@ function editUser(u,b){
     <div><label class="f">Full name</label><input class="in" id="u_fn" value="${esc(u.full_name||"")}"></div>
     <div class="grid g2"><div><label class="f">Email</label><input class="in" id="u_em" value="${esc(u.email||"")}"></div><div><label class="f">Mobile</label><input class="in" id="u_ph" value="${esc(u.phone||"")}"></div></div>
     <div><label class="f">Role</label><select class="in" id="u_ro">${Object.keys(ROLE_INFO).map(k=>`<option value="${k}" ${k===u.role?"selected":""}>${k} — ${ROLE_INFO[k]}</option>`).join("")}</select></div>
+    <div id="u_bbox"><label class="f">Brands this manager can see</label>
+      <div class="row" style="gap:8px">${(S.ov.brands||[]).map(b=>`<label class="bpick"><input type="checkbox" class="u_b" value="${b.id}" ${(u.brand_ids||[]).includes(b.id)?"checked":""}><span style="--bc:${esc(b.color1)}">${esc(b.name)}</span></label>`).join("")}</div></div>
     <div id="u_vbox"><label class="f">Limit to experience centers <span class="muted" style="font-weight:400">(leave all unticked = every center)</span></label>
       <div class="row" style="gap:6px 14px">${(S.ov.venues||[]).map(v=>`<label class="small row" style="gap:6px"><input type="checkbox" class="u_v" value="${v.id}" ${(u.venue_ids||[]).includes(v.id)?"checked":""}> ${esc(v.name.split(" — ")[0])} <span class="muted">(${esc(v.city)})</span></label>`).join("")}</div></div>
     ${!isNew?`<label class="small row"><input type="checkbox" id="u_ac" ${u.is_active?"checked":""}> Active</label>`:""}
     <div class="row"><button class="btn primary" id="u_go">Save</button>${!isNew?'<button type="button" class="btn" id="u_rs">Reset password</button>':""}<button type="button" class="btn" data-close>Cancel</button></div></form>`);
+  const syncRole=()=>{ $("#u_bbox")&&$("#u_bbox").classList.toggle("hide",$("#u_ro").value!=="brand"); $("#u_vbox")&&$("#u_vbox").classList.toggle("hide",["super","brand"].includes($("#u_ro").value)) };
+  $("#u_ro").addEventListener("change",syncRole); syncRole();
   const showPw=(name,pw)=>modal(`<h3>Temporary password</h3><p>Share this with <b>${esc(name)}</b>. They'll be asked to set their own on first sign-in.</p>
     <div class="row"><input class="in grow" value="${esc(pw)}" readonly id="tp"><button class="btn" id="tpc">Copy</button></div>
     <p class="small muted">Console: ${esc(baseUrl())}</p><div class="row"><button class="btn primary" data-close>Done</button></div>`,()=>{ $("#tpc").onclick=()=>copy(`Tech Week console: ${baseUrl()}\nUsername: ${$("#u_un")?$("#u_un").value:u.username}\nTemporary password: ${pw}`) });
   $("#uf").onsubmit=async e=>{ e.preventDefault(); const bt=$("#u_go"); busy(bt,true);
     try{ const un=isNew?$("#u_un").value:u.username;
-      const r=await rpc("tw_user_save",{p_token:S.token,p_data:{id:u.id||"",username:un,full_name:$("#u_fn").value,email:$("#u_em").value,phone:$("#u_ph").value,role:$("#u_ro").value,is_active:isNew?true:$("#u_ac").checked,venue_ids:$("#u_ro").value==="super"?[]:$$(".u_v:checked").map(x=>x.value)}});
+      const r=await rpc("tw_user_save",{p_token:S.token,p_data:{id:u.id||"",username:un,full_name:$("#u_fn").value,email:$("#u_em").value,phone:$("#u_ph").value,role:$("#u_ro").value,is_active:isNew?true:$("#u_ac").checked,venue_ids:$("#u_ro").value==="super"?[]:$$(".u_v:checked").map(x=>x.value),brand_ids:$$(".u_b:checked").map(x=>x.value)}});
       busy(bt,false); if(!r.ok) return toast(r.error,true); adUsers(b); if(r.temp_password){ const n=$("#u_fn").value; showPw(n,r.temp_password); $("#tpc").onclick=()=>copy(`Tech Week console: ${baseUrl()}\nUsername: ${un}\nTemporary password: ${r.temp_password}`) } else { toast("Saved"); closeModal() } }
     catch(ex){ busy(bt,false); toast(ex.message,true) } };
   $("#u_rs") && ($("#u_rs").onclick=async()=>{ if(!confirm("Reset password for "+u.full_name+"?")) return; const r=await rpc("tw_user_reset",{p_token:S.token,p_id:u.id}).catch(e=>({ok:false,error:e.message}));
@@ -1945,7 +1975,7 @@ async function drawBrands(){
   box.innerHTML=`<div class="row between"><div><div class="b">Brand comparison</div><div class="small muted">${esc((PERIODS.find(x=>x[0]===(S.repPeriod||"all"))||[])[1]||"")} · all events you can see · a multi-brand event counts for each of its brands</div></div></div>
     ${rows.length?`<div class="bgrid">${rows.map(x=>`<div class="bcard" style="--bc:${esc(x.color)}"><div class="row between"><span class="bchip" style="--bc:${esc(x.color)}">${esc(x.brand)}</span><span class="tiny muted">${x.events} event${x.events==1?"":"s"} · ${x.sessions} sessions</span></div>
       <div class="bnums"><div><b>${x.registrations}</b><small>registered</small></div><div><b style="color:var(--green)">${x.attended}</b><small>attended</small></div><div><b>${x.show_up!=null?x.show_up+"%":"—"}</b><small>show-up</small></div><div><b>${x.rating!=null?x.rating+"★":"—"}</b><small>rating</small></div></div>
-      <div class="bnums"><div><b>${x.orgs}</b><small>companies</small></div><div><b style="color:var(--red)">${x.hot}</b><small>hot leads</small></div><div><b>${fmtINR(x.pipeline)}</b><small>pipeline</small></div></div>
+      <div class="bnums"><div><b>${x.orgs}</b><small>companies</small></div><div><b style="color:var(--red)">${x.hot}</b><small>hot leads</small></div><div><b>${fmtINR(x.pipeline)}</b><small>pipeline</small></div><div><b>${x.cost?fmtINR(x.cost):"—"}</b><small>${x.cost&&x.attended?fmtINR(x.cost/x.attended)+" / attendee":"cost"}</small></div></div>
       ${(x.cities||[]).length?`<div class="tiny muted">${x.cities.map(c=>`${esc(c.city)} ${c.attended}/${c.registrations}`).join(" · ")}</div>`:""}</div>`).join("")}</div>`
       :'<div class="small muted">No registrations in this period yet.</div>'}`;
 }
@@ -2064,6 +2094,16 @@ function editBrand(br){
       <div class="stack" style="gap:6px">${perks.map((p,i)=>`<div class="row" style="flex-wrap:nowrap;gap:6px"><select class="in" data-pi="${i}" style="max-width:120px">${PERK_ICONS.map(k=>`<option ${k===p.icon?"selected":""}>${k}</option>`).join("")}</select>
         <input class="in" data-pt="${i}" value="${esc(p.title)}" placeholder="Title" style="max-width:190px"><input class="in" data-px="${i}" value="${esc(p.text)}" placeholder="One line description"></div>`).join("")}</div></div>
     <div><label class="f">Certificate line</label><input class="in" id="b_cl" value="${esc(br.cert_line||"")}" placeholder="in association with ${esc(br.name||"Brand")}"></div>
+    <div><label class="f">Extra questions on the registration form <span class="muted" style="font-weight:400">(up to 5)</span></label>
+      <div class="stack" style="gap:6px">${[0,1,2,3,4].map(i=>{ const q=(br.questions||[])[i]||{}; return `<div class="row" style="flex-wrap:nowrap;gap:6px">
+        <input class="in" data-ql="${i}" value="${esc(q.label||"")}" placeholder="${i===0?"e.g. Which "+esc(br.name||"brand")+" products do you use?":"Question"}">
+        <select class="in" data-qt="${i}" style="max-width:120px">${[["text","Text"],["select","Choice"],["yesno","Yes / No"]].map(([k,l])=>`<option value="${k}" ${q.type===k?"selected":""}>${l}</option>`).join("")}</select>
+        <input class="in" data-qo="${i}" value="${esc((q.options||[]).join(", "))}" placeholder="Choices, comma separated" style="max-width:200px">
+        <label class="small row" style="gap:4px;white-space:nowrap"><input type="checkbox" data-qr="${i}" ${q.required?"checked":""}> Required</label></div>` }).join("")}</div></div>
+    <div class="grid g2"><div><label class="f">Content pack link <span class="muted" style="font-weight:400">(slides, datasheets — sent in the thank-you email)</span></label><input class="in" id="b_cu" value="${esc(br.content_url||"")}" placeholder="https://drive.google.com/…"></div>
+      <div><label class="f">Content pack note</label><input class="in" id="b_cn" value="${esc(br.content_note||"")}" placeholder="Slides, firmware links and datasheets from today"></div></div>
+    <details><summary class="b small" style="cursor:pointer">Email wording for this brand</summary><div class="stack" style="margin-top:8px">
+      ${[["invite","Invitation email — extra paragraph"],["confirm","Confirmation email — extra paragraph"],["thankyou","Thank-you email — extra paragraph"]].map(([k,l])=>`<div><label class="f">${l}</label><textarea class="in" data-et="${k}" style="min-height:64px">${esc((br.email_texts||{})[k]||"")}</textarea></div>`).join("")}</div></details>
     <label class="small row" style="gap:8px"><input type="checkbox" id="b_ap" ${br.approved?"checked":""}> The brand (OEM) has approved use of its logo and colours</label>
     ${!isNew?`<label class="small row" style="gap:8px"><input type="checkbox" id="b_ac" ${br.is_active?"checked":""}> Active (can be picked for new events)</label>`:""}
     <div class="row"><button class="btn primary" id="b_go">Save brand</button><button type="button" class="btn" data-close>Cancel</button><div class="grow"></div>${!isNew?'<button type="button" class="btn ghost" id="b_del" style="color:var(--red)">Delete</button>':""}</div></form>`, m=>{
@@ -2083,6 +2123,8 @@ function editBrand(br){
     $("#bf").onsubmit=async ev=>{ ev.preventDefault(); const bt=$("#b_go"); busy(bt,true);
       const pk=[0,1,2,3].map(i=>({icon:$(`[data-pi="${i}"]`).value,title:$(`[data-pt="${i}"]`).value.trim(),text:$(`[data-px="${i}"]`).value.trim()})).filter(x=>x.title);
       const r=await rpc("tw_save_brand",{p_token:S.token,p_data:{id:br.id||"",name:$("#b_n").value,tagline:$("#b_t").value,color1:$("#b_c1t").value,color2:$("#b_c2t").value,logo,perks:pk,cert_line:$("#b_cl").value,
+        questions:[0,1,2,3,4].map(i=>({label:$(`[data-ql="${i}"]`).value.trim(),type:$(`[data-qt="${i}"]`).value,options:$(`[data-qo="${i}"]`).value.split(",").map(x=>x.trim()).filter(Boolean),required:$(`[data-qr="${i}"]`).checked})).filter(q=>q.label&&(q.type!=="select"||q.options.length)),
+        content_url:$("#b_cu").value,content_note:$("#b_cn").value,email_texts:Object.fromEntries($$("[data-et]").map(x=>[x.dataset.et,x.value.trim()]).filter(x=>x[1])),
         approved:$("#b_ap").checked,is_active:isNew?true:$("#b_ac").checked}}).catch(e=>({ok:false,error:e.message}));
       busy(bt,false); if(!r.ok) return toast(r.error,true); toast("Brand saved"); closeModal(); await loadOverview(); go("admin") };
   });
@@ -2174,6 +2216,101 @@ async function renderErase(){
   $("#er_go").onclick=async()=>{ const b=$("#er_go"); busy(b,true); const r=await rpc("tw_erase",{p_pass:tok,p_confirm:true}).catch(e=>({ok:false,error:e.message}));
     if(!r.ok){ busy(b,false); return toast(r.error,true) } renderErase() };
 }
+
+/* ---------------- Should-haves ---------------- */
+const answersLine=r=>{ const a=Object.entries(r.answers||{}); return a.length?`<div class="tiny" style="margin-top:2px">📝 ${a.map(([k,v])=>`<span class="muted">${esc(k)}:</span> ${esc(v)}`).join(" · ")}</div>`:"" };
+const BUDGET_KEYS=[["venue","Venue / room"],["food","Food & refreshments"],["travel","Travel & stay"],["kit","Demo kit & logistics"],["marketing","Marketing & printing"],["other","Other"]];
+const inr=n=>"₹"+Math.round(+n||0).toLocaleString("en-IN");
+function budgetTotal(b){ return BUDGET_KEYS.reduce((a,[k])=>a+(+((b||{})[k])||0),0) }
+function budgetKit(e){
+  const b=e.budget||{}, c=e.counts||{};
+  modal(`<h3>Budget — ${esc(e.title)}</h3><form class="stack" id="bgf">
+    <div class="small muted">Enter actual or planned costs. Reports show cost per attendee by brand, and the claim pack is ready for OEM marketing-fund claims.</div>
+    <div class="grid g2">${BUDGET_KEYS.map(([k,l])=>`<div><label class="f">${l} (₹)</label><input class="in bg_i" inputmode="numeric" data-k="${k}" value="${esc(b[k]||"")}"></div>`).join("")}</div>
+    <div class="grid g2"><div><label class="f">OEM / brand funding (₹)</label><input class="in" id="bg_oem" inputmode="numeric" value="${esc(b.oem_fund||"")}"></div>
+      <div><label class="f">Fund reference / claim no.</label><input class="in" id="bg_ref" value="${esc(b.ref||"")}" placeholder="e.g. MDF-Q3-0142"></div></div>
+    <div><label class="f">Notes</label><textarea class="in" id="bg_n">${esc(b.notes||"")}</textarea></div>
+    <div class="ev-stats" id="bg_sum"></div>
+    <div class="row"><button class="btn primary" id="bg_go">Save budget</button><button type="button" class="btn" id="bg_claim">${ico("download",15)} Claim pack (Excel)</button><button type="button" class="btn" data-close>Cancel</button></div></form>`, m=>{
+    const val=()=>{ const o={}; $$(".bg_i",m).forEach(x=>{ const n=x.value.replace(/[^0-9.]/g,""); if(n) o[x.dataset.k]=+n }); const f=$("#bg_oem").value.replace(/[^0-9.]/g,""); if(f) o.oem_fund=+f;
+      if($("#bg_ref").value.trim()) o.ref=$("#bg_ref").value.trim(); if($("#bg_n").value.trim()) o.notes=$("#bg_n").value.trim(); return o };
+    const sum=()=>{ const o=val(), t=budgetTotal(o), att=c.checked_in||0;
+      $("#bg_sum").innerHTML=`<span><b>${inr(t)}</b> total</span><span class="g"><b>${att}</b> attended</span><span><b>${att?inr(t/att):"—"}</b> per attendee</span>${o.oem_fund?`<span class="w"><b>${inr(o.oem_fund)}</b> OEM funded</span>`:""}` };
+    $$("input",m).forEach(x=>x.oninput=sum); sum();
+    $("#bgf").onsubmit=async ev=>{ ev.preventDefault(); const bt=$("#bg_go"); busy(bt,true);
+      const r=await rpc("tw_event_meta",{p_token:S.token,p_id:e.id,p_data:{budget:val()}}).catch(x=>({ok:false,error:x.message})); busy(bt,false);
+      if(!r.ok) return toast(r.error,true); toast("Budget saved"); closeModal(); await loadOverview(); go(S.tab) };
+    $("#bg_claim").onclick=()=>claimPack(e,val());
+  });
+}
+async function claimPack(e,b){
+  try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"); await loadRegs(e.id) }catch(x){ return toast(x.message,true) }
+  const att=S.regs.filter(r=>r.checked_in_at), t=budgetTotal(b);
+  const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}}};
+  const sum=[["Event",e.title],["Brands",brandNames(e.brand_ids)],["City / Experience Center",e.city+" — "+e.venue_name],["Dates",evDates(e)],["Sessions",e.slots.filter(s=>s.is_active).length],
+    ["Registrations",e.counts.total],["Approved",e.counts.approved],["Attended",att.length],["Companies attended",new Set(att.map(r=>(r.organization||"").toLowerCase().trim())).size],[],
+    ...BUDGET_KEYS.map(([k,l])=>[l+" (INR)",+(b[k]||0)]),["Total cost (INR)",t],["Cost per attendee (INR)",att.length?Math.round(t/att.length):""],["OEM funding (INR)",+(b.oem_fund||0)],["Fund reference",b.ref||""],["Notes",b.notes||""]];
+  const ws=XLSX.utils.aoa_to_sheet([["Claim summary",""],...sum]); ws["A1"].s=hs; ws["B1"].s=hs; ws["!cols"]=[{wch:30},{wch:50}];
+  const ah=["Name","Designation","Organisation","Org type","Session","City","Checked in","Rating"];
+  const ad=att.map(r=>[r.full_name,r.designation||"",r.organization,r.partner_type||"",r.slot_date+" "+r.slot_label,r.city,new Date(r.checked_in_at).toLocaleString("en-IN"),r.rating||""]);
+  const aws=XLSX.utils.aoa_to_sheet([ah,...ad]); ah.forEach((_,i)=>{ aws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); aws["!cols"]=ah.map(()=>({wch:20}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Summary"); XLSX.utils.book_append_sheet(wb,aws,"Attendees");
+  XLSX.writeFile(wb,("claim-pack-"+e.city+"-"+todayStr()).toLowerCase().replace(/[^a-z0-9-]+/g,"-")+".xlsx"); toast("Claim pack downloaded");
+}
+function drawCalendar(box){
+  S.calMonth=S.calMonth||todayStr().slice(0,7);
+  const [y,mo]=S.calMonth.split("-").map(Number), first=new Date(y,mo-1,1), days=new Date(y,mo,0).getDate(), lead=(first.getDay()+6)%7;
+  const byDay={}; (S.ov.events||[]).forEach(e=>e.slots.filter(s=>s.is_active).forEach(s=>{ (byDay[s.local_date]=byDay[s.local_date]||[]).push({e,s}) }));
+  const venues=[...new Set((S.ov.events||[]).map(e=>e.city))];
+  const colorOf=e=>{ const b=brandById((e.brand_ids||[])[0]); return b?b.color1:"#6B7480" };
+  const cells=[]; for(let i=0;i<lead;i++) cells.push('<div class="cal-c off"></div>');
+  for(let d=1;d<=days;d++){ const ds=S.calMonth+"-"+String(d).padStart(2,"0"); const items=(byDay[ds]||[]).sort((a,b)=>a.s.starts_at.localeCompare(b.s.starts_at)); const wk=((lead+d-1)%7)>=5;
+    cells.push(`<div class="cal-c ${ds===todayStr()?"today":""} ${wk?"wk":""}"><div class="cal-d">${d}</div>${items.map(({e,s})=>`<button class="cal-i" data-cal="${e.id}" style="--bc:${esc(colorOf(e))}" title="${esc(e.title)} · ${esc(s.label)} ${esc(s.time_label)} · ${s.approved}/${s.capacity}">
+      <b>${esc(e.city)}</b> ${esc(s.label)}<span>${s.approved}/${s.capacity}</span></button>`).join("")}</div>`) }
+  const prev=new Date(y,mo-2,1), next=new Date(y,mo,1), ym=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0");
+  const monthSessions=Object.keys(byDay).filter(k=>k.startsWith(S.calMonth)).reduce((a,k)=>a+byDay[k].length,0);
+  box.innerHTML=`<div class="card pad"><div class="row between" style="margin-bottom:10px"><button class="btn sm" data-cm="${ym(prev)}">‹</button>
+      <div class="b" style="font-size:17px">${first.toLocaleDateString("en-IN",{month:"long",year:"numeric"})} <span class="small muted" style="font-weight:400">· ${monthSessions} session${monthSessions===1?"":"s"} · ${venues.length} cit${venues.length===1?"y":"ies"}</span></div>
+      <button class="btn sm" data-cm="${ym(next)}">›</button></div>
+    <div class="cal-h">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>`<div>${x}</div>`).join("")}</div><div class="cal-g">${cells.join("")}</div>
+    <div class="row" style="margin-top:10px;gap:10px">${(S.ov.brands||[]).filter(b=>(S.ov.events||[]).some(e=>(e.brand_ids||[])[0]===b.id)).map(b=>`<span class="bchip" style="--bc:${esc(b.color1)}">${esc(b.name)}</span>`).join("")}<span class="tiny muted">Tap a session to open its event</span></div></div>`;
+  $$("[data-cm]",box).forEach(b=>b.onclick=()=>{ S.calMonth=b.dataset.cm; drawCalendar(box) });
+  $$("[data-cal]",box).forEach(b=>b.onclick=()=>{ const e=evById(b.dataset.cal); can("super")?editEvent(e):sessionsView(e) });
+}
+function printSheet(title,html){
+  const w=window.open("","_blank"); if(!w) return toast("Allow pop-ups to print",true);
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;color:#14171A;margin:24px}h1{font-size:20px;margin:0 0 4px}.m{color:#6B7480;font-size:13px;margin-bottom:14px}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #D7DBE0;padding:7px 8px;text-align:left}th{background:#F1F3F5}
+    .sheet{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bd{border:1px solid #D7DBE0;border-radius:12px;height:62mm;overflow:hidden;display:flex;flex-direction:column;break-inside:avoid}
+    .bd .t{color:#fff;padding:8px 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}.bd .c{flex:1;display:flex;gap:10px;align-items:center;padding:10px 12px}
+    .bd .n{font-size:22px;font-weight:800;line-height:1.1}.bd .o{font-size:13px;color:#3A4149;margin-top:4px}.bd .q{width:26mm;height:26mm;flex:none}.bd .q img,.bd .q canvas{width:100%;height:100%}
+    @media print{body{margin:8mm}.np{display:none}}</style></head><body><div class="np" style="margin-bottom:12px"><button onclick="print()">Print</button></div>${html}</body></html>`);
+  w.document.close(); setTimeout(()=>{ try{ w.focus(); w.print() }catch(e){} },600);
+}
+function visitorList(e){
+  if(!e) return;
+  const days=[...new Set(e.slots.filter(s=>s.is_active).map(s=>s.local_date))].sort();
+  modal(`<h3>Visitor list for building security</h3><div class="stack"><div class="small muted">Approved visitors for one day at ${esc(e.venue_name)}, ${esc(e.city)}. Print it or send the PDF to the security desk the evening before.</div>
+    <select class="in" id="vl_d">${days.map(d=>`<option value="${d}" ${d===todayStr()?"selected":""}>${esc(dayLabel(d))}</option>`).join("")}</select>
+    <label class="small row" style="gap:8px"><input type="checkbox" id="vl_ph" checked> Include mobile numbers</label>
+    <div class="row"><button class="btn primary" id="vl_go">${ico("printer",15)} Print / save as PDF</button><button class="btn" data-close>Close</button></div></div>`, ()=>{
+    $("#vl_go").onclick=async()=>{ await loadRegs(e.id).catch(()=>{}); const d=$("#vl_d").value;
+      const rows=S.regs.filter(r=>r.status==="approved"&&String(r.slot_starts_at).length&&e.slots.find(s=>s.id===r.slot_id&&s.local_date===d)).sort((a,b)=>a.slot_starts_at.localeCompare(b.slot_starts_at)||a.full_name.localeCompare(b.full_name));
+      printSheet("Visitors "+d,`<h1>Visitor list — ${esc(dayLabel(d))}</h1><div class="m">${esc(e.venue_name)}, ${esc(e.city)} · ${esc(e.title)} · ${rows.length} visitors · host: Cavitak</div>
+        <table><tr><th>#</th><th>Name</th><th>Organisation</th>${$("#vl_ph").checked?"<th>Mobile</th>":""}<th>Session</th><th>In time</th><th>Sign</th></tr>
+        ${rows.map((r,i)=>`<tr><td>${i+1}</td><td><b>${esc(r.full_name)}</b><br><small>${esc(r.designation||"")}</small></td><td>${esc(r.organization)}</td>${$("#vl_ph").checked?`<td>${esc(r.phone)}</td>`:""}<td>${esc(r.slot_label)}<br><small>${esc(r.slot_time)}</small></td><td></td><td></td></tr>`).join("")||'<tr><td colspan="7">No approved visitors for this day.</td></tr>'}</table>`) };
+  });
+}
+function printBadges(list,e){
+  if(!list.length) return toast("No approved attendees in this session",true);
+  const b=brandById(((e||{}).brand_ids||[])[0]), col=b?b.color2:"#8E1219";
+  const html=`<div class="sheet">${list.map(r=>`<div class="bd"><div class="t" style="background:${esc(col)}">Cavitak${b?" × "+esc(b.name):""} · Tech Week</div>
+    <div class="c"><div style="flex:1"><div class="n">${esc(r.full_name)}</div><div class="o">${esc(r.designation||"")}</div><div class="o"><b>${esc(r.organization)}</b></div></div>
+    <div class="q">${r.pass_token?`<img src="${qrDataUrl(regLinkPass(r.pass_token),300)}">`:""}</div></div></div>`).join("")}</div>`;
+  printSheet("Badges",html);
+}
+const regLinkPass=tok=>baseUrl().split("?")[0]+"?p="+tok;
 
 /* ---------------- start ---------------- */
 if(params.has("e")) renderRegister();

@@ -148,6 +148,16 @@ function detailsBlock(p: any, opts: { showAgenda?: boolean } = {}) {
 
 function brandsOf(p: any): any[] { return Array.isArray(p.event?.brands) ? p.event.brands : []; }
 function headColor(p: any) { const b = brandsOf(p); return b.length === 1 && /^#[0-9a-f]{6}$/i.test(b[0].color1 || "") ? b[0].color1 : RED; }
+function extraText(p: any, key: string) {
+  const t = brandsOf(p).map((b: any) => (b.email_texts || {})[key]).filter(Boolean);
+  return t.length ? t.map((x: string) => `<p>${esc(x).replace(/\n/g, "<br>")}</p>`).join("") : "";
+}
+function contentPack(p: any) {
+  const b = brandsOf(p).find((x: any) => x.content_url);
+  if (b) return { url: b.content_url as string, note: (b.content_note as string) || `${b.name} slides & resources` };
+  const fu = (p.settings?.followup_url ?? "").trim();
+  return fu ? { url: fu, note: "Slides & resources" } : null;
+}
 function publicBase(p: any) { return (p.settings?.public_url ?? "").trim().split("?")[0]; }
 function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
   const bs = brandsOf(p);
@@ -167,7 +177,7 @@ function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
   </td></tr>
   <tr><td style="padding:22px 24px;color:${INK};font-size:15px;line-height:1.55">${bodyHtml}</td></tr>
   <tr><td style="padding:14px 24px;border-top:1px solid #EEF0F2;color:${MUTED};font-size:12px;line-height:1.5">
-    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : p.outbox?.kind === "trainer_brief" ? "Sent to the trainer assigned to this session in the Tech Week console." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
+    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : p.outbox?.kind === "trainer_brief" ? "Sent to the trainer assigned to this session in the Tech Week console." : p.outbox?.kind === "approver_digest" ? "Daily summary for Tech Week approvers. Sent only on days with pending requests." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
     ${p.settings?.reply_to ? `Questions? Reply to this email or write to ${esc(p.settings.reply_to)}.` : ""}
     ${privacy || erase ? `<div style="margin-top:6px">${[privacy, erase].filter(Boolean).join(" · ")}</div>` : ""}
   </td></tr>
@@ -222,6 +232,7 @@ async function build(p: any): Promise<Mail> {
         ${await qrBlock("Your entry pass")}
         ${detailsBlock(p, { showAgenda: true })}
         <p style="margin-top:18px">${btn(pass, "Open my pass")}${linkBtn(v.map_url, "Directions")}</p>
+        ${kind === "approved" ? extraText(p, "confirm") : ""}
         <p style="font-size:13px;color:${MUTED}">A calendar invite is attached. If you can no longer attend, please cancel from your pass page so the seat can go to another partner.</p>`;
       addIcs();
       break;
@@ -292,12 +303,14 @@ async function build(p: any): Promise<Mail> {
           <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">Attached as a PDF · Certificate ID ${esc(r.cert_code)}</div>
           ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : ""}
         ${fb ? `<p><strong>How was the session?</strong> Two minutes of feedback helps us plan the next one.</p><p>${btn(fb, "Rate the session ★★★★★")}</p>` : ""}
-        ${(p.settings?.followup_url ?? "").trim() ? `<p>${linkBtn(p.settings.followup_url, "Slides & resources")}</p>` : ""}
+        ${contentPack(p) ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC"><div style="font-weight:700">📁 Your content pack</div>
+          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${esc(contentPack(p)!.note)}</div>${btn(contentPack(p)!.url, "Open content pack")}</div>` : ""}
+        ${extraText(p, "thankyou")}
         <p>For demos, project support or pricing, simply reply to this email.</p>`;
       break;
     }
     case "noshow": {
-      const fu = (p.settings?.followup_url ?? "").trim();
+      const fu = contentPack(p)?.url || "";
       const more = (p.next_slots || []).slice(0, 6);
       subject = `We missed you at ${e.title}`;
       headline = "We missed you today";
@@ -332,6 +345,7 @@ async function build(p: any): Promise<Mail> {
         ${e.description ? `<p style="color:${MUTED}">${esc(e.description)}</p>` : ""}
         ${sched ? `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #E6E8EB;border-radius:10px;padding:12px 16px;background:#FAFBFC;font-size:14px">${sched}</table>` : ""}
         <p style="margin:16px 0 6px">Seats are limited to ${esc(String((list[0] || {}).capacity || ""))} per session and confirmed on approval. Pick the session that suits you:</p>
+        ${extraText(p, "invite")}
         <p>${btn(link, "Register now →")}</p>
         <p style="font-size:13px;color:${MUTED}">📍 ${esc(v.address).replace(/\n/g, ", ")}${v.map_url ? ` · <a href="${esc(v.map_url)}" style="color:${RED}">Map</a>` : ""}</p>`;
       break;
@@ -352,6 +366,23 @@ async function build(p: any): Promise<Mail> {
           <tr style="background:#F5F6F8;font-size:12px;color:${MUTED};text-align:left"><th style="padding:6px 8px">#</th><th style="padding:6px 8px">Name</th><th style="padding:6px 8px">Organisation</th><th style="padding:6px 8px">Wants to learn</th></tr>${rows}</table>`
           : `<p style="color:${MUTED}">No confirmed partners yet.</p>`}
         <p style="margin-top:16px;font-size:13px;color:${MUTED}">Contact details are kept in the console for privacy. The check-in team will have the room QR ready.</p>`;
+      break;
+    }
+    case "approver_digest": {
+      const list = (p.pending || []) as any[];
+      const cu = consoleUrl(p);
+      subject = `${list.length} Tech Week request${list.length === 1 ? "" : "s"} waiting for approval`;
+      headline = "Requests waiting for you";
+      pre = `${list.length} pending · oldest from ${list.length ? list[list.length - 1].age : ""}`;
+      const byEv: Record<string, any[]> = {};
+      list.forEach((x: any) => { (byEv[x.event] = byEv[x.event] || []).push(x); });
+      body = `<p>Hi ${first},</p><p>These partners are waiting for approval. Approving sends them their QR pass automatically.</p>
+        ${Object.keys(byEv).map((k) => `<h3 style="font-size:15px;margin:18px 0 6px">${esc(k)} <span style="font-weight:400;color:${MUTED}">· ${byEv[k].length}</span></h3>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;border-collapse:collapse">${byEv[k].map((x: any) => `<tr>
+          <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2"><strong>${esc(x.name)}</strong><div style="font-size:12px;color:${MUTED}">${esc([x.designation, x.organization].filter(Boolean).join(" · "))}</div></td>
+          <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2;font-size:13px">${esc(x.session)}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2;font-size:12px;color:${MUTED};white-space:nowrap">${esc(x.age)}</td></tr>`).join("")}</table>`).join("")}
+        <p style="margin-top:18px">${btn(cu, "Open approvals")}</p>`;
       break;
     }
     case "admin_new": {
