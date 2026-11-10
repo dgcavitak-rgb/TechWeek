@@ -72,6 +72,25 @@ table.t td{padding:9px 10px;border-bottom:1px solid var(--line-2);vertical-align
 @media(min-width:720px){.modal{border-radius:16px}}
 .modal{position:relative}
 .modal h3{font-size:18px;margin-bottom:12px;padding-right:36px}
+/* smooth motion: page change, pop-ups, toasts */
+@keyframes vin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bgin{from{opacity:0}to{opacity:1}}
+@keyframes min{from{opacity:.4;transform:translateY(40px)}to{opacity:1;transform:none}}
+@keyframes mind{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+.vin{animation:vin .26s cubic-bezier(.2,.7,.3,1)}
+.modal-bg{animation:bgin .18s ease-out}
+.modal{animation:min .26s cubic-bezier(.2,.8,.3,1);overscroll-behavior:contain}
+@media(min-width:720px){.modal{animation-name:mind}}
+.modal-bg.out{opacity:0;transition:opacity .16s ease-in;pointer-events:none}
+.modal-bg.out .modal{transform:translateY(24px);transition:transform .16s ease-in}
+@media(min-width:720px){.modal-bg.out .modal{transform:scale(.97)}}
+.toast{animation:tin .22s ease-out;transition:opacity .25s,transform .25s}.toast.out{opacity:0;transform:translate(-50%,8px)}
+.btn,.tabs button,.bnav button,.seg button,.card,.acct,.hbtn{transition:background-color .15s,color .15s,border-color .15s,box-shadow .2s,transform .12s}
+.btn:active:not(:disabled),.bnav button:active,.seg button:active{transform:scale(.97)}
+.bnav button svg{transition:transform .2s}.bnav button.on svg{transform:translateY(-2px)}
+html{scroll-behavior:auto;-webkit-tap-highlight-color:transparent}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .mclose{position:sticky;top:0;float:right;margin:-6px -6px 0 0;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:15px;color:var(--muted);z-index:2}
 .mclose:hover{background:var(--grey-50);color:var(--ink)}
 .empty{padding:28px;text-align:center;color:var(--muted)}
@@ -323,7 +342,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.4.0";
+const APP_VERSION = "2.4.1";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -337,7 +356,8 @@ const store = {
 };
 function toast(msg, err=false){
   const t=document.createElement("div"); t.className="toast"+(err?" err":""); t.textContent=msg;
-  document.body.appendChild(t); setTimeout(()=>t.remove(), err?4800:2600);
+  $$(".toast").forEach(o=>o.remove()); // never stack toasts on top of each other
+  document.body.appendChild(t); setTimeout(()=>{ t.classList.add("out"); setTimeout(()=>t.remove(),260) }, err?4800:2600);
 }
 async function rpc(fn, args = {}){
   const res = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
@@ -386,22 +406,48 @@ function download(name, content, type){
 }
 function modal(html, onMount){
   const root=$("#modal-root");
-  root.innerHTML=`<div class="modal-bg"><div class="modal" role="dialog"><button type="button" class="mclose" aria-label="Close" title="Close">✕</button>${html}</div></div>`;
+  const wasOpen=modalOpen(); window._modalLock=false;
+  root.innerHTML=`<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true"><button type="button" class="mclose" aria-label="Close" title="Close">✕</button>${html}</div></div>`;
   const bg=root.firstElementChild, box=bg.firstElementChild;
+  if(wasOpen) bg.style.animation="none"; // swapping one pop-up for another: no flash of the backdrop
+  document.body.style.overflow="hidden"; // page behind stays still while the pop-up scrolls
+  // phone / browser Back closes the pop-up instead of leaving the app
+  if(!(history.state&&history.state.modal)) history.pushState(Object.assign({},history.state||{},{modal:1}),"");
   let dirty=false;
   const mark=e=>{ if(e.target.closest && e.target.closest("form")) dirty=true };
   box.addEventListener("input", mark, true); box.addEventListener("change", mark, true);
   // Closing by tapping outside / Esc / ✕ never silently throws away typed changes
-  const tryClose=()=>{ if(!dirty || confirm("You have unsaved changes. Close without saving?")) closeModal() };
+  const tryClose=()=>{ if(window._modalLock) return; if(!dirty || confirm("You have unsaved changes. Close without saving?")) closeModal() };
   bg.addEventListener("click", e=>{ if(e.target===bg) tryClose() });
   $(".mclose", box).onclick=tryClose;
   $$("[data-close]", bg).forEach(b=>b.onclick=tryClose);
   window._modalEsc=e=>{ if(e.key==="Escape") tryClose() }; document.addEventListener("keydown", window._modalEsc);
+  window._modalTry=()=>{ if(!dirty || confirm("You have unsaved changes. Close without saving?")){ closeModal(true); return true } return false };
   onMount && onMount(box);
   dirty=false; // values filled in by onMount don't count as edits
   return box;
 }
-function closeModal(){ $("#modal-root").innerHTML=""; if(window._modalEsc){ document.removeEventListener("keydown", window._modalEsc); window._modalEsc=null } }
+function modalOpen(){ return !!document.querySelector("#modal-root>.modal-bg:not(.out)") }
+function closeModal(fromBack){
+  const bg=document.querySelector("#modal-root>.modal-bg:not(.out)");
+  if(bg){ bg.classList.add("out"); setTimeout(()=>bg.remove(),170) }
+  if(window._modalEsc){ document.removeEventListener("keydown", window._modalEsc); window._modalEsc=null }
+  window._modalTry=null; window._modalLock=false; document.body.style.overflow="";
+  // drop the pop-up's history entry — unless another pop-up opens straight after this one
+  if(!fromBack) setTimeout(()=>{ if(!modalOpen() && history.state&&history.state.modal){ window._skipPop=true; history.back() } },0);
+}
+window.addEventListener("popstate", e=>{
+  if(window._skipPop){ window._skipPop=false; return }
+  const st=e.state||{};
+  if(modalOpen()){
+    if(window._modalLock || (window._modalTry && !window._modalTry())){ history.pushState(Object.assign({},st,{modal:1}),""); return }
+    if(!window._modalTry) closeModal(true);
+  }
+  if(!$("#view") || !S.user) return;
+  const tab=st.tab || "dash";
+  if(tab==="admin" && st.at) S.adminTab=st.at;
+  if(tab!==S.tab || tab==="admin") go(tab,{fromBack:true});
+});
 function busy(btn, on){ if(!btn) return; if(on){ btn.dataset.t=btn.innerHTML; btn.innerHTML='<span class="spin"></span>'; btn.disabled=true } else { btn.innerHTML=btn.dataset.t||btn.innerHTML; btn.disabled=false } }
 const STATUS_LABEL={pending:"Pending",approved:"Approved",waitlisted:"Waitlisted",rejected:"Rejected",cancelled:"Cancelled"};
 const chip=(s)=>`<span class="chip ${esc(s)}">${esc(STATUS_LABEL[s]||s)}</span>`;
@@ -772,7 +818,7 @@ async function renderSelfCheckin(){
   const saved=store.get("tw_pass_"+d.event.slug);
   let me=null;
   if(saved){ try{ const p=await rpc("tw_pass",{p_token:saved}); if(p.ok && p.status!=="cancelled") me=p }catch(e){} }
-  const cur=d.current[0];
+  const cur=(d.current||[])[0];
   app.innerHTML=`
   <div class="hero" style="padding-bottom:64px"><div class="wrap" style="max-width:520px">
     <div class="eyebrow">${esc(d.brand||"Cavitak")} · Tech Week · ${esc(d.venue.city)}</div>
@@ -919,7 +965,8 @@ async function bootConsole(){
   try{ await loadOverview() }catch(e){ return renderLogin(/not_auth/.test(e.message)?"":e.message) }
   if(S.user.must_change) return changePassword(true);
   const allowed=TAB_DEF.filter(t=>t.roles.includes(S.user.role));
-  if(!allowed.find(t=>t.id===S.tab)) S.tab=allowed[0].id;
+  const h=location.hash.slice(1); if(h && (h==="help"||allowed.find(t=>t.id===h))) S.tab=h;
+  if(S.tab!=="help" && !allowed.find(t=>t.id===S.tab)) S.tab=allowed[0].id;
   $("#app").innerHTML=`
   <header class="top"><div class="wrap">
     <div class="logo"><i>C</i><span>Tech Week</span></div>
@@ -933,7 +980,7 @@ async function bootConsole(){
   $$("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab));
   $("#me").onclick=accountMenu;
   $("#hlp").onclick=()=>{ $$("[data-tab]").forEach(b=>b.classList.remove("on")); go("help") };
-  go(S.tab);
+  go(S.tab,{replace:true});
 }
 async function loadOverview(){
   const ov=await rpc("tw_overview",{p_token:S.token});
@@ -943,10 +990,22 @@ async function loadOverview(){
     rpc("tw_settings_save",{p_token:S.token,p_data:{public_url:location.origin+location.pathname}}).then(()=>{S.settings.public_url=location.origin+location.pathname}).catch(()=>{});
   }
 }
-function go(tab){
+function go(tab, o={}){
+  const ok=tab==="help" || TAB_DEF.some(t=>t.id===tab && t.roles.includes(S.user.role));
+  if(!ok) tab="dash";
+  if(window._modalLock!==true && modalOpen()) closeModal(true);
   S.tab=tab; store.set("tw_tab",tab);
+  if(!o.fromBack){
+    const st={tab}; if(tab==="admin") st.at=S.adminTab;
+    const url=location.pathname+location.search+"#"+tab;
+    const hs=history.state||{};
+    // first screen, a leftover pop-up entry, or same page again → replace; a real move → new Back step
+    if(o.replace || !hs.tab || (hs.modal&&!modalOpen()) || (hs.tab===tab && hs.at===st.at)) history.replaceState(st,"",url);
+    else history.pushState(st,"",url);
+  }
   $$("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
   const v=$("#view"); window.scrollTo(0,0);
+  v.classList.remove("vin"); void v.offsetWidth; v.classList.add("vin");
   if(window._scanner){ try{ window._scanner.stop() }catch(e){} window._scanner=null }
   ({dash:viewDash,events:viewEvents,approvals:viewApprovals,checkin:viewCheckin,reports:viewReports,partners:viewPartners,admin:viewAdmin,help:viewHelp}[tab])(v);
 }
@@ -955,7 +1014,7 @@ function accountMenu(){
     <div class="stack"><button class="btn block" id="cp">${ico("key",17)} Change password</button><button class="btn block" id="lo">${ico("logout",17)} Sign out</button><button class="btn ghost block" data-close>Close</button>
     <div class="tiny muted" style="text-align:center">Tech Week Console v${APP_VERSION}</div></div>`);
   $("#cp").onclick=()=>changePassword(false);
-  $("#lo").onclick=async()=>{ try{ await rpc("tw_logout",{p_token:S.token}) }catch(e){} store.set("tw_token",null); S.token=null; closeModal(); renderLogin() };
+  $("#lo").onclick=async()=>{ try{ await rpc("tw_logout",{p_token:S.token}) }catch(e){} store.set("tw_token",null); S.token=null; closeModal(true); history.replaceState(null,"",location.pathname+location.search); renderLogin() };
 }
 function changePassword(forced){
   modal(`<h3>${forced?"Set your own password":"Change password"}</h3>${forced?'<div class="banner info" style="margin-bottom:12px">You signed in with a temporary password. Please set your own to continue.</div>':""}
@@ -963,6 +1022,7 @@ function changePassword(forced){
     <div><label class="f">New password (min 8 characters)</label><input class="in" type="password" id="c1" autocomplete="new-password"></div>
     <div><label class="f">Confirm new password</label><input class="in" type="password" id="c2" autocomplete="new-password"></div>
     <div class="row"><button class="btn primary" id="cpb">Save password</button>${forced?"":'<button type="button" class="btn" data-close>Cancel</button>'}</div></form>`);
+  if(forced){ window._modalLock=true; const x=$("#modal-root .mclose"); x&&x.remove() }
   $("#cpf").onsubmit=async e=>{
     e.preventDefault(); if($("#c1").value!==$("#c2").value) return toast("Passwords don't match",true);
     const b=$("#cpb"); busy(b,true);
@@ -1841,7 +1901,7 @@ function viewAdmin(v){
   if(!tabs.find(t=>t[0]===S.adminTab)) S.adminTab=tabs[0][0];
   const AT_IC={users:"users",brands:"tag",venues:"building",programs:"layers",settings:"key",privacy:"shield",backup:"download",email:"mail",audit:"history"};
   v.innerHTML=`${pageHead(ICONS.admin,"Admin","Team, venues, programs, email settings and logs")}<div class="seg segi" style="margin-bottom:12px">${tabs.map(t=>`<button data-at="${t[0]}" class="${t[0]===S.adminTab?"on":""}">${ico(AT_IC[t[0]],15)} ${t[1]}</button>`).join("")}</div><div id="ad_body"></div>`;
-  $$("[data-at]",v).forEach(b=>b.onclick=()=>{ S.adminTab=b.dataset.at; viewAdmin(v) });
+  $$("[data-at]",v).forEach(b=>b.onclick=()=>{ if(S.adminTab===b.dataset.at) return; S.adminTab=b.dataset.at; history.pushState({tab:"admin",at:S.adminTab},"",location.pathname+location.search+"#admin"); viewAdmin(v); $("#ad_body").classList.add("vin") });
   ({users:adUsers,brands:adBrands,venues:adVenues,programs:adPrograms,settings:adSettings,privacy:adPrivacy,backup:adBackup,email:adEmail,audit:adAudit}[S.adminTab])($("#ad_body"));
 }
 const ROLE_INFO={super:"Everything: events, approvals, users, settings",approver:"Approve/reject, check-in, reports, email log",checkin:"Scan QR and check people in at the door",marketing:"See events, share links, reports (contact details masked), upload targets",brand:"Brand / OEM manager: sees only their brand's events, reports and partners (contacts masked)"};
