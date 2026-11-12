@@ -306,8 +306,14 @@ body.rg .btn.primary{background:var(--acc);border-color:var(--acc)}
 body.rg .btn.primary:hover{filter:brightness(.92)}
 .rg-hero{position:relative;overflow:hidden;color:#fff;padding:22px 0 54px;background:radial-gradient(900px 500px at 85% 10%,rgba(255,255,255,.14),transparent 60%),linear-gradient(135deg,#1A0B0D 0%,var(--acc2) 45%,var(--acc) 100%)}
 body.rg-bs .rg-hero{background:radial-gradient(900px 500px at 85% 10%,rgba(255,255,255,.14),transparent 60%),linear-gradient(135deg,#120F2E 0%,#312E81 45%,#7C3AED 82%,#C8232C 130%)}
-.rg-art{position:absolute;right:-60px;top:20px;width:620px;max-width:none;opacity:.9;pointer-events:none}
-@media(max-width:720px){.rg-art{width:460px;right:-170px;top:-10px;opacity:.45}}
+.rg-art3d{position:absolute;right:max(0px,calc((100vw - 1160px)/2));top:40px;width:430px;max-width:none;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 30px 40px rgba(0,0,0,.35));animation:artin .9s cubic-bezier(.2,.7,.2,1) both,float 7s ease-in-out .9s infinite}
+@keyframes artin{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes float{50%{transform:translateY(-8px)}}
+@media(min-width:721px){.rg-hero .rg-kicker,.rg-hero .rg-title,.rg-hero .rg-lead,.rg-hero .rg-facts{max-width:min(600px,calc(100% - 460px))}}
+@media(min-width:721px){.rg-hero .rg-facts{grid-template-columns:1fr 1fr;max-width:min(520px,calc(100% - 460px))}}
+@media(max-width:1100px){.rg-art3d{width:400px;right:-60px;opacity:.75}}
+@media(max-width:720px){.rg-art3d{display:none}}
 .rg-hwrap{position:relative}
 .rg-brand{display:flex;align-items:center;gap:8px;font-size:15px}.rg-brand i{width:30px;height:30px;border-radius:9px;background:#fff;color:#C8232C;display:grid;place-items:center;font-style:normal;font-weight:800}
 .rg-pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
@@ -356,7 +362,9 @@ body.rg .consent input{accent-color:var(--acc)}
 @media(min-width:960px){.rg-sticky{display:none}}
 body.rg .foot{padding-bottom:96px}
 .rg-done{position:relative;overflow:hidden;text-align:center;padding:30px 18px}
-.rg-emoji{font-size:54px;line-height:1;margin-bottom:8px}.rg-done h2{font-size:26px}
+.rg-emoji{font-size:54px;line-height:1;margin-bottom:8px}
+.rg-okart{display:block;width:180px;height:auto;margin:-6px auto 6px;animation:okin .7s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes okin{from{opacity:0;transform:scale(.6) rotate(-8deg)}to{opacity:1;transform:none}}.rg-done h2{font-size:26px}
 .rg-ticket{max-width:420px;margin:16px auto 0;border:1.5px dashed var(--acc);border-radius:16px;padding:14px;background:var(--acc-50);display:flex;flex-direction:column;gap:10px}
 .rg-tstat{align-self:flex-start;font-size:12px;font-weight:700;background:#fff;border-radius:999px;padding:3px 10px;color:var(--acc)}
 .rg-done>*:not(.rg-confetti){position:relative;z-index:1}.rg-confetti{position:absolute;inset:0;pointer-events:none}.rg-confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;opacity:0;animation:cf 1.6s ease-out forwards}
@@ -377,7 +385,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.1";
+const APP_VERSION = "2.5.2";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -622,17 +630,7 @@ async function renderRegister(){
 
   app.innerHTML = `
   <header class="rg-hero">
-    <svg class="rg-art" viewBox="0 0 600 420" aria-hidden="true">
-      <defs><linearGradient id="gl" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".02"/></linearGradient></defs>
-      <g fill="none" stroke="#fff" stroke-opacity=".35">
-        <rect x="250" y="40" width="300" height="180" rx="14" fill="url(#gl)"/><rect x="268" y="58" width="264" height="144" rx="6" stroke-opacity=".25"/>
-        <path d="M380 220v40M340 262h80" stroke-width="3"/>
-        <rect x="120" y="190" width="200" height="120" rx="12" fill="url(#gl)"/><rect x="134" y="204" width="172" height="92" rx="5" stroke-opacity=".25"/>
-        <rect x="360" y="290" width="120" height="34" rx="8" fill="url(#gl)"/><circle cx="380" cy="307" r="4" fill="#fff" fill-opacity=".7"/><path d="M398 307h60" stroke-opacity=".5"/>
-        <path d="M320 250 C350 270 360 290 380 290" stroke-dasharray="4 6"/><path d="M480 307 C520 300 540 260 530 220" stroke-dasharray="4 6"/>
-      </g>
-      <g fill="#fff" fill-opacity=".18">${Array.from({length:42},(_,i)=>`<circle cx="${40+(i%7)*22}" cy="${40+Math.floor(i/7)*22}" r="2"/>`).join("")}</g>
-    </svg>
+    <img class="rg-art3d" src="art-hero.webp" alt="" aria-hidden="true" decoding="async" fetchpriority="high" style="${artHue(brands,bs)}">
     <div class="wrap rg-hwrap">
       <div class="row between"><div class="rg-brand"><i>C</i><span>Cavitak <b>Tech Week</b></span>${brands.filter(b=>b.logo).map(b=>`<span class="rg-blogo"><img src="${esc(b.logo)}" alt="${esc(b.name)}"></span>`).join("")}</div>
         ${d.open&&seatsTot?`<span class="rg-pill">🔥 ${seatsLeft} of ${seatsTot} seats left</span>`:""}</div>
@@ -713,7 +711,7 @@ async function renderRegister(){
       const shareTxt=encodeURIComponent(`I've registered for ${ev.title} at ${(v.name||"").split(" — ")[0]}, ${v.city}. Join me — limited seats: ${location.origin+location.pathname}?e=${ev.slug}&src=referral`);
       formEl.outerHTML=`<div class="card rg-done">
         <div class="rg-confetti">${Array.from({length:24},(_,i)=>`<i style="left:${(i*41)%100}%;animation-delay:${(i%8)*.08}s;background:${["#C8232C","#7C3AED","#F5A623","#16794A","#1F5FBF"][i%5]}"></i>`).join("")}</div>
-        <div class="rg-emoji">${msg.e}</div><h2>${esc(msg.h)}</h2><p class="muted">${esc(msg.p)}</p>
+        ${r.status==="waitlisted"||r.duplicate?`<div class="rg-emoji">${msg.e}</div>`:`<img class="rg-okart" src="art-success.webp" alt="" aria-hidden="true">`}<h2>${esc(msg.h)}</h2><p class="muted">${esc(msg.p)}</p>
         ${!r.duplicate?`<div class="rg-ticket"><div class="row" style="gap:12px;flex-wrap:nowrap"><span class="rg-sico">${ico(slotIcon(s.label||""),22)}</span>
           <div style="text-align:left"><div class="b">${esc(s.date_label||"")}</div><div class="small">${esc(s.label||"")} · ${esc(s.time_label||"")}</div><div class="tiny muted">${esc(v.name)}, ${esc(v.city)}</div></div></div>
           <div class="rg-tstat">${r.status==="approved"?"Confirmed":r.status==="waitlisted"?"Waitlisted":"Awaiting approval"}</div></div>`:""}
@@ -737,6 +735,16 @@ function themePublic(brands){
   const r=document.documentElement.style;
   r.setProperty("--red",a);
   r.setProperty("--hero-bg",`radial-gradient(700px 320px at 100% 0%,rgba(255,255,255,.16),transparent 60%),linear-gradient(135deg,${c2} 0%,${a} 100%)`);
+}
+// The 3D hero artwork is drawn in Cavitak red; rotate its hue to the event's brand colour
+function artHue(brands,bs){
+  const c=(brands&&brands.length===1&&/^#[0-9a-f]{6}$/i.test(brands[0].color1||""))?brands[0].color1:(bs?"#7C3AED":"");
+  if(!c) return "";
+  const [r,g,b]=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)/255), mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+  if(d<.08) return "filter:grayscale(.6) drop-shadow(0 30px 40px rgba(0,0,0,.35))";
+  let h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4; h=(h*60+360)%360;
+  const rot=Math.round(((h-357+540)%360)-180);
+  return `filter:hue-rotate(${rot}deg) saturate(1.05) drop-shadow(0 30px 40px rgba(0,0,0,.35))`;
 }
 function publicShell(inner){ return `<div class="hero"><div class="wrap"><div class="eyebrow">Cavitak · Tech Week</div></div></div><div class="wrap lift">${inner}</div>` }
 
