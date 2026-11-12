@@ -1,0 +1,28 @@
+{
+ "name": "Cavitak Tech Week",
+ "short_name": "Tech Week",
+ "description": "Tech Week console: events, approvals, QR check-in and reports.",
+ "start_url": "./?source=app",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#F5F6F8",
+ "theme_color": "#C8232C",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

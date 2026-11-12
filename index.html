@@ -16,6 +16,8 @@
 <meta name="twitter:image" content="https://dgcavitak-rgb.github.io/TechWeek/og-techweek.jpg?v=2">
 <link rel="icon" href="icon-512.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Tech Week"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -96,7 +98,7 @@ html{scroll-behavior:auto;-webkit-tap-highlight-color:transparent}
 .v,.kpi .v,.kpi2 .v,.nbadge{font-variant-numeric:tabular-nums}
 h1,h2,h3{text-wrap:balance}
 /* public hero: same deep-red depth as the console welcome card, with a quiet dot grid */
-.hero{position:relative;overflow:hidden;background:radial-gradient(700px 320px at 100% 0%,rgba(255,255,255,.14),transparent 60%),linear-gradient(135deg,#1A0B0D 0%,#8E1219 48%,#C8232C 100%)}
+.hero{position:relative;overflow:hidden;background:var(--hero-bg,radial-gradient(700px 320px at 100% 0%,rgba(255,255,255,.14),transparent 60%),linear-gradient(135deg,#1A0B0D 0%,#8E1219 48%,#C8232C 100%))}
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.14) 1px,transparent 1.2px);background-size:18px 18px;-webkit-mask-image:linear-gradient(105deg,transparent 35%,#000 100%);mask-image:linear-gradient(105deg,transparent 35%,#000 100%)}
 .hero>.wrap{position:relative;z-index:1}
 .lift{position:relative;z-index:2}
@@ -134,7 +136,7 @@ h1,h2,h3{text-wrap:balance}
 .seg button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 /* ---------- public pages ---------- */
-.hero{background:linear-gradient(135deg,#C8232C 0%,#8E1219 100%);color:#fff;padding:28px 0 64px}
+.hero{color:#fff;padding:28px 0 64px}
 .hero .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600}
 .hero h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:6px 0 8px}
 @media(min-width:640px){.hero h1{font-size:36px}}
@@ -375,7 +377,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.0";
+const APP_VERSION = "2.5.1";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -725,6 +727,17 @@ async function renderRegister(){
     }catch(ex){ busy(btn,false); fail(ex.message) }
   };
 }
+// Partner pages take the event's brand colours (one brand only), darkened where needed so white text stays readable (WCAG AA)
+function themePublic(brands){
+  const b=(brands||[]).filter(x=>/^#[0-9a-f]{6}$/i.test(x.color1||""));
+  if(b.length!==1) return;
+  const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=0.03928?v/12.92:((v+0.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+  let a=b[0].color1; for(let k=0;k<12&&1.05/(lum(a)+.05)<4.5;k++) a="#"+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*.88).toString(16).padStart(2,"0")).join("");
+  const c2=/^#[0-9a-f]{6}$/i.test(b[0].color2||"")?b[0].color2:"#14070a";
+  const r=document.documentElement.style;
+  r.setProperty("--red",a);
+  r.setProperty("--hero-bg",`radial-gradient(700px 320px at 100% 0%,rgba(255,255,255,.16),transparent 60%),linear-gradient(135deg,${c2} 0%,${a} 100%)`);
+}
 function publicShell(inner){ return `<div class="hero"><div class="wrap"><div class="eyebrow">Cavitak · Tech Week</div></div></div><div class="wrap lift">${inner}</div>` }
 
 /* =============================================================
@@ -738,6 +751,7 @@ async function renderPass(){
   document.title="Tech Week pass — "+p.full_name;
   if(d.status!=="cancelled") store.set("tw_pass_"+ev.slug, tok);
   const stMsg={approved:"Confirmed — show this QR at reception",pending:"Your request is under review",waitlisted:"You're on the waitlist",rejected:"We couldn't accommodate this request",cancelled:"This registration is cancelled"}[d.status]||d.status;
+  themePublic(d.brands);
   app.innerHTML=`
   <div class="hero" style="padding-bottom:72px"><div class="wrap">
     <div class="eyebrow">${esc(d.brand||"Cavitak")} · Tech Week pass</div>
@@ -792,6 +806,7 @@ async function renderFeedback(){
   if(!d.ok){ app.innerHTML=publicShell(`<div class="card pad empty"><h2 style="color:var(--ink)">Link not valid</h2><p>${esc(d.error)}</p></div>`); return }
   document.title="Feedback — "+d.event_title;
   const prev=d.previous||{};
+  themePublic(d.brands);
   app.innerHTML=`<div class="hero" style="padding-bottom:64px"><div class="wrap" style="max-width:560px">
     <div class="eyebrow">${["Cavitak","Tech Week",d.city].filter(Boolean).map(esc).join(" · ")}</div><h1 style="font-size:26px">How was the session${d.first_name?", "+esc(d.first_name):""}?</h1>
     <div style="opacity:.92">${esc([d.event_title,[d.date_label,d.slot_label].filter(Boolean).join(", ")].filter(Boolean).join(" · "))}</div></div></div>
@@ -852,6 +867,7 @@ async function renderSelfCheckin(){
   let me=null;
   if(saved){ try{ const p=await rpc("tw_pass",{p_token:saved}); if(p.ok && p.status!=="cancelled") me=p }catch(e){} }
   const cur=(d.current||[])[0];
+  themePublic(d.brands);
   app.innerHTML=`
   <div class="hero" style="padding-bottom:64px"><div class="wrap" style="max-width:520px">
     <div class="eyebrow">${esc(d.brand||"Cavitak")} · Tech Week · ${esc(d.venue.city)}</div>
@@ -2486,6 +2502,7 @@ function viewHelp(v){
     <div class="card pad"><div class="hfaq">
       ${[["Partner didn't get the email","Ask them to check spam/Promotions. Admin → Email log shows sent/failed; Approvals → ⋯ → Resend."],
          ["Lost the QR at the door","Use the room QR with their email or mobile, or search their name in Check-in."],
+         ["Put the console on your phone like an app","Android (Chrome): ⋮ menu → Install app / Add to Home screen. iPhone (Safari): Share → Add to Home Screen. It opens full screen with the Tech Week icon."],
          ["Need to change a date or time","Edit the event. Approved people get the new details and calendar invite automatically."],
          ["Session is full","New sign-ups go to the waitlist. When a seat frees up, the next person is promoted and emailed."],
          ["Brand manager can't see an event","Edit the event and tick their brand."],
