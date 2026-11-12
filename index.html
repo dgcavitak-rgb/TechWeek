@@ -104,6 +104,7 @@ h1,h2,h3{text-wrap:balance}
 .lift{position:relative;z-index:2}
 .lift>.card{box-shadow:0 1px 2px rgba(16,24,40,.05),0 12px 32px -8px rgba(16,24,40,.14)}
 .pfoot{text-align:center;color:var(--muted);font-size:12px;margin:22px 0 30px}
+.estate3{display:grid;justify-items:center;text-align:center;gap:6px;padding:22px 12px}.estate3 img{width:112px;height:auto;margin-bottom:6px;animation:okin .6s cubic-bezier(.2,.9,.3,1.2) both}.estate3 b{font-size:16px}
 .estate{display:grid;justify-items:center;text-align:center;gap:8px;padding:10px 4px}
 .estate .eico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--blue-50);color:var(--blue)}
 .estate .eico svg{width:26px;height:26px}
@@ -385,7 +386,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.2";
+const APP_VERSION = "2.5.3";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -746,6 +747,8 @@ function artHue(brands,bs){
   const rot=Math.round(((h-357+540)%360)-180);
   return `filter:hue-rotate(${rot}deg) saturate(1.05) drop-shadow(0 30px 40px rgba(0,0,0,.35))`;
 }
+// 3D empty-state artwork (calendar / inbox / feedback)
+function emptyArt(kind,title,sub){ return `<div class="estate3"><img src="empty-${kind}.webp" alt="" aria-hidden="true" loading="lazy"><b>${title}</b>${sub?`<div class="small muted">${sub}</div>`:""}</div>` }
 function publicShell(inner){ return `<div class="hero"><div class="wrap"><div class="eyebrow">Cavitak · Tech Week</div></div></div><div class="wrap lift">${inner}</div>` }
 
 /* =============================================================
@@ -819,7 +822,7 @@ async function renderFeedback(){
     <div class="eyebrow">${["Cavitak","Tech Week",d.city].filter(Boolean).map(esc).join(" · ")}</div><h1 style="font-size:26px">How was the session${d.first_name?", "+esc(d.first_name):""}?</h1>
     <div style="opacity:.92">${esc([d.event_title,[d.date_label,d.slot_label].filter(Boolean).join(", ")].filter(Boolean).join(" · "))}</div></div></div>
   <div class="wrap lift" style="max-width:560px"><div class="card pad stack" id="fb_box">
-    ${!d.attended?`<div class="estate"><span class="eico">${ico("star",26)}</span><b>Feedback opens after your session</b><div class="small muted">Once you've attended, this page will ask for a quick rating. See you there!</div></div>`:`
+    ${!d.attended?`<div class="estate"><img src="empty-feedback.webp" alt="" aria-hidden="true" style="width:104px;height:auto"><b>Feedback opens after your session</b><div class="small muted">Once you've attended, this page will ask for a quick rating. See you there!</div></div>`:`
     <form id="fbf" class="stack">
       <div><label class="f">Overall rating *</label><div class="row" id="stars" style="gap:6px">${[1,2,3,4,5].map(n=>`<button type="button" class="star" data-n="${n}" aria-label="${n} star" style="font-size:38px;line-height:1;border:0;background:none;cursor:pointer;color:#D0D4D9;padding:2px">★</button>`).join("")}</div><div class="tiny muted" id="star_l"></div></div>
       <div><label class="f">How useful was it for your projects?</label><div class="seg" id="use" style="flex-wrap:wrap">${["Not useful","Somewhat","Useful","Very useful","Extremely"].map((t,i)=>`<button type="button" data-u="${i+1}">${t}</button>`).join("")}</div></div>
@@ -1191,7 +1194,7 @@ function viewDash(v){
   <div class="dcols">
     <div class="card pad"><div class="sech">${ico("bell",18)} Needs your attention</div>
       ${todo.length?`<div class="todo">${todo.slice(0,6).map((t,i)=>`<button class="todo-i" data-todo="${i}"><span class="tico t-${t.tone}">${ico(t.icon,18)}</span><span class="grow"><b>${esc(t.t)}</b><small>${esc(t.s)}</small></span>${ico("arrow",16)}</button>`).join("")}</div>`
-        :`<div class="allclear">${ico("check",22)}<div><b>All clear</b><div class="small muted">Nothing is waiting on you right now.</div></div></div>`}</div>
+        :emptyArt("inbox","All clear","Nothing is waiting on you right now.")}</div>
     <div class="card pad"><div class="sech">${ico("zap",18)} Quick actions</div>
       <div class="qa">${qa.map(([i,t,s,a])=>`<button class="qa-i" data-qa="${a}"><span class="qico">${ico(i,20)}</span><b>${t}</b><small>${esc(s)}</small></button>`).join("")}</div></div>
   </div>
@@ -1202,7 +1205,7 @@ function viewDash(v){
           <div class="row" style="gap:8px;flex-wrap:nowrap"><div class="bar grow" style="height:6px"><i style="width:${pct}%;background:${pct>=100?"var(--green)":"var(--red)"}"></i></div><span class="tiny b" style="white-space:nowrap">${s.approved}/${s.capacity}</span></div>
           <div class="tiny muted">${s.pending?`<span style="color:var(--amber)">${s.pending} pending</span> · `:""}${s.checked_in?`${s.checked_in} checked in · `:""}${esc(relWhen(s.starts_at))}</div></div></div>` }).join("")}</div></div>`:""}
   <div class="sech" style="margin:4px 0 10px">${ico("layers",18)} Events</div>
-  <div class="stack">${ev.length?ev.map(eventCard).join(""):`<div class="card empty">${ico("cal",34,1.5)}<div style="margin-top:8px">No events yet.${can("super")?" Create your first Tech Week event.":""}</div></div>`}</div>`;
+  <div class="stack">${ev.length?ev.map(eventCard).join(""):`<div class="card">${emptyArt("calendar","No events yet",can("super")?"Create your first Tech Week event — it takes about two minutes.":"Events will appear here once they are scheduled.")}</div>`}</div>`;
   $("#newev") && ($("#newev").onclick=()=>editEvent(null));
   $$("[data-todo]",v).forEach(b=>b.onclick=()=>{ const a=todo[+b.dataset.todo].act;
     if(a==="email"||a==="settings"){ S.adminTab=a; return go("admin") }
@@ -1451,7 +1454,7 @@ function viewEvents(v){
   S.evView=S.evView||"list";
   v.innerHTML=`${pageHead(ICONS.events,"Events","One event per city / experience center — each with its own room capacity, dates and slots.",can("super")?'<button class="btn primary" id="newev">'+ico("plus",17)+' New event</button>':"")}
     <div class="seg segi" style="margin-bottom:12px"><button data-ev="list" class="${S.evView==="list"?"on":""}">${ico("list",15)} List</button><button data-ev="cal" class="${S.evView==="cal"?"on":""}">${ico("cal",15)} Calendar</button></div>
-    <div class="stack" id="ev_body">${S.evView==="cal"?"":ev.length?ev.map(eventCard).join(""):'<div class="card empty">No events yet.</div>'}</div>`;
+    <div class="stack" id="ev_body">${S.evView==="cal"?"":ev.length?ev.map(eventCard).join(""):`<div class="card">${emptyArt("calendar","No events yet",can("super")?"Tap New event to schedule your first Tech Week.":"Events will appear here once they are scheduled.")}</div>`}</div>`;
   $$("[data-ev]",v).forEach(b=>b.onclick=()=>{ S.evView=b.dataset.ev; viewEvents(v) });
   if(S.evView==="cal") drawCalendar($("#ev_body"));
   $("#newev") && ($("#newev").onclick=()=>editEvent(null));
@@ -1601,7 +1604,7 @@ async function loadRegs(eventId){
 }
 async function viewApprovals(v){
   const ev=S.ov.events||[];
-  if(!ev.length){ v.innerHTML='<div class="card empty">No events yet.</div>'; return }
+  if(!ev.length){ v.innerHTML=`<div class="card">${emptyArt("calendar","No events yet","Registrations to approve will show up here.")}</div>`; return }
   if(!S.apprEvent || !evById(S.apprEvent)) S.apprEvent=(ev.find(e=>e.counts.pending)||ev.find(e=>e.status==="open")||ev[0]).id;
   S.apprStatus=S.apprStatus||"pending";
   v.innerHTML=`${pageHead(ICONS.approvals,"Approvals","Approve, waitlist or move registrations — the partner gets an email automatically.",'<button class="btn sm" id="ap_ref">'+ico("refresh",15)+' Refresh</button>')}
@@ -1635,7 +1638,7 @@ async function drawApprovals(){
           <div class="small muted">${esc(r.email)} · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>${r.participant_city?" · "+esc(r.participant_city):""}</div>
           <div class="tiny muted" style="margin-top:2px">${esc(r.slot_date)} · ${esc(r.slot_label)} · registered ${esc(fmtDT(r.created_at))}${r.source?" · via "+esc(r.source):""}${r.decided_by?" · by "+esc(r.decided_by):""}</div>
           ${r.interests?`<div class="tiny" style="margin-top:2px">💬 ${esc(r.interests)}</div>`:""}${answersLine(r)}${r.reason&&r.status!=="approved"?`<div class="tiny muted">Note: ${esc(r.reason)}</div>`:""}
-        </div></div>`).join(""):`<div class="empty">Nothing ${st==="all"?"":"in "+STATUS_LABEL[st].toLowerCase()} here.</div>`}</div>
+        </div></div>`).join(""):(st==="pending"?emptyArt("inbox","All caught up","No registrations are waiting for approval."):`<div class="empty">Nothing ${st==="all"?"":"in "+STATUS_LABEL[st].toLowerCase()} here.</div>`)}</div>
     <div class="card pad sticky-actions hide" id="ap_bar"><div class="row"><span class="b" id="ap_n"></span><div class="grow"></div>
       <button class="btn sm green" data-act="approve">Approve</button><button class="btn sm" data-act="waitlist">Waitlist</button>
       <button class="btn sm" data-act="move">Move</button><button class="btn sm" data-act="reject">Reject</button>${can("super")?'<button class="btn sm ghost" id="ap_del" style="color:var(--red)">Delete</button>':""}</div></div>`;
@@ -1726,7 +1729,7 @@ function regMenu(r){
 /* ---------------- Check-in ---------------- */
 async function viewCheckin(v){
   const ev=(S.ov.events||[]).filter(e=>e.slots.length);
-  if(!ev.length){ v.innerHTML='<div class="card empty">No events with sessions yet.</div>'; return }
+  if(!ev.length){ v.innerHTML=`<div class="card">${emptyArt("calendar","No sessions yet","Once an event has sessions, check-in opens here.")}</div>`; return }
   const now=Date.now();
   const nearest=(e)=>{ const sl=e.slots.filter(s=>s.is_active); return sl.find(s=>new Date(s.ends_at)>now-3600e3) || sl[sl.length-1] };
   if(!S.ciEvent||!evById(S.ciEvent)){ S.ciEvent=(ev.map(e=>({e,s:nearest(e)})).filter(x=>x.s).sort((a,b)=>Math.abs(new Date(a.s.starts_at)-now)-Math.abs(new Date(b.s.starts_at)-now))[0]||{e:ev[0]}).e.id }
