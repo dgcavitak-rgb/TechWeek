@@ -173,7 +173,16 @@ function signoff(p: any) {
   return `${salesBlock(p)}<p style="margin-top:22px">Warm regards,<br><strong>Team ${esc(p.settings?.brand_name || "Cavitak")}</strong>${bs.length ? `<br><span style="color:${MUTED};font-size:13px">in association with ${bs.map((b: any) => esc(b.name)).join(" & ")}</span>` : ""}</p>`;
 }
 function publicBase(p: any) { return (p.settings?.public_url ?? "").trim().split("?")[0]; }
+// Accent for buttons/links: the brand colour, darkened until white text on it passes WCAG AA (4.5:1)
+function accent(hex: string) {
+  const lum = (h: string) => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  let h = hex;
+  for (let k = 0; k < 12 && 1.05 / (lum(h) + 0.05) < 4.5; k++) h = "#" + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * 0.88).toString(16).padStart(2, "0")).join("");
+  return h;
+}
 function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
+  const hc = accent(headColor(p));
+  bodyHtml = bodyHtml.split(RED).join(hc); // buttons and links match the brand header
   const bs = brandsOf(p);
   const brand = esc(p.settings?.brand_name || "Cavitak") + (bs.length ? " × " + bs.map((b: any) => esc(b.name)).join(" · ") : "");
   const base = publicBase(p);
@@ -185,7 +194,7 @@ function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F2F3F5;padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden">
-  <tr><td style="background:${headColor(p)};padding:18px 24px;color:#fff">
+  <tr><td bgcolor="${hc}" style="background:${hc};padding:20px 24px 18px;color:#fff;border-bottom:4px solid rgba(0,0,0,.18)">
     <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.9">${brand} · Tech Week</div>
     <div style="font-size:21px;font-weight:700;margin-top:4px">${esc(headline)}</div>
   </td></tr>
