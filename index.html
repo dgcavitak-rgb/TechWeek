@@ -396,7 +396,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.9";
+const APP_VERSION = "2.6.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1356,6 +1356,28 @@ async function doorKit(e){
       const x=await rpc("tw_door_code",{p_token:S.token,p_event:e.id,p_rotate:true}).catch(err=>({ok:false,error:err.message})); if(!x.ok) return toast(x.error,true); toast("New code created"); doorKit(e) });
   });
 }
+// Staff add a confirmed guest to a session; a held seat is used first
+function addGuest(e, slotId){
+  const now=Date.now(), sl=(e.slots||[]).filter(s=>s.is_active&&new Date(s.ends_at)>now);
+  if(!sl.length) return toast("This event has no upcoming sessions.",true);
+  const pre=slotId||S.apprSlot||((sl.find(s=>s.held>0)||{}).id)||"";
+  modal(`<h3>Add a guest — ${esc(e.title)}</h3>
+    <div class="small muted" style="margin-bottom:10px">The guest is confirmed straight away and gets the normal confirmation email, entry pass and reminders. If the session has held seats, one is used; otherwise any free seat.</div>
+    <form class="stack" id="gf"><select class="in" id="g_s" required>${sl.map(s=>{ const free=s.capacity-s.approved; const lab=`${s.date_label.replace(/ \d{4}$/,"")} · ${s.label} · ${s.approved}/${s.capacity} approved${s.held?` · ${s.held} held`:""}${free<=0?" · FULL":""}`;
+      return `<option value="${s.id}" ${s.id===pre?"selected":""} ${free<=0?"disabled":""}>${esc(lab)}</option>` }).join("")}</select>
+    <div class="grid g2"><input class="in" id="g_n" placeholder="Full name *" required><input class="in" id="g_d" placeholder="Designation">
+    <input class="in" id="g_o" placeholder="Organisation *" required><select class="in" id="g_t"><option value="">Organisation type</option>${PARTNER_TYPES.map(t=>`<option>${t}</option>`).join("")}</select>
+    <input class="in" id="g_e" type="email" placeholder="Email * (pass is sent here)" required><input class="in" id="g_p" type="tel" placeholder="Mobile"></div>
+    <label class="consent"><input type="checkbox" id="g_m" checked><span>Email the confirmation and entry pass to the guest</span></label>
+    <div class="row"><button class="btn primary" id="g_go">${ico("userplus",16)} Add guest</button><button type="button" class="btn" data-close>Cancel</button></div></form>`, m=>{
+    $("#gf").onsubmit=async ev=>{ ev.preventDefault(); const b=$("#g_go"); busy(b,true);
+      const r=await rpc("tw_add_guest",{p_token:S.token,p_slot_id:$("#g_s").value,p_notify:$("#g_m").checked,
+        p_data:{full_name:$("#g_n").value,designation:$("#g_d").value,organization:$("#g_o").value,partner_type:$("#g_t").value,email:$("#g_e").value,phone:$("#g_p").value}}).catch(x=>({ok:false,error:x.message}));
+      busy(b,false); if(!r.ok) return toast(r.error,true);
+      toast(r.used_held?`Guest added — used a held seat (${r.held_left} held left)`:"Guest added and confirmed"); closeModal(true);
+      await loadOverview(); if(S.tab==="approvals"){ S.apprStatus="approved"; go("approvals") } else go(S.tab) };
+  });
+}
 function sessionsView(e){
   const ed=can("super","approver");
   modal(`<h3>${esc(e.title)} — sessions, trainers & held seats</h3>
@@ -1626,7 +1648,7 @@ async function viewApprovals(v){
   if(!ev.length){ v.innerHTML=`<div class="card">${emptyArt("calendar","No events yet","Registrations to approve will show up here.")}</div>`; return }
   if(!S.apprEvent || !evById(S.apprEvent)) S.apprEvent=(ev.find(e=>e.counts.pending)||ev.find(e=>e.status==="open")||ev[0]).id;
   S.apprStatus=S.apprStatus||"pending";
-  v.innerHTML=`${pageHead(ICONS.approvals,"Approvals","Approve, waitlist or move registrations — the partner gets an email automatically.",'<button class="btn sm" id="ap_ref">'+ico("refresh",15)+' Refresh</button>')}
+  v.innerHTML=`${pageHead(ICONS.approvals,"Approvals","Approve, waitlist or move registrations — the partner gets an email automatically.",(can("super","approver")?'<button class="btn sm primary" id="ap_guest">'+ico("userplus",15)+' Add guest</button> ':'')+'<button class="btn sm" id="ap_ref">'+ico("refresh",15)+' Refresh</button>')}
     <div class="stack">${ev.length>1?`<div class="apev">${ev.map(e=>{ const c=e.counts||{}, act=(e.slots||[]).filter(x=>x.is_active), cap=act.reduce((a,x)=>a+(+x.capacity||0),0), apv=act.reduce((a,x)=>a+(+x.approved||0),0), pct=cap?Math.min(100,apv/cap*100):0;
       return `<button class="apev-i ${e.id===S.apprEvent?"on":""}" data-apev="${e.id}"><div class="tiny muted">${esc(e.city||"")}${e.slots&&e.slots.length?" · "+e.slots.filter(x=>x.is_active).length+" sessions":""}</div>
         <div class="b small apev-t">${esc(e.title)}</div>
@@ -1638,6 +1660,7 @@ async function viewApprovals(v){
   $("#ap_ev").onchange=()=>pickEv($("#ap_ev").value);
   $$("[data-apev]",v).forEach(b=>b.onclick=()=>pickEv(b.dataset.apev));
   $("#ap_ref").onclick=async()=>{ await loadOverview(); drawApprovals() };
+  $("#ap_guest") && ($("#ap_guest").onclick=()=>addGuest(evById(S.apprEvent)));
   drawApprovals();
 }
 async function drawApprovals(){
