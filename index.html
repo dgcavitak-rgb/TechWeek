@@ -390,7 +390,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.5";
+const APP_VERSION = "2.5.6";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -2221,11 +2221,38 @@ async function partnerDetail(id){
 }
 async function exportPartners(){
   try{ await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js") }catch(e){ return toast(e.message,true) }
-  const head=["Company","Type","City","People","Registered","Attended","Events","Brands","Last session","Hot leads","On target list"];
-  const data=(S.partners||[]).map(x=>[x.name,x.type||"",x.city||"",x.people,x.registrations,x.attended,x.events,(x.brands||[]).join(", "),x.last_seen?fmtD(x.last_seen):"",x.hot,x.targeted?"Yes":""]);
-  const ws=XLSX.utils.aoa_to_sheet([head,...data]); const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}}};
-  head.forEach((_,i)=>{ ws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); ws["!cols"]=head.map((h,i)=>({wch:i===0?34:14}));
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Partners"); XLSX.writeFile(wb,"tech-week-partners-"+todayStr()+".xlsx"); toast("Excel downloaded");
+  toast("Preparing Excel…");
+  let people=[];
+  try{ const r=await rpc("tw_partner_people",{p_token:S.token}); people=(r&&r.rows)||[] }catch(e){ return toast(e.message,true) }
+  const hs={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"C8232C"}},alignment:{vertical:"center",wrapText:true}};
+  const sheet=(head,rows,widths)=>{ const ws=XLSX.utils.aoa_to_sheet([head,...rows]);
+    head.forEach((_,i)=>{ ws[XLSX.utils.encode_cell({r:0,c:i})].s=hs }); ws["!cols"]=widths.map(w=>({wch:w}));
+    ws["!autofilter"]={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(rows.length,1),c:head.length-1}})};
+    ws["!freeze"]={xSplit:0,ySplit:1}; ws["!views"]=[{state:"frozen",ySplit:1}]; return ws };
+  // 1) Participants — one row per person per session
+  const ph=["Company","Type","Participant","Designation","Email","Mobile","Event","City","Date","Day","Session","Time","Status","Checked in","Walk-in","Registered on","Source","Interested in","Lead","Lead owner","Next step","Lead value (₹)","Rating"];
+  const pr=people.map(x=>[x.company||"",x.type||"",x.name||"",x.designation||"",x.email||"",x.phone||"",x.event||"",x.city||"",x.date||"",x.day||"",x.session||"",x.time||"",
+    STATUS_LABEL[x.status]||x.status||"",x.checked_in?("Yes — "+x.checked_in):"No",x.walk_in?"Yes":"",x.registered||"",x.source||"",x.interests||"",
+    x.lead?x.lead[0].toUpperCase()+x.lead.slice(1):"",x.lead_owner||"",x.lead_next||"",x.lead_value||"",x.rating||""]);
+  const wsP=sheet(ph,pr,[34,16,24,22,28,14,30,11,12,10,10,22,11,22,8,20,12,26,8,16,22,12,7]);
+  const sCol=ph.indexOf("Session"), stCol=ph.indexOf("Status"), ciCol=ph.indexOf("Checked in");
+  pr.forEach((row,ri)=>{ const r=ri+1;
+    const sc=wsP[XLSX.utils.encode_cell({r,c:sCol})]; if(sc) sc.s={font:{bold:true,color:{rgb:/even/i.test(row[sCol])?"3730A3":"92400E"}},fill:{fgColor:{rgb:/even/i.test(row[sCol])?"E0E7FF":"FEF3C7"}}};
+    const st=wsP[XLSX.utils.encode_cell({r,c:stCol})]; const col={Approved:"166534",Pending:"92400E",Waitlisted:"1E40AF",Rejected:"991B1B",Cancelled:"6B7280"}[row[stCol]]; if(st&&col) st.s={font:{bold:true,color:{rgb:col}}};
+    const ci=wsP[XLSX.utils.encode_cell({r,c:ciCol})]; if(ci&&row[ciCol]!=="No") ci.s={font:{color:{rgb:"166534"}}};
+  });
+  // 2) Companies — summary, now with sessions and participant names
+  const by={}; people.forEach(x=>{ const k=(x.company||"").toLowerCase(); (by[k]=by[k]||[]).push(x) });
+  const ch=["Company","Type","City","People","Participants","Sessions","Registered","Attended","Events","Brands","Last session","Hot leads","On target list"];
+  const cr=(S.partners||[]).map(x=>{ const ps=by[(x.name||"").toLowerCase()]||[];
+    const names=[...new Set(ps.map(p=>p.name))].join(", ");
+    const sess=[...new Set(ps.map(p=>`${p.date} ${p.session}`))].join(", ");
+    return [x.name,x.type||"",x.city||"",x.people,names,sess,x.registrations,x.attended,x.events,(x.brands||[]).join(", "),x.last_seen?fmtD(x.last_seen):"",x.hot,x.targeted?"Yes":""] });
+  const wsC=sheet(ch,cr,[34,16,12,8,40,34,10,9,7,14,13,9,12]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,wsP,"Participants");
+  XLSX.utils.book_append_sheet(wb,wsC,"Companies");
+  XLSX.writeFile(wb,"tech-week-partners-"+todayStr()+".xlsx"); toast(`Excel downloaded — ${pr.length} participants, ${cr.length} companies`);
 }
 
 /* ---------------- Admin: brands ---------------- */
