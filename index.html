@@ -396,7 +396,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.8";
+const APP_VERSION = "2.5.9";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1220,7 +1220,7 @@ function viewDash(v){
       return `<div class="tl-i"><div class="rg-date"><span>${dd.toLocaleDateString("en-IN",{month:"short"}).toUpperCase()}</span><b>${dd.getDate()}</b></div>
         <div class="grow"><div class="b">${esc(s.label)} <span class="tiny muted">${esc(s.time_label)}</span></div>
           <div class="row" style="gap:8px;flex-wrap:nowrap"><div class="bar grow" style="height:6px"><i style="width:${pct}%;background:${pct>=100?"var(--green)":"var(--red)"}"></i></div><span class="tiny b" style="white-space:nowrap">${s.approved}/${s.capacity}</span></div>
-          <div class="tiny muted">${s.pending?`<span style="color:var(--amber)">${s.pending} pending</span> · `:""}${s.checked_in?`${s.checked_in} checked in · `:""}${esc(relWhen(s.starts_at))}</div></div></div>` }).join("")}</div></details>` }).join("") })()}</div>`:""}
+          <div class="tiny muted">${s.held?`<span style="color:var(--blue)">${s.held} held</span> · `:""}${s.pending?`<span style="color:var(--amber)">${s.pending} pending</span> · `:""}${s.checked_in?`${s.checked_in} checked in · `:""}${esc(relWhen(s.starts_at))}</div></div></div>` }).join("")}</div></details>` }).join("") })()}</div>`:""}
   <div class="sech" style="margin:4px 0 10px">${ico("layers",18)} Events</div>
   <div class="stack">${ev.length?ev.map(eventCard).join(""):`<div class="card">${emptyArt("calendar","No events yet",can("super")?"Create your first Tech Week event — it takes about two minutes.":"Events will appear here once they are scheduled.")}</div>`}</div>`;
   $("#newev") && ($("#newev").onclick=()=>editEvent(null));
@@ -1358,22 +1358,24 @@ async function doorKit(e){
 }
 function sessionsView(e){
   const ed=can("super","approver");
-  modal(`<h3>${esc(e.title)} — sessions & trainers</h3>
-    <div class="small muted" style="margin-bottom:8px">The trainer's name shows on the registration page. With an email, they get a briefing the day before with the confirmed attendee list.</div>
-    <div class="tscroll"><table class="t"><thead><tr><th>Session</th><th>Seats</th><th>Pend.</th><th>In</th><th>Trainer</th></tr></thead><tbody>
+  modal(`<h3>${esc(e.title)} — sessions, trainers & held seats</h3>
+    <div class="small muted" style="margin-bottom:8px">The trainer's name shows on the registration page. With an email, they get a briefing the day before with the confirmed attendee list.
+      <b>Held</b> seats are kept back for guests you invite yourself — partners can't book them, but you can still approve or add people into them.</div>
+    <div class="tscroll"><table class="t"><thead><tr><th>Session</th><th>Seats</th><th>Held</th><th>Pend.</th><th>In</th><th>Trainer</th></tr></thead><tbody>
     ${e.slots.map(s=>`<tr style="${s.is_active?"":"opacity:.45"}"><td><b>${esc(s.date_label)}</b><div class="small">${esc(s.label)} · <span class="muted">${esc(s.time_label)}</span></div></td>
       <td><b>${s.approved}</b>/${s.capacity}<div class="bar" style="width:70px;margin-top:4px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%"></i></div></td>
+      <td>${ed&&s.is_active?`<input class="in" type="number" min="0" max="${s.capacity}" data-th="${s.id}" value="${s.held||0}" style="width:66px;min-height:34px" aria-label="Held seats">`:(s.held||"—")}</td>
       <td>${s.pending}</td><td>${s.checked_in}</td>
       <td style="min-width:230px">${ed&&s.is_active?`<div class="stack" style="gap:4px"><input class="in" data-tn="${s.id}" value="${esc(s.trainer_name||"")}" placeholder="Trainer name" style="min-height:34px">
         <div class="row" style="gap:4px;flex-wrap:nowrap"><input class="in" data-tt="${s.id}" value="${esc(s.trainer_title||"")}" placeholder="Title" style="min-height:34px"><input class="in" data-te="${s.id}" value="${esc(s.trainer_email||"")}" placeholder="Email" type="email" style="min-height:34px"></div></div>`
         :esc([s.trainer_name,s.trainer_title].filter(Boolean).join(" · ")||"—")}</td></tr>`).join("")}</tbody></table></div>
-    <div class="row" style="margin-top:12px">${ed?`<button class="btn primary" id="tr_save">Save trainers</button><button class="btn" id="tr_all">Same trainer for all</button>`:""}<button class="btn" data-close>Close</button></div>`, m=>{
+    <div class="row" style="margin-top:12px">${ed?`<button class="btn primary" id="tr_save">Save</button><button class="btn" id="tr_all">Same trainer for all</button>`:""}<button class="btn" data-close>Close</button></div>`, m=>{
     $("#tr_all") && ($("#tr_all").onclick=()=>{ const f=$("[data-tn]",m); if(!f) return; const n=f.value, t=$(`[data-tt="${f.dataset.tn}"]`).value, em=$(`[data-te="${f.dataset.tn}"]`).value;
       $$("[data-tn]",m).forEach(x=>{ x.value=n; $(`[data-tt="${x.dataset.tn}"]`).value=t; $(`[data-te="${x.dataset.tn}"]`).value=em }); toast("Copied from the first session") });
     $("#tr_save") && ($("#tr_save").onclick=async()=>{ const b=$("#tr_save"); busy(b,true);
-      const rows=$$("[data-tn]",m).map(x=>({id:x.dataset.tn,name:x.value,title:$(`[data-tt="${x.dataset.tn}"]`).value,email:$(`[data-te="${x.dataset.tn}"]`).value}));
+      const rows=$$("[data-tn]",m).map(x=>({id:x.dataset.tn,name:x.value,title:$(`[data-tt="${x.dataset.tn}"]`).value,email:$(`[data-te="${x.dataset.tn}"]`).value,held:($(`[data-th="${x.dataset.tn}"]`)||{}).value||0}));
       const r=await rpc("tw_set_trainers",{p_token:S.token,p_rows:rows}).catch(x=>({ok:false,error:x.message})); busy(b,false);
-      if(!r.ok) return toast(r.error,true); toast("Trainers saved"); closeModal(true); await loadOverview(); go(S.tab) });
+      if(!r.ok) return toast(r.error,true); toast("Sessions saved"); closeModal(true); await loadOverview(); go(S.tab) });
   });
 }
 function cloneEvent(e){
@@ -1657,7 +1659,7 @@ async function drawApprovals(){
       <div class="small muted b" style="margin:14px 0 6px">Seats by session</div>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">${e.slots.filter(s=>s.is_active).map(s=>`<button class="slot ${sl===s.id?"sel":""}" data-slot="${s.id}" style="padding:8px 10px">
         <div class="tiny muted">${esc(s.date_label.split(",")[0].slice(0,3))}, ${esc(s.date_label.split(",")[1]||"").replace(/ \d{4}$/,"")}</div><div class="b small">${esc(s.label)}</div>
-        <div class="tiny"><b>${s.approved}</b>/${s.capacity} · ${s.approved>=s.capacity?'<span style="color:var(--green);font-weight:700">Full</span>':`<span style="color:var(--amber)">${s.pending} pend.</span>`}</div>
+        <div class="tiny"><b>${s.approved}</b>/${s.capacity}${s.held?` · <span style="color:var(--blue);font-weight:700">${s.held} held</span>`:""} · ${s.approved+(s.held||0)>=s.capacity?'<span style="color:var(--green);font-weight:700">Full</span>':`<span style="color:var(--amber)">${s.pending} pend.</span>`}</div>
         <div class="bar" style="margin-top:4px;height:5px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%;background:${s.approved>=s.capacity?"var(--green)":"var(--red)"}"></i></div></button>`).join("")}</div></div>
     <div class="seg">${["pending","waitlisted","approved","rejected","cancelled","all"].map(s=>`<button data-st="${s}" class="${s===st?"on":""}">${s==="all"?"All":STATUS_LABEL[s]} ${s==="all"?S.regs.length:(counts[s]||0)}</button>`).join("")}</div>
     <input class="in" id="ap_q" placeholder="Search name, organisation, email, phone" value="${esc(S.apprQ||"")}">
