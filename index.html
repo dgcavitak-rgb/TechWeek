@@ -239,6 +239,12 @@ main.console{padding:16px 0 96px}
 .qa-i{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:12px;cursor:pointer}
 .qa-i:hover{border-color:var(--red);background:var(--red-50)}.qa-i b{font-size:14px;margin-top:6px}.qa-i small{color:var(--muted);font-size:12px}
 .qico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--red-50);color:var(--red)}
+.apev{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.apev-i{text-align:left;background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
+.apev-i.on{border-color:var(--red);box-shadow:0 0 0 3px rgba(200,35,44,.12)}.apev-t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:2px 0 4px}
+.apsum{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line)}.apsum>.grow{min-width:220px}
+.apsum-k{display:flex;gap:18px;flex-wrap:wrap}.apsum-k>div{display:grid;line-height:1.15}.apsum-k b{font-size:22px;font-variant-numeric:tabular-nums}.apsum-k span{font-size:13px;color:var(--muted);display:inline}
+.apsum-k>div{grid-template-columns:auto 1fr;align-items:baseline}.apsum-k small{grid-column:1/-1;font-size:11.5px;color:var(--muted)}
 .upg{border-top:1px solid var(--line);padding-top:4px}.upg:first-of-type{border-top:0}
 .upg>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer}.upg>summary::-webkit-details-marker{display:none}
 .upg>summary svg{transition:transform .2s;color:var(--muted)}.upg[open]>summary svg{transform:rotate(90deg)}
@@ -390,7 +396,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.5.7";
+const APP_VERSION = "2.5.8";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1619,9 +1625,16 @@ async function viewApprovals(v){
   if(!S.apprEvent || !evById(S.apprEvent)) S.apprEvent=(ev.find(e=>e.counts.pending)||ev.find(e=>e.status==="open")||ev[0]).id;
   S.apprStatus=S.apprStatus||"pending";
   v.innerHTML=`${pageHead(ICONS.approvals,"Approvals","Approve, waitlist or move registrations — the partner gets an email automatically.",'<button class="btn sm" id="ap_ref">'+ico("refresh",15)+' Refresh</button>')}
-    <div class="stack"><select class="in" id="ap_ev">${ev.map(e=>`<option value="${e.id}" ${e.id===S.apprEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}${e.counts.pending?` (${e.counts.pending} pending)`:""}</option>`).join("")}</select>
+    <div class="stack">${ev.length>1?`<div class="apev">${ev.map(e=>{ const c=e.counts||{}, act=(e.slots||[]).filter(x=>x.is_active), cap=act.reduce((a,x)=>a+(+x.capacity||0),0), apv=act.reduce((a,x)=>a+(+x.approved||0),0), pct=cap?Math.min(100,apv/cap*100):0;
+      return `<button class="apev-i ${e.id===S.apprEvent?"on":""}" data-apev="${e.id}"><div class="tiny muted">${esc(e.city||"")}${e.slots&&e.slots.length?" · "+e.slots.filter(x=>x.is_active).length+" sessions":""}</div>
+        <div class="b small apev-t">${esc(e.title)}</div>
+        <div class="tiny"><b>${apv}</b>/${cap} seats${c.pending?` · <span style="color:var(--amber);font-weight:700">${c.pending} pending</span>`:""}${c.waitlisted?` · ${c.waitlisted} waitlist`:""}</div>
+        <div class="bar" style="margin-top:6px;height:5px"><i style="width:${pct}%;background:${pct>=100?"var(--green)":"var(--red)"}"></i></div></button>` }).join("")}</div>`:""}
+    <select class="in" id="ap_ev">${ev.map(e=>`<option value="${e.id}" ${e.id===S.apprEvent?"selected":""}>${esc(e.city)} — ${esc(e.title)}${e.counts.pending?` (${e.counts.pending} pending)`:""}</option>`).join("")}</select>
     <div id="ap_body"><div class="empty"><span class="spin dark"></span></div></div></div>`;
-  $("#ap_ev").onchange=()=>{ S.apprEvent=$("#ap_ev").value; S.apprSlot=""; drawApprovals() };
+  const pickEv=id=>{ S.apprEvent=id; S.apprSlot=""; $("#ap_ev").value=id; $$("[data-apev]",v).forEach(b=>b.classList.toggle("on",b.dataset.apev===id)); drawApprovals() };
+  $("#ap_ev").onchange=()=>pickEv($("#ap_ev").value);
+  $$("[data-apev]",v).forEach(b=>b.onclick=()=>pickEv(b.dataset.apev));
   $("#ap_ref").onclick=async()=>{ await loadOverview(); drawApprovals() };
   drawApprovals();
 }
@@ -1634,10 +1647,17 @@ async function drawApprovals(){
   const rows=S.regs.filter(r=>(st==="all"||r.status===st)&&(!sl||r.slot_id===sl)&&(!q||[r.full_name,r.organization,r.email,r.phone,r.designation].join(" ").toLowerCase().includes(q)))
     .sort((a,b)=>st==="pending"?a.created_at.localeCompare(b.created_at):b.created_at.localeCompare(a.created_at));
   body.innerHTML=`
-    <div class="card pad"><div class="small muted b" style="margin-bottom:6px">Seats by session</div>
+    <div class="card pad">${(()=>{ const c=e.counts||{}, act=e.slots.filter(x=>x.is_active), cap=act.reduce((a,x)=>a+(+x.capacity||0),0), ap=act.reduce((a,x)=>a+(+x.approved||0),0),
+        pend=act.reduce((a,x)=>a+(+x.pending||0),0), full=act.filter(x=>x.approved>=x.capacity).length, ci=c.checked_in||0, pct=cap?Math.min(100,ap/cap*100):0;
+      return `<div class="apsum"><div class="grow"><div class="tiny muted b" style="letter-spacing:.06em;text-transform:uppercase">Event total · ${esc(e.city||"")}</div>
+          <div class="b">${esc(e.title)}</div>
+          <div class="bar" style="margin-top:8px;height:8px"><i style="width:${pct}%;background:${pct>=100?"var(--green)":"var(--red)"}"></i></div></div>
+        <div class="apsum-k"><div><b>${ap}</b><span>/${cap}</span><small>seats approved</small></div><div><b style="color:var(--amber)">${pend}</b><small>pending</small></div>
+          <div><b>${c.waitlisted||0}</b><small>waitlist</small></div><div><b>${full}</b><span>/${act.length}</span><small>sessions full</small></div><div><b style="color:var(--green)">${ci}</b><small>checked in</small></div></div></div>` })()}
+      <div class="small muted b" style="margin:14px 0 6px">Seats by session</div>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">${e.slots.filter(s=>s.is_active).map(s=>`<button class="slot ${sl===s.id?"sel":""}" data-slot="${s.id}" style="padding:8px 10px">
         <div class="tiny muted">${esc(s.date_label.split(",")[0].slice(0,3))}, ${esc(s.date_label.split(",")[1]||"").replace(/ \d{4}$/,"")}</div><div class="b small">${esc(s.label)}</div>
-        <div class="tiny"><b>${s.approved}</b>/${s.capacity} · <span style="color:var(--amber)">${s.pending} pend.</span></div>
+        <div class="tiny"><b>${s.approved}</b>/${s.capacity} · ${s.approved>=s.capacity?'<span style="color:var(--green);font-weight:700">Full</span>':`<span style="color:var(--amber)">${s.pending} pend.</span>`}</div>
         <div class="bar" style="margin-top:4px;height:5px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%;background:${s.approved>=s.capacity?"var(--green)":"var(--red)"}"></i></div></button>`).join("")}</div></div>
     <div class="seg">${["pending","waitlisted","approved","rejected","cancelled","all"].map(s=>`<button data-st="${s}" class="${s===st?"on":""}">${s==="all"?"All":STATUS_LABEL[s]} ${s==="all"?S.regs.length:(counts[s]||0)}</button>`).join("")}</div>
     <input class="in" id="ap_q" placeholder="Search name, organisation, email, phone" value="${esc(S.apprQ||"")}">
