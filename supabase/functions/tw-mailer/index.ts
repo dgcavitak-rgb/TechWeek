@@ -266,32 +266,31 @@ async function build(p: any): Promise<Mail> {
       subject = `You're on the waitlist — ${e.title} · ${when}`;
       headline = "You're on the waitlist";
       pre = "This session is currently full. We'll notify you if a seat opens.";
-      body = `<p>Dear ${first},</p><p>Thank you for your interest. The session you chose is currently full, so we've placed you on the
-        <strong>waitlist</strong>. If a seat opens up, we'll email you right away.</p>${detailsBlock(p)}
-        <p style="margin-top:18px">${linkBtn(pass, "View status")}</p>`;
+      body = `<p>Dear ${first},</p><p>Thank you for your interest. We have placed your request on the
+        <strong>waitlist</strong> for the session below. If a seat opens up, we will email you right away.</p>${detailsBlock(p)}
+        <p style="margin-top:18px">${linkBtn(pass, "View status")}</p>${signoff(p)}`;
       break;
     case "promoted":
       subject = `A seat has opened — ${e.title} · ${when}`;
       headline = "Good news — a seat has opened";
       pre = "Your waitlisted request is now under review.";
-      body = `<p>Hi ${first},</p><p>A seat has opened in your session and your request has moved from the waitlist to review.
-        You'll receive your confirmation and QR pass shortly.</p>${detailsBlock(p)}`;
+      body = `<p>Dear ${first},</p><p>A seat has opened in your session and your request has moved from the waitlist to review.
+        You will receive a confirmation email once it is approved.</p>${detailsBlock(p)}${signoff(p)}`;
       break;
     case "rejected":
       subject = `About your Tech Week request — ${e.title}`;
       headline = "Update on your request";
       pre = "We're unable to accommodate this request.";
-      body = `<p>Hi ${first},</p><p>Thank you for your interest in ${esc(e.title)}. Unfortunately, we're unable to accommodate your request
+      body = `<p>Dear ${first},</p><p>Thank you for your interest in ${esc(e.title)}. Unfortunately, we are unable to accommodate your request
         for <strong>${esc(when)}</strong>.${r.reason ? ` <br><span style="color:${MUTED}">Note: ${esc(r.reason)}</span>` : ""}</p>
-        <p>We'll keep you informed about upcoming Tech Week sessions in your city.</p>`;
+        <p>We will keep you informed about upcoming sessions in your city.</p>${signoff(p)}`;
       break;
     case "cancelled":
       subject = `Registration cancelled — ${e.title} · ${when}`;
       headline = "Your registration is cancelled";
       pre = "Your seat has been released.";
-      body = `<p>Hi ${first},</p><p>Your registration for <strong>${esc(when)}</strong> at ${esc(v.name)}, ${esc(v.city)} has been cancelled
-        and your seat released.${r.reason && r.reason !== "Cancelled by attendee" ? ` <br><span style="color:${MUTED}">Note: ${esc(r.reason)}</span>` : ""}</p>
-        <p>We hope to see you at a future session.</p>`;
+      body = `<p>Dear ${first},</p><p>Your registration for <strong>${esc(when)}</strong> at ${esc(v.name)}, ${esc(v.city)} has been cancelled${r.was_approved === false ? "" : " and your seat released"}.${r.reason && r.reason !== "Cancelled by attendee" ? ` <br><span style="color:${MUTED}">Note: ${esc(r.reason)}</span>` : ""}</p>
+        <p>We hope to welcome you at a future session.</p>${signoff(p)}`;
       addIcs(true);
       break;
     case "event_cancelled":
@@ -336,6 +335,9 @@ async function build(p: any): Promise<Mail> {
         ${cert ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
           <div style="font-weight:700">Certificate of participation</div>
           <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">Attached as a PDF · Certificate ID ${esc(r.cert_code)}</div>
+          ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : r.checked_in ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
+          <div style="font-weight:700">Your certificate of participation</div>
+          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${r.cert_code ? `Certificate ID ${esc(r.cert_code)} · ` : ""}Download it as a PDF at any time.</div>
           ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : ""}
         ${contentPack(p) ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC"><div style="font-weight:700">Session resources</div>
           <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${esc(contentPack(p)!.note)}</div>${btn(contentPack(p)!.url, "Open resources")}</div>` : ""}
