@@ -317,7 +317,9 @@ button.pl{cursor:pointer}button.pl:hover{box-shadow:0 2px 8px rgba(16,24,40,.12)
 .bpick span:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--bc)}
 .bpick input:checked+span{border-color:var(--bc);background:color-mix(in srgb,var(--bc) 12%,#fff);color:var(--bc)}
 .bpick input:focus-visible+span{outline:2px solid var(--bc);outline-offset:2px}
-.rg-blogo{background:#fff;border-radius:8px;padding:4px 8px;display:inline-flex;height:30px;align-items:center;margin-left:8px}.rg-blogo img{max-height:22px;max-width:120px;display:block}
+.rg-blogo{background:#fff;border-radius:8px;padding:5px 10px;display:inline-flex;height:32px;align-items:center}.rg-blogo img{max-height:20px;max-width:130px;display:block}
+.rg-cvlogo{height:24px;width:auto;display:block}.rg-tw{font-weight:700;opacity:.95;padding-left:10px;margin-left:2px;border-left:1px solid rgba(255,255,255,.35)}.rg-x{opacity:.7;font-weight:600;margin:0 2px}
+@media(max-width:420px){.rg-cvlogo{height:20px}.rg-tw{display:none}}
 .bgrid{display:grid;gap:12px;grid-template-columns:1fr}@media(min-width:720px){.bgrid{grid-template-columns:repeat(2,1fr)}}@media(min-width:1000px){.bgrid{grid-template-columns:repeat(3,1fr)}}
 .bcard{border:1px solid var(--line);border-top:4px solid var(--bc);border-radius:12px;padding:14px;display:grid;gap:8px;background:#fff}
 .bswatch{height:64px;border-radius:10px;display:flex;align-items:center;gap:10px;padding:0 14px;color:#fff;font-size:16px}.bswatch.big{height:84px;justify-content:space-between}
@@ -414,7 +416,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.6.6";
+const APP_VERSION = "2.6.7";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -663,7 +665,7 @@ async function renderRegister(){
   <header class="rg-hero">
     <img class="rg-art3d" src="art-hero.webp" alt="" aria-hidden="true" decoding="async" fetchpriority="high" style="${artHue(brands,bs)}">
     <div class="wrap rg-hwrap">
-      <div class="row between"><div class="rg-brand"><i>C</i><span>Cavitak <b>Tech Week</b></span>${brands.filter(b=>b.logo).map(b=>`<span class="rg-blogo"><img src="${esc(b.logo)}" alt="${esc(b.name)}"></span>`).join("")}</div>
+      <div class="row between"><div class="rg-brand"><img class="rg-cvlogo" src="logo-cavitak-white.png" alt="Cavitak"><span class="rg-tw">Tech Week</span>${brands.filter(b=>b.logo).map(b=>`<span class="rg-x">×</span><span class="rg-blogo"><img src="${esc(b.logo)}" alt="${esc(b.name)}"></span>`).join("")}</div>
         ${d.open&&seatsTot?`<span class="rg-pill">🔥 ${seatsLeft} of ${seatsTot} seats left</span>`:""}</div>
       <div class="rg-kicker">${brands.length?"Cavitak × "+esc(brands.map(b=>b.name).join(" · "))+" · ":bs?"Cavitak × BrightSign · ":""}Partner training · ${esc(v.city)}</div>
       <h1 class="rg-title">${esc(ev.title)}</h1>
@@ -1062,7 +1064,7 @@ const can=(...roles)=>S.user && roles.includes(S.user.role);
 function renderLogin(msg){
   $("#app").innerHTML=`
   <div class="hero" style="padding:30px 0 92px"><div class="wrap" style="max-width:460px">
-    <div class="lgmark"><i>C</i><span>Cavitak</span></div>
+    <div class="lgmark"><img src="logo-cavitak-white.png" alt="Cavitak" style="height:30px;width:auto;display:block"></div>
     <h1>Tech Week Console</h1><div style="opacity:.9">Partner training, from invite to certificate.</div>
     <div class="lgchips"><span>${ico("cal",14)} Events</span><span>${ico("check",14)} Approvals</span><span>${ico("qr",14)} QR check-in</span><span>${ico("chart",14)} Reports</span></div></div></div>
   <div class="wrap lift" style="max-width:460px"><form class="card pad stack" id="lf" style="padding:22px">
