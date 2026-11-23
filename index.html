@@ -412,7 +412,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.6.4";
+const APP_VERSION = "2.6.5";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -957,7 +957,12 @@ async function renderSelfCheckin(){
    ============================================================= */
 async function renderDisplay(){
   const code=params.get("d"), app=$("#app");
-  document.body.style.background="#0E0F12"; document.body.style.overflow="hidden";
+  document.body.style.background="#0E0F12"; document.body.style.overflow="hidden"; document.body.style.cursor="none";
+  // Always-on players: if the page started before the network was up (QR library missing), show a calm holding screen and retry
+  if(typeof QRCode==="undefined"){
+    app.innerHTML=`<div style="position:fixed;inset:0;display:grid;place-items:center;color:#fff;font:600 3vh Inter,system-ui,sans-serif;background:radial-gradient(1200px 700px at 15% 20%,#C8232C,#1A0B0D)">Connecting to check-in… this screen will start automatically.</div>`;
+    setTimeout(()=>location.reload(), 30000); return;
+  }
   const scanUrl=baseUrl()+"?c="+encodeURIComponent(code);
   app.innerHTML=`<style>
     .tv{position:fixed;inset:0;display:grid;grid-template-columns:1.25fr 1fr;color:#fff;font-family:Inter,system-ui,sans-serif;
@@ -1025,7 +1030,8 @@ async function renderDisplay(){
     }catch(e){ /* keep showing last state; retry next tick */ }
   };
   clock(); setInterval(clock,20000); tick(); setInterval(tick,8000);
-  setTimeout(()=>location.reload(), 6*3600e3); // daily-safe refresh for always-on screens
+  // fresh reload every 6 hours — but only when the server answers, so an offline moment never leaves a browser error page on the display
+  setInterval(async()=>{ try{ const ok=await rpc("tw_door_info",{p_code:code}); if(ok&&ok.ok) location.reload() }catch(_){ } }, 6*3600e3);
 }
 
 /* =============================================================
