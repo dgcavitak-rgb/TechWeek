@@ -417,7 +417,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.7.0";
+const APP_VERSION = "2.7.1";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1020,11 +1020,16 @@ async function renderDisplay(){
   const showNext=()=>{ if(showing||!queue.length) return; showing=true; const p=queue.shift(); const w=$("#tv_w");
     w.innerHTML=`Welcome, ${esc(p.name)}! 👋<small>${esc(p.org)}</small>`; w.classList.add("on");
     setTimeout(()=>{ w.classList.remove("on"); setTimeout(()=>{ showing=false; showNext() },600) },4500) };
-  const clock=()=>{ $("#tv_clk").textContent=new Date().toLocaleString("en-IN",{weekday:"long",day:"numeric",month:"long",hour:"numeric",minute:"2-digit"}) };
+  // Clock in venue time from the server — players often run on UTC or a drifting clock, so never trust the device time zone
+  let skew=0, off=330;
+  const clock=()=>{ const t=new Date(Date.now()+skew+off*60000), h=t.getUTCHours(), m=t.getUTCMinutes();
+    $("#tv_clk").textContent=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][t.getUTCDay()]+", "+t.getUTCDate()+" "+
+      ["January","February","March","April","May","June","July","August","September","October","November","December"][t.getUTCMonth()]+" · "+((h%12)||12)+":"+String(m).padStart(2,"0")+" "+(h<12?"AM":"PM") };
   const tick=async()=>{
     try{
       const d=await rpc("tw_door_info",{p_code:code});
       if(!d.ok){ $("#tv_t").textContent=d.error; return }
+      if(d.now_ms){ skew=Number(d.now_ms)-Date.now(); if(d.utc_offset_min!=null) off=Number(d.utc_offset_min); clock() }
       $("#tv_eb").textContent=(d.brand||"Cavitak")+" · Tech Week · "+d.venue.city;
       $("#tv_t").textContent=d.event.title;
       const c=d.current[0];
@@ -1034,7 +1039,7 @@ async function renderDisplay(){
       first=false; showNext();
     }catch(e){ /* keep showing last state; retry next tick */ }
   };
-  clock(); setInterval(clock,20000); tick(); setInterval(tick,8000);
+  clock(); setInterval(clock,10000); tick(); setInterval(tick,8000);
   // fresh reload every 6 hours — but only when the server answers, so an offline moment never leaves a browser error page on the display
   setInterval(async()=>{ try{ const ok=await rpc("tw_door_info",{p_code:code}); if(ok&&ok.ok) location.reload() }catch(_){ } }, 6*3600e3);
 }
