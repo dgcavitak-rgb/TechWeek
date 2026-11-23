@@ -82,6 +82,12 @@ export async function buildCertificate(d, PDFLib, QRCode) {
 
   // signature
   const sy = 112;
+  const sig = String(d.signature || "").startsWith("data:image/png;base64,")
+    ? await embed(Uint8Array.from(atob(String(d.signature).split(",")[1]), (ch) => ch.charCodeAt(0))) : null;
+  if (sig) {
+    const k = Math.min(200 / sig.width, 48 / sig.height);
+    page.drawImage(sig, { x: 90, y: sy + 3, width: sig.width * k, height: sig.height * k });
+  }
   page.drawLine({ start: { x: 80, y: sy }, end: { x: 300, y: sy }, thickness: 0.8, color: c(INK) });
   page.drawText(safe(d.signer_name || "Cavitak Marketing Pvt. Ltd."), { x: 80, y: sy - 16, size: 11, font: bold, color: c(INK) });
   const st = safe(d.signer_title || "");
