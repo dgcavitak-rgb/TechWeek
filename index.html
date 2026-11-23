@@ -249,6 +249,8 @@ main.console{padding:16px 0 96px}
 .act-i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grey-50);color:var(--muted)}
 .act-move,.act-walkin_move{background:#EEF3FF;color:#1E40AF}.act-cancel,.act-cancel_self,.act-reject,.act-delete_registration{background:#FDF1F2;color:var(--red)}
 .act-approve,.act-checkin,.act-checkin_manual,.act-self_checkin,.act-walkin_approve{background:#F0FAF4;color:var(--green)}.act-add_guest,.act-walkin{background:#FFF7E6;color:var(--amber)}
+.ptn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:520px}
+.ptot td{font-weight:800;background:var(--grey-50);border-top:2px solid var(--line);position:sticky;bottom:0}
 .sbd{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
 .sbd-c{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}.sbd-c.dim{opacity:.4}
 .sbd-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}.sbd-p{display:flex;flex-wrap:wrap;gap:6px}
@@ -412,7 +414,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.6.5";
+const APP_VERSION = "2.6.6";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -2439,10 +2441,13 @@ function drawPartners(){
     ${kpiTile("users","blue","People",all.reduce((a,x)=>a+x.people,0),"")}${kpiTile("scan","green","Companies attended",all.filter(x=>x.attended>0).length,all.length?Math.round(all.filter(x=>x.attended>0).length/all.length*100)+"% of companies":"")}
     ${kpiTile("history","amber","Repeat companies",all.filter(x=>x.events>1).length,"came to 2+ events")}</div>`;
   $("#pt_tbl").innerHTML=rows.length?`<table class="t"><thead><tr><th>Company</th><th>People</th><th>Registered</th><th>Attended</th><th>Events</th><th>Brands</th><th>Last session</th><th>Hot</th></tr></thead><tbody>${rows.map(x=>`<tr class="clk" data-org="${x.id}">
-    <td class="b">${esc(x.name)} ${x.targeted?'<span class="chip waitlisted">Target</span>':""}<div class="tiny muted">${esc([x.type,x.city].filter(Boolean).join(" · "))}</div></td>
+    <td class="b"><span class="ptn" title="${esc(x.name)}">${esc(x.name)}</span> ${x.targeted?'<span class="chip waitlisted">Target</span>':""}<div class="tiny muted">${esc([x.type,x.city].filter(Boolean).join(" · "))}</div></td>
     <td>${x.people}</td><td>${x.registrations}</td><td>${x.attended?`<span class="chip approved">${x.attended}</span>`:'<span class="muted">0</span>'}</td><td>${x.events}</td>
     <td>${(x.brands||[]).map(n=>`<span class="bchip" style="--bc:${esc(byName(n).color1||"#6B7480")}">${esc(n)}</span>`).join(" ")}</td>
-    <td class="small">${x.last_seen?esc(fmtD(x.last_seen)):""}</td><td>${x.hot?`<b style="color:var(--red)">${x.hot}</b>`:""}</td></tr>`).join("")}</tbody></table>`
+    <td class="small">${x.last_seen?esc(fmtD(x.last_seen)):""}</td><td>${x.hot?`<b style="color:var(--red)">${x.hot}</b>`:""}</td></tr>`).join("")}</tbody>
+    <tfoot><tr class="ptot"><td>Total · ${rows.length} compan${rows.length===1?"y":"ies"}${S.ptQ?` <span class="tiny muted">(matching “${esc(S.ptQ)}”)</span>`:""}</td>
+      <td>${rows.reduce((a,x)=>a+(+x.people||0),0)}</td><td>${rows.reduce((a,x)=>a+(+x.registrations||0),0)}</td><td>${rows.reduce((a,x)=>a+(+x.attended||0),0)}</td>
+      <td></td><td></td><td></td><td>${rows.reduce((a,x)=>a+(+x.hot||0),0)||""}</td></tr></tfoot></table>`
     :`<div class="empty">${S.ptQ?"No match for “"+esc(S.ptQ)+"”.":"No partners yet — they appear as people register."}</div>`;
   $$("[data-org]").forEach(tr=>tr.onclick=()=>partnerDetail(tr.dataset.org));
 }
@@ -2483,6 +2488,10 @@ async function exportPartners(){
     const st=wsP[XLSX.utils.encode_cell({r,c:stCol})]; const col={Approved:"166534",Pending:"92400E",Waitlisted:"1E40AF",Rejected:"991B1B",Cancelled:"6B7280"}[row[stCol]]; if(st&&col) st.s={font:{bold:true,color:{rgb:col}}};
     const ci=wsP[XLSX.utils.encode_cell({r,c:ciCol})]; if(ci&&row[ciCol]!=="No") ci.s={font:{color:{rgb:"166534"}}};
   });
+  // Participants total row
+  if(pr.length){ const tr=pr.length+1, comp=new Set(people.map(x=>(x.company||"").toLowerCase())).size;
+    XLSX.utils.sheet_add_aoa(wsP,[[`TOTAL — ${comp} companies`,"",`${new Set(people.map(x=>(x.email||x.name||"").toLowerCase())).size} people · ${pr.length} registrations`]],{origin:{r:tr,c:0}});
+    [0,1,2].forEach(i=>{ const c=wsP[XLSX.utils.encode_cell({r:tr,c:i})]; if(c) c.s={font:{bold:true},fill:{fgColor:{rgb:"F3F4F6"}}} }) }
   // 2) Companies — summary, now with sessions and participant names
   const by={}; people.forEach(x=>{ const k=(x.company||"").toLowerCase(); (by[k]=by[k]||[]).push(x) });
   const ch=["Company","Type","City","People","Participants","Sessions","Registered","Attended","Events","Brands","Last session","Hot leads","On target list"];
@@ -2490,7 +2499,10 @@ async function exportPartners(){
     const names=[...new Set(ps.map(p=>p.name))].join(", ");
     const sess=[...new Set(ps.map(p=>`${p.date} ${p.session}`))].join(", ");
     return [x.name,x.type||"",x.city||"",x.people,names,sess,x.registrations,x.attended,x.events,(x.brands||[]).join(", "),x.last_seen?fmtD(x.last_seen):"",x.hot,x.targeted?"Yes":""] });
+  if(cr.length){ const sum=i=>cr.reduce((a,r)=>a+(+r[i]||0),0);
+    cr.push([`TOTAL — ${cr.length} companies`,"","",sum(3),"","",sum(6),sum(7),"","","",sum(11),""]) }
   const wsC=sheet(ch,cr,[34,16,12,8,40,34,10,9,7,14,13,9,12]);
+  if(cr.length){ const tr=cr.length; ch.forEach((_,i)=>{ const c=wsC[XLSX.utils.encode_cell({r:tr,c:i})]; if(c) c.s={font:{bold:true},fill:{fgColor:{rgb:"F3F4F6"}},border:{top:{style:"thin",color:{rgb:"9CA3AF"}}}} }) }
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,wsP,"Participants");
   XLSX.utils.book_append_sheet(wb,wsC,"Companies");
