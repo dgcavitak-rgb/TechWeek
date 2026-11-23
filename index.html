@@ -396,7 +396,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.6.1";
+const APP_VERSION = "2.6.2";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -961,15 +961,35 @@ async function renderDisplay(){
     .tv .wel{position:fixed;left:5vw;bottom:14vh;max-width:50vw;transform:translateY(30px);opacity:0;transition:all .5s;background:#16794A;color:#fff;
         border-radius:1.6vw;padding:2vh 3vw;font-size:2.6vw;font-weight:800;box-shadow:0 1vw 4vw rgba(0,0,0,.4);white-space:nowrap}
     .tv .wel.on{opacity:1;transform:translateY(0)}.tv .wel small{display:block;font-size:1.4vw;font-weight:600;opacity:.9}
+    .tv .m{display:none}
+    /* super-ultrawide (32:9 and similar): three panels sized by screen height */
+    @media (min-aspect-ratio: 5/2){
+      .tv{grid-template-columns:1.15fr 1fr auto;background:radial-gradient(1400px 900px at 10% 30%,#C8232C 0%,#7A0F15 45%,#1A0B0D 100%)}
+      .tv .l{padding:7vh 3vw 7vh 4vw}
+      .tv .eb{font-size:2.6vh}.tv h1{font-size:8.2vh;margin-top:2vh}.tv .ses{font-size:4.2vh;margin-top:3vh}
+      .tv .cnt{font-size:16vh}.tv .cntl{font-size:3vh}.tv .clock{font-size:2.8vh}
+      .tv .m{display:flex;flex-direction:column;justify-content:center;gap:4.5vh;padding:7vh 3vw;border-left:1px solid rgba(255,255,255,.14)}
+      .tv .st{display:flex;align-items:center;gap:2.4vh;font-size:3.6vh;font-weight:700}
+      .tv .st b{flex:none;width:7.5vh;height:7.5vh;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35);font-size:3.6vh}
+      .tv .st span{display:block;font-size:2.4vh;font-weight:500;opacity:.8;margin-top:.4vh}
+      .tv .r{padding:6vh 4vw 6vh 2vw}
+      .tv .qrc{border-radius:3vh;padding:4vh;max-width:none;width:auto}
+      .tv .qrc .t{font-size:4.4vh;margin-bottom:2vh}.tv .qrc .s{font-size:2.2vh;max-width:56vh;margin:2vh auto 0}
+      .tv #tvqr canvas,.tv #tvqr img{width:62vh!important;height:62vh!important;max-width:none!important;max-height:none!important}
+      .tv .wel{left:auto;right:auto;bottom:8vh;left:35vw;max-width:40vw;font-size:4.6vh;border-radius:2.4vh;padding:2.4vh 3.6vh}.tv .wel small{font-size:2.4vh}
+    }
   </style>
   <div class="tv"><div class="l">
       <div><div class="eb" id="tv_eb">Cavitak · Tech Week</div><h1 id="tv_t">Loading…</h1><div class="ses" id="tv_s"></div></div>
       <div><div class="cnt" id="tv_c"></div><div class="cntl" id="tv_cl"></div></div>
       <div class="clock" id="tv_clk"></div></div>
+    <div class="m"><div class="st"><b>1</b><div>Open your phone camera<span>Point it at the QR code</span></div></div>
+      <div class="st"><b>2</b><div>Confirm your details<span>Entry code, or the email / mobile you registered with</span></div></div>
+      <div class="st"><b>3</b><div>You're checked in<span>Please take your seat — welcome!</span></div></div></div>
     <div class="r"><div class="qrc"><div class="t">Scan to check in</div><div id="tvqr"></div>
       <div class="s">Open your phone camera, scan, and confirm with your registered email or mobile.</div></div></div>
     <div class="wel" id="tv_w"></div></div>`;
-  qrInto($("#tvqr"), scanUrl, 600);
+  qrInto($("#tvqr"), scanUrl, 900);
   const seen=new Set(), queue=[]; let first=true, showing=false;
   const showNext=()=>{ if(showing||!queue.length) return; showing=true; const p=queue.shift(); const w=$("#tv_w");
     w.innerHTML=`Welcome, ${esc(p.name)}! 👋<small>${esc(p.org)}</small>`; w.classList.add("on");
@@ -1335,6 +1355,36 @@ async function invitesKit(e){
   };
   draw();
 }
+// 32:9 (3840x1080) still image of the room check-in QR for ultrawide displays
+async function wideCheckinImage(e, scan){
+  try{ await document.fonts.ready }catch(_){}
+  const W=3840, H=1080, c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
+  const g=x.createRadialGradient(W*.12,H*.3,40,W*.12,H*.3,W*.75); g.addColorStop(0,"#C8232C"); g.addColorStop(.45,"#7A0F15"); g.addColorStop(1,"#1A0B0D");
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle="rgba(255,255,255,.07)"; for(let i=0;i<W;i+=36) for(let j=0;j<H;j+=36) if(i>W*.45) { x.beginPath(); x.arc(i,j,2,0,7); x.fill() }
+  const F=(w,s)=>`${w} ${s}px Inter, "Segoe UI", system-ui, sans-serif`;
+  const wrap=(t,mx,lh,y0,max)=>{ const ws=String(t).split(" "); let line="",y=y0,n=0; for(const w of ws){ const tt=line?line+" "+w:w; if(x.measureText(tt).width>mx&&line){ x.fillText(line,150,y); line=w; y+=lh; if(++n>=max-1){ } } else line=tt } x.fillText(line,150,y); return y };
+  // left: event
+  x.fillStyle="rgba(255,255,255,.85)"; x.font=F(600,34); x.fillText(`CAVITAK  ·  TECH WEEK  ·  ${String(e.city||"").toUpperCase()}`,150,190);
+  x.fillStyle="#fff"; x.font=F(800,96); let y=wrap(e.title||"Tech Week",1300,108,330,3);
+  x.font=F(500,44); x.fillStyle="rgba(255,255,255,.9)"; x.fillText(String(e.venue_name||"").split(" — ")[0],150,y+90);
+  x.font=F(500,34); x.fillStyle="rgba(255,255,255,.75)"; x.fillText("Check-in opens 45 minutes before each session",150,H-150);
+  // middle: steps
+  x.strokeStyle="rgba(255,255,255,.16)"; x.lineWidth=2; x.beginPath(); x.moveTo(1640,150); x.lineTo(1640,H-150); x.stroke();
+  [["Open your phone camera","Point it at the QR code"],["Confirm your details","Entry code, or registered email / mobile"],["You're checked in","Please take your seat — welcome!"]].forEach(([t,sub],i)=>{
+    const cy=300+i*240; x.fillStyle="rgba(255,255,255,.14)"; x.beginPath(); x.arc(1790,cy,62,0,7); x.fill(); x.strokeStyle="rgba(255,255,255,.4)"; x.lineWidth=3; x.stroke();
+    x.fillStyle="#fff"; x.font=F(800,58); x.textAlign="center"; x.fillText(String(i+1),1790,cy+20); x.textAlign="left";
+    x.font=F(700,56); x.fillText(t,1890,cy-6); x.font=F(500,36); x.fillStyle="rgba(255,255,255,.8)"; x.fillText(sub,1890,cy+46) });
+  // right: QR card
+  const cw=880, ch=960, cx=W-cw-150, cy=(H-ch)/2;
+  x.fillStyle="rgba(0,0,0,.35)"; x.filter="blur(30px)"; x.fillRect(cx+20,cy+40,cw,ch); x.filter="none";
+  x.fillStyle="#fff"; x.beginPath(); x.roundRect ? x.roundRect(cx,cy,cw,ch,48) : x.rect(cx,cy,cw,ch); x.fill();
+  x.fillStyle="#14171A"; x.font=F(800,64); x.textAlign="center"; x.fillText("Scan to check in",cx+cw/2,cy+110);
+  const qi=new Image(); qi.src=qrDataUrl(scan,720); await new Promise(r=>{ qi.onload=r; qi.onerror=r });
+  x.imageSmoothingEnabled=false; x.drawImage(qi,cx+(cw-720)/2,cy+160,720,720);
+  x.fillStyle="#5B6470"; x.font=F(500,32); x.fillText("Works for every session of this event",cx+cw/2,cy+ch-40); x.textAlign="left";
+  return c.toDataURL("image/png");
+}
 async function doorKit(e){
   let r; try{ r=await rpc("tw_door_code",{p_token:S.token,p_event:e.id}) }catch(x){ return toast(x.message,true) }
   if(!r.ok) return toast(r.error,true);
@@ -1350,12 +1400,18 @@ async function doorKit(e){
         <div style="font-size:24px;font-weight:800;margin-top:4px">Welcome! Scan to check in</div><div style="opacity:.9;margin-top:2px">${esc(e.venue_name)}</div></div>
         <div class="pb"><div class="qrbox" id="dk_qr" style="border:0"></div><div class="small muted" style="margin-top:6px">Open your phone camera, scan, and confirm with the email or mobile you registered with.</div></div></div>
       <div class="row" style="margin-top:8px"><button class="btn" id="dk_print">Print</button><button class="btn" id="dk_png">Download QR</button></div></div>
+    <div><label class="f">Option 3 — Still image for a 32:9 display</label>
+      <div class="small muted" style="margin-bottom:6px">A 3840 × 1080 picture (32:9) with the QR and check-in steps — play it as a still on the display or BrightSign. It has no live counter, but the QR works for every session and day of this event.</div>
+      <img id="dk_wide" alt="32:9 check-in image preview" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block;aspect-ratio:32/9;background:#1A0B0D">
+      <div class="row" style="margin-top:8px"><button class="btn primary" id="dk_wdl">${ico("download",15)} Download 32:9 image</button></div></div>
     ${can("super")?'<div class="small muted">If a photo of this QR is shared outside the room, you can <a href="#" id="dk_rot">change the code</a>; old printouts and screens then stop working.</div>':""}
     <div class="row"><button class="btn ghost" data-close>Close</button></div></div>`, ()=>{
     qrInto($("#dk_qr"), scan, 220);
     $("#dk_cs").onclick=()=>copy(screen);
     $("#dk_print").onclick=()=>window.print();
     $("#dk_png").onclick=()=>{ const a=document.createElement("a"); a.href=qrDataUrl(scan,900); a.download=e.slug+"-room-checkin-qr.png"; a.click() };
+    wideCheckinImage(e, scan).then(url=>{ $("#dk_wide").src=url;
+      $("#dk_wdl").onclick=()=>{ const a=document.createElement("a"); a.href=url; a.download=e.slug+"-checkin-3840x1080.png"; a.click() } });
     $("#dk_rot") && ($("#dk_rot").onclick=async ev=>{ ev.preventDefault(); if(!confirm("Change the room check-in code? Printed QRs and open screens will need the new one.")) return;
       const x=await rpc("tw_door_code",{p_token:S.token,p_event:e.id,p_rotate:true}).catch(err=>({ok:false,error:err.message})); if(!x.ok) return toast(x.error,true); toast("New code created"); doorKit(e) });
   });
