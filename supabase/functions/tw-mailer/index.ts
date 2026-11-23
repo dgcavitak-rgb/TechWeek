@@ -34,15 +34,33 @@ const FN_URL = (Deno.env.get("SUPABASE_URL") || "") + "/functions/v1/tw-mailer";
 async function certBytes(pass: string) {
   const { data: d, error } = await SB.rpc("tw_cert_payload", { p_pass: pass });
   if (error || !d?.ok) return null;
+  return await certFrom(d);
+}
+async function certFrom(d: any) {
   const get = async (u: string) => { try { const r = await fetch(u); return r.ok ? new Uint8Array(await r.arrayBuffer()) : null; } catch (_) { return null; } };
   const base = String(d.public_url || "").split("?")[0];
   d.logo_left = base ? await get(base + "logo-cavitak.png") : null;
   d.logo_right = d.brand_logo ? await get(d.brand_logo) : null;
   return await buildCertificate(d, PDFLib, QRCode);
 }
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type, x-tw-hook", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
+// Sample certificate (real settings, signature and event; dummy attendee) — preview in the console or emailed
+async function sample(body: any, secret: string) {
+  const { data: r, error } = await SB.rpc("tw_cert_sample", secret ? { p_token: null, p_secret: secret, p_to: body.to ?? null } : { p_token: String(body.sample || "") });
+  if (error || !r?.ok) return new Response(JSON.stringify({ ok: false, error: error?.message || r?.error || "Not allowed" }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
+  const bytes = await certFrom(r.cert);
+  if (!body.mail) return new Response(bytes, { headers: { ...CORS, "Content-Type": "application/pdf", "Content-Disposition": 'inline; filename="Sample-Certificate.pdf"' } });
+  if (!r.to) return new Response(JSON.stringify({ ok: false, error: "Your login has no email address." }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+  const p = { outbox: { kind: "cert_sample", to_email: r.to }, settings: r.settings, event: {} };
+  await send(p, { subject: "Sample certificate — Cavitak Tech Week", text: "Sample certificate attached (dummy attendee, real layout and signature).",
+    html: `<div style="font-family:Segoe UI,Arial,sans-serif;font-size:15px;color:${INK}"><p>Hello,</p><p>Attached is a <strong>sample certificate</strong> exactly as partners will receive it after attending — with the current logos, signature and signer details. The attendee name is a placeholder.</p><p style="color:${MUTED};font-size:13px">Cavitak Tech Week console</p></div>`,
+    attachments: [{ filename: "Sample-Certificate.pdf", content: b64(bytes), type: "application/pdf" }] });
+  return new Response(JSON.stringify({ ok: true, to: r.to }), { headers: { ...CORS, "Content-Type": "application/json" } });
+}
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method === "GET" && url.searchParams.get("cert")) {
     const bytes = await certBytes(url.searchParams.get("cert")!);
     if (!bytes) return new Response("Certificate not available — it is issued after you attend the session.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
@@ -51,8 +69,9 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ ok: true, service: "tw-mailer",
     provider: msReady() ? "microsoft-365" : (envGet("SMTP_USER") && envGet("SMTP_PASS")) ? "gmail-smtp" : envGet("RESEND_API_KEY") ? "resend" : "none" });
   const secret = req.headers.get("x-tw-hook") ?? "";
-  let id: number;
-  try { id = Number((await req.json()).id); } catch { return json({ ok: false, error: "bad body" }, 400); }
+  let id: number, body: any;
+  try { body = await req.json(); id = Number(body.id); } catch { return json({ ok: false, error: "bad body" }, 400); }
+  if (body && body.sample !== undefined) return await sample(body, secret);
   if (!secret || !id) return json({ ok: false, error: "forbidden" }, 403);
 
   const { data: p, error } = await SB.rpc("tw__email_payload", { p_id: id, p_secret: secret });
