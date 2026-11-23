@@ -48,11 +48,24 @@ export async function buildCertificate(d, PDFLib, QRCode) {
     center(t, y, font, size, color);
   };
 
-  // brand line
-  page.drawText("CAVITAK", { x: 60, y: H - 76, size: 18, font: bold, color: c(RED) });
-  page.drawText("TECH WEEK  ·  PARTNER TRAINING", { x: 60, y: H - 92, size: 8.5, font: bold, color: c(MUTED) });
+  // header: Cavitak logo (left) and partner brand logo (right); falls back to text if a logo is missing
+  const embed = async (bytes) => { try { return bytes ? await pdf.embedPng(bytes) : null; } catch (_) { return null; } };
+  const L = await embed(d.logo_left), Rl = await embed(d.logo_right);
+  if (L) {
+    const h = 30, w = L.width * h / L.height;
+    page.drawImage(L, { x: 60, y: H - 94, width: w, height: h });
+    page.drawText("TECH WEEK  \u00B7  PARTNER TRAINING", { x: 62, y: H - 110, size: 8, font: bold, color: c(MUTED) });
+  } else {
+    page.drawText("CAVITAK", { x: 60, y: H - 76, size: 18, font: bold, color: c(RED) });
+    page.drawText("TECH WEEK  \u00B7  PARTNER TRAINING", { x: 60, y: H - 92, size: 8.5, font: bold, color: c(MUTED) });
+  }
   const brand = safe(d.brand_line || "");
-  if (brand) {
+  if (Rl) {
+    const h = 26, w = Math.min(150, Rl.width * h / Rl.height), hh = w * Rl.height / Rl.width;
+    const lab = "in association with", lw = reg.widthOfTextAtSize(lab, 8);
+    page.drawText(lab, { x: W - 60 - lw, y: H - 62, size: 8, font: reg, color: c(MUTED) });
+    page.drawImage(Rl, { x: W - 60 - w, y: H - 72 - hh, width: w, height: hh });
+  } else if (brand) {
     const bw = bold.widthOfTextAtSize(brand, 9);
     page.drawText(brand, { x: W - 60 - bw, y: H - 80, size: 9, font: bold, color: c(MUTED) });
   }

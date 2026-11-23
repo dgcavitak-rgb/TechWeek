@@ -34,6 +34,10 @@ const FN_URL = (Deno.env.get("SUPABASE_URL") || "") + "/functions/v1/tw-mailer";
 async function certBytes(pass: string) {
   const { data: d, error } = await SB.rpc("tw_cert_payload", { p_pass: pass });
   if (error || !d?.ok) return null;
+  const get = async (u: string) => { try { const r = await fetch(u); return r.ok ? new Uint8Array(await r.arrayBuffer()) : null; } catch (_) { return null; } };
+  const base = String(d.public_url || "").split("?")[0];
+  d.logo_left = base ? await get(base + "logo-cavitak.png") : null;
+  d.logo_right = d.brand_logo ? await get(d.brand_logo) : null;
   return await buildCertificate(d, PDFLib, QRCode);
 }
 
