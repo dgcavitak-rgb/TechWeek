@@ -41,7 +41,20 @@ async function certFrom(d: any) {
   const base = String(d.public_url || "").split("?")[0];
   d.logo_left = base ? await get(base + "logo-cavitak.png") : null;
   d.logo_right = d.brand_logo ? await get(d.brand_logo) : null;
-  return await buildCertificate(d, PDFLib, QRCode);
+  d.fonts = base ? await certFonts(base, get) : null;
+  return await buildCertificate(d, PDFLib, QRCode, await loadFontkit());
+}
+// Certificate fonts (Latin subsets hosted with the app) — fetched once per worker
+let FONTS: any = null, FK: any = undefined;
+// loaded lazily so a font-engine problem can never stop the other emails (certificate falls back to built-in fonts)
+async function loadFontkit() { if (FK === undefined) { try { const m: any = await import("npm:@pdf-lib/fontkit@1.1.1"); FK = m.default || m; } catch (_) { FK = null; } } return FK; }
+async function certFonts(base: string, get: (u: string) => Promise<Uint8Array | null>) {
+  if (FONTS) return FONTS;
+  const f = (n: string) => get(base + "fonts/" + n + ".ttf");
+  const [sans, sansSemi, sansBold, sansItalic, serif] = await Promise.all([f("Inter_400Regular"), f("Inter_600SemiBold"), f("Inter_700Bold"), f("Inter_400Regular_Italic"), f("PlayfairDisplay_600SemiBold")]);
+  const set = { sans, sansSemi, sansBold, sansItalic, serif };
+  if (sans && sansSemi && serif) FONTS = set;
+  return set;
 }
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type, x-tw-hook", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 // Sample certificate (real settings, signature and event; dummy attendee) — preview in the console or emailed
