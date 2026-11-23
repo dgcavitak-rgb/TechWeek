@@ -434,7 +434,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.8.1";
+const APP_VERSION = "2.8.2";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1128,7 +1128,7 @@ async function bootConsole(){
     <button class="acct" id="me" title="Account"><span class="av">${esc(initials(S.user.full_name))}</span><span class="acct-t"><b>${esc(S.user.full_name.split(" ")[0])}</b><small>${esc(ROLE_NAME[S.user.role]||S.user.role)}</small></span></button>
   </div></header>
   <main class="console"><div class="wrap" id="view"></div></main>
-  <nav class="bnav">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.label}</span>${t.id==="approvals"&&pendTot()?`<em class="nbadge">${pendTot()}</em>`:""}</button>`).join("")}</nav>`;
+  <nav class="bnav">${allowed.map(t=>`<button data-tab="${t.id}">${ICONS[t.id]}<span>${t.id==="dash"?"Home":t.label}</span>${t.id==="approvals"&&pendTot()?`<em class="nbadge">${pendTot()}</em>`:""}</button>`).join("")}</nav>`;
   $$("[data-tab]").forEach(b=>b.onclick=()=>go(b.dataset.tab));
   $("#me").onclick=accountMenu;
   $("#hlp").onclick=()=>{ $$("[data-tab]").forEach(b=>b.classList.remove("on")); go("help") };
@@ -1794,8 +1794,8 @@ async function drawApprovals(){
     <input class="in" id="ap_q" placeholder="Search name, organisation, email, phone" value="${esc(S.apprQ||"")}">
     <div class="card">${rows.length?`<div class="reg" style="background:var(--grey-50)"><input type="checkbox" id="ap_all"><div class="small muted b">Select all (${rows.length})</div></div>`+rows.map(r=>`
       <div class="reg"><input type="checkbox" class="ap_ck" value="${r.id}">
-        <div class="grow"><div class="row between" style="align-items:flex-start"><div><span class="nm">${esc(r.full_name)}</span> ${chip(r.status)} ${r.checked_in_at?'<span class="chip in">✓ In</span>':""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
-          <div class="row" style="gap:4px;flex-wrap:nowrap">${can("super","approver")&&waLink(r)?`<a class="btn sm ghost" href="${esc(waLink(r))}" target="_blank" rel="noopener" title="Send on WhatsApp" style="color:#16794A">${WA_SVG}</a>`:""}<button class="btn sm ghost" data-more="${r.id}" title="More actions" aria-label="More actions">${ico("more",16)}</button></div></div>
+        <div class="grow"><div class="row between" style="align-items:flex-start;flex-wrap:nowrap"><div style="min-width:0;flex:1"><span class="nm">${esc(r.full_name)}</span> ${chip(r.status)} ${r.checked_in_at?'<span class="chip in">✓ In</span>':""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
+          <div class="row" style="gap:4px;flex-wrap:nowrap;flex:none">${can("super","approver")&&waLink(r)?`<a class="btn sm ghost" href="${esc(waLink(r))}" target="_blank" rel="noopener" title="Send on WhatsApp" style="color:#16794A">${WA_SVG}</a>`:""}<button class="btn sm ghost" data-more="${r.id}" title="More actions" aria-label="More actions">${ico("more",16)}</button></div></div>
           <div class="small">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}${r.partner_type?` <span class="muted">(${esc(r.partner_type)})</span>`:""}</div>
           <div class="small muted">${esc(r.email)} · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>${r.participant_city?" · "+esc(r.participant_city):""}</div>
           <div class="tiny muted" style="margin-top:2px">${esc(r.slot_date)} · ${esc(r.slot_label)} · registered ${esc(fmtDT(r.created_at))}${r.source?" · via "+esc(r.source):""}${r.decided_by?" · by "+esc(r.decided_by):""}</div>
