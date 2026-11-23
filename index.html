@@ -245,6 +245,10 @@ main.console{padding:16px 0 96px}
 .apsum{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line)}.apsum>.grow{min-width:220px}
 .apsum-k{display:flex;gap:18px;flex-wrap:wrap}.apsum-k>div{display:grid;line-height:1.15}.apsum-k b{font-size:22px;font-variant-numeric:tabular-nums}.apsum-k span{font-size:13px;color:var(--muted);display:inline}
 .apsum-k>div{grid-template-columns:auto 1fr;align-items:baseline}.apsum-k small{grid-column:1/-1;font-size:11.5px;color:var(--muted)}
+.act-r{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-top:1px solid var(--line)}.act-r:first-of-type{border-top:0}
+.act-i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grey-50);color:var(--muted)}
+.act-move,.act-walkin_move{background:#EEF3FF;color:#1E40AF}.act-cancel,.act-cancel_self,.act-reject,.act-delete_registration{background:#FDF1F2;color:var(--red)}
+.act-approve,.act-checkin,.act-checkin_manual,.act-self_checkin,.act-walkin_approve{background:#F0FAF4;color:var(--green)}.act-add_guest,.act-walkin{background:#FFF7E6;color:var(--amber)}
 .sbd{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
 .sbd-c{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}.sbd-c.dim{opacity:.4}
 .sbd-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}.sbd-p{display:flex;flex-wrap:wrap;gap:6px}
@@ -408,7 +412,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.6.3";
+const APP_VERSION = "2.6.4";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1756,9 +1760,9 @@ async function drawApprovals(){
         <div class="tiny muted">${esc(s.date_label.split(",")[0].slice(0,3))}, ${esc(s.date_label.split(",")[1]||"").replace(/ \d{4}$/,"")}</div><div class="b small">${esc(s.label)}</div>
         <div class="tiny"><b>${s.approved}</b>/${s.capacity}${s.held?` · <span style="color:var(--blue);font-weight:700">${s.held} held</span>`:""} · ${s.approved+(s.held||0)>=s.capacity?'<span style="color:var(--green);font-weight:700">Full</span>':`<span style="color:var(--amber)">${s.pending} pend.</span>`}</div>
         <div class="bar" style="margin-top:4px;height:5px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%;background:${s.approved>=s.capacity?"var(--green)":"var(--red)"}"></i></div></button>`).join("")}</div></div>
-    <div class="row between" style="gap:8px;flex-wrap:wrap"><div class="seg" style="flex:none"><button data-apv="list" class="${S.apView!=="board"?"on":""}">${ico("list",15)} List</button><button data-apv="board" class="${S.apView==="board"?"on":""}">${ico("users",15)} By session</button></div>
+    <div class="row between" style="gap:8px;flex-wrap:wrap"><div class="seg" style="flex:none"><button data-apv="list" class="${S.apView!=="board"?"on":""}">${ico("list",15)} List</button><button data-apv="board" class="${S.apView==="board"?"on":""}">${ico("users",15)} By session</button><button data-apv="activity" class="${S.apView==="activity"?"on":""}">${ico("clock",15)} Activity</button></div>
       ${can("super","approver")?`<button class="btn sm" id="ap_share">${ico("share",15)} Share "who's coming" link</button>`:""}</div>
-    ${S.apView==="board"?sessionBoard(e,q):`
+    ${S.apView==="activity"?`<div id="ap_act"><div class="card pad"><span class="spin"></span></div></div>`:S.apView==="board"?sessionBoard(e,q):`
     <div class="seg">${["pending","waitlisted","approved","rejected","cancelled","all"].map(s=>`<button data-st="${s}" class="${s===st?"on":""}">${s==="all"?"All":STATUS_LABEL[s]} ${s==="all"?S.regs.length:(counts[s]||0)}</button>`).join("")}</div>
     <input class="in" id="ap_q" placeholder="Search name, organisation, email, phone" value="${esc(S.apprQ||"")}">
     <div class="card">${rows.length?`<div class="reg" style="background:var(--grey-50)"><input type="checkbox" id="ap_all"><div class="small muted b">Select all (${rows.length})</div></div>`+rows.map(r=>`
@@ -1777,6 +1781,7 @@ async function drawApprovals(){
   $("#ap_share") && ($("#ap_share").onclick=()=>boardShare(e));
   $$("[data-pill]",body).forEach(b=>b.onclick=()=>regMenu(S.regs.find(r=>r.id===b.dataset.pill)));
   $("#apb_q") && ($("#apb_q").oninput=()=>{ S.apprQ=$("#apb_q").value; clearTimeout(window._apq); window._apq=setTimeout(()=>{ drawApprovals().then(()=>{ const i=$("#apb_q"); i.focus(); i.setSelectionRange(i.value.length,i.value.length) }) },250) });
+  if(S.apView==="activity") return drawActivity(e);
   if(S.apView==="board") return;
   $$("[data-st]",body).forEach(b=>b.onclick=()=>{ S.apprStatus=b.dataset.st; drawApprovals() });
   $$("[data-slot]",body).forEach(b=>b.onclick=()=>{ S.apprSlot=S.apprSlot===b.dataset.slot?"":b.dataset.slot; drawApprovals() });
@@ -1791,6 +1796,32 @@ async function drawApprovals(){
     const x=await rpc("tw_delete_registration",{p_token:S.token,p_ids:ids}).catch(err=>({ok:false,error:err.message}));
     if(!x.ok) return toast(x.error,true); toast(x.deleted+" deleted"); await loadOverview(); drawApprovals() });
   $$("[data-more]",body).forEach(b=>b.onclick=()=>regMenu(S.regs.find(r=>r.id===b.dataset.more)));
+}
+// Activity: session changes and other actions on registrations, newest first
+async function drawActivity(e){
+  const box=$("#ap_act"); if(!box) return; const kind=S.actKind||"moves";
+  const r=await rpc("tw_event_activity",{p_token:S.token,p_event:e.id,p_kind:kind==="moves"?"moves":kind}).catch(x=>({ok:false,error:x.message}));
+  if(!r.ok){ box.innerHTML=`<div class="banner warn">${esc(r.error)}</div>`; return }
+  const A={move:["move","Session changed"],walkin_move:["move","Moved at the door"],register:["plus","Registered"],approve:["check","Approved"],reject:["x","Rejected"],
+    cancel:["x","Cancelled by organiser"],cancel_self:["x","Cancelled by partner"],waitlist:["clock","Moved to waitlist"],pending:["clock","Back to pending"],promote_waitlist:["arrow","Moved up from waitlist"],
+    add_guest:["userplus","Guest added"],walkin:["userplus","Walk-in added"],walkin_approve:["check","Approved at the door"],checkin:["check","Checked in"],checkin_manual:["check","Checked in"],
+    checkin_undo:["x","Check-in undone"],edit_registration:["edit","Details edited"],delete_registration:["x","Deleted"],self_checkin:["check","Self check-in"]};
+  const line=x=>{ const [ic,lab]=A[x.action]||["clock",x.action], d=x.detail||{}, t=new Date(x.at);
+    const what=(x.action==="move"||x.action==="walkin_move")?`<b>${esc(d.from||"earlier session not recorded")}</b> → <b>${esc(d.to&&d.to.includes("·")?d.to:x.now)}</b>`
+      :x.action==="add_guest"&&d.slot?`into <b>${esc(d.slot)}</b>${d.used_held?" (used a held seat)":""}`
+      :x.action==="reject"&&d.from?`was ${esc(d.from)}${d.reason?" · "+esc(d.reason):""}`:`<span class="muted">${esc(x.now)}</span>`;
+    return `<div class="act-r"><span class="act-i act-${esc(x.action)}">${ico(ic,15)}</span><div class="grow"><div><b>${esc(x.name)}</b> <span class="muted">· ${esc(x.org)}</span></div>
+      <div class="small">${esc(lab)} ${what}</div><div class="tiny muted">${esc(t.toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}))} · by ${esc(x.actor||"system")}</div></div>
+      ${can("super","approver")&&S.regs.find(z=>z.id===x.reg_id)?`<button class="btn sm ghost" data-actreg="${x.reg_id}" title="Open">${ico("more",16)}</button>`:""}</div>` };
+  box.innerHTML=`<div class="card pad"><div class="row between" style="gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <div class="seg" style="flex:none">${[["moves","Session changes"],["changes","All changes"],["all","Everything"]].map(([k,l])=>`<button data-actk="${k}" class="${k===kind?"on":""}">${l}</button>`).join("")}</div>
+      <button class="btn sm" id="act_x">${ico("download",15)} Download</button></div>
+    ${r.rows.length?r.rows.map(line).join(""):`<div class="empty">${kind==="moves"?"No one has changed session yet.":"Nothing here yet."}</div>`}</div>`;
+  $$("[data-actk]",box).forEach(b=>b.onclick=()=>{ S.actKind=b.dataset.actk; drawActivity(e) });
+  $$("[data-actreg]",box).forEach(b=>b.onclick=()=>regMenu(S.regs.find(z=>z.id===b.dataset.actreg)));
+  $("#act_x").onclick=()=>{ const rows=[["When","Who","Company","What","From","To / session now","By"]].concat(r.rows.map(x=>{ const d=x.detail||{};
+      return [new Date(x.at).toLocaleString("en-IN"),x.name,x.org,(A[x.action]||[0,x.action])[1],d.from&&x.action.includes("move")?d.from:"",x.action.includes("move")?(d.to||x.now):x.now,x.actor||"system"] }));
+    download(`${e.slug}-activity-${kind}.csv`, "\ufeff"+rows.map(rw=>rw.map(c=>`"${String(c??"").replace(/"/g,'""')}"`).join(",")).join("\n"), "text/csv") };
 }
 // Session board: one card per session with a pill for every person coming
 function sessionBoard(e,q){
