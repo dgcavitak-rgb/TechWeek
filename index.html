@@ -59,7 +59,9 @@ textarea.in{min-height:84px;resize:vertical}
 .chip.pending{background:var(--amber-50);color:var(--amber)}.chip.approved{background:var(--green-50);color:var(--green)}
 .chip.waitlisted{background:var(--blue-50);color:var(--blue)}.chip.rejected,.chip.cancelled{background:#F4F4F5;color:#71717A}
 .chip.open{background:var(--green-50);color:var(--green)}.chip.draft{background:var(--grey-50);color:var(--muted)}.chip.closed{background:#F4F4F5;color:#52525B}
-.chip.in{background:var(--green);color:#fff}
+.chip.in{background:var(--green);color:#fff;width:auto;min-height:0;border:0;padding:2px 9px;border-radius:999px}
+.chip.failed{background:#FDECEC;color:#9B1C22}
+.chip.target{background:#fff;border:1px solid var(--line);color:var(--ink-2)}
 .bar{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--red);border-radius:99px}
 .kpi{padding:14px 16px}.kpi .v{font-size:26px;font-weight:800;letter-spacing:-.02em}.kpi .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 table.t{width:100%;border-collapse:collapse;font-size:14px}
@@ -166,7 +168,9 @@ h1,h2,h3{text-wrap:balance}
 .tabs button.on{background:var(--red-50);color:var(--red)}
 @media(min-width:900px){.tabs{display:flex}.bnav{display:none!important}}
 .bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
-.bnav button{flex:1;border:0;background:none;padding:8px 2px 9px;font-size:11px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.bnav span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bnums small{white-space:nowrap}
+.bnav button{flex:1;min-width:0;border:0;background:none;padding:8px 2px 9px;font-size:10.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 .bnav button svg{width:22px;height:22px}
 .bnav button.on{color:var(--red)}
 main.console{padding:16px 0 96px}
@@ -211,10 +215,14 @@ main.console{padding:16px 0 96px}
 .pico{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;color:#fff;background:linear-gradient(135deg,var(--red),#7C1219);box-shadow:0 6px 16px rgba(200,35,44,.25)}
 .pico svg{width:22px;height:22px}.pico.sm{width:34px;height:34px;border-radius:10px}.pico.sm svg{width:18px;height:18px}
 .segi button{display:inline-flex;align-items:center;gap:6px}
+.seg.vsw{display:inline-flex;background:var(--grey-50);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;flex:none;width:auto}
+.seg.vsw button{border:0;background:transparent;color:var(--ink-2)}
+.seg.vsw button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.12)}
 .dhero{position:relative;overflow:hidden;border-radius:18px;color:#fff;padding:22px;margin-bottom:14px;display:grid;gap:16px;
   background:radial-gradient(600px 300px at 90% 0%,rgba(255,255,255,.16),transparent 60%),linear-gradient(135deg,#1A0B0D 0%,#8E1219 50%,#C8232C 100%)}
 @media(min-width:760px){.dhero{grid-template-columns:1fr 320px;align-items:center}}
 .dh-art{position:absolute;right:-30px;top:-10px;width:420px;opacity:.8;pointer-events:none}
+@media(max-width:759px){.dh-art{display:none}}
 .dh-in{position:relative}.dh-k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;font-weight:600}
 .dhero h2{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:4px 0}.dh-s{opacity:.85;font-size:14px}
 .dh-btn{margin-top:14px;background:#fff;color:#8E1219;border:0}.dh-btn:hover{background:#FDF1F2}
@@ -249,7 +257,7 @@ main.console{padding:16px 0 96px}
 .act-i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grey-50);color:var(--muted)}
 .act-move,.act-walkin_move{background:#EEF3FF;color:#1E40AF}.act-cancel,.act-cancel_self,.act-reject,.act-delete_registration{background:#FDF1F2;color:var(--red)}
 .act-approve,.act-checkin,.act-checkin_manual,.act-self_checkin,.act-walkin_approve{background:#F0FAF4;color:var(--green)}.act-add_guest,.act-walkin{background:#FFF7E6;color:var(--amber)}
-.ptn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:520px}
+.ptn{display:-webkit-inline-box;vertical-align:bottom;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:520px}
 .ptot td{font-weight:800;background:var(--grey-50);border-top:2px solid var(--line);position:sticky;bottom:0}
 .sbd{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
 .sbd-c{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}.sbd-c.dim{opacity:.4}
@@ -258,10 +266,12 @@ main.console{padding:16px 0 96px}
 button.pl{cursor:pointer}button.pl:hover{box-shadow:0 2px 8px rgba(16,24,40,.12)}
 .pl small{font-size:11px;font-weight:500;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl em{font-style:normal;font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}
-.pl-approved{background:#F0FAF4;border-color:#BFE3CC}.pl-in{background:#16794A;border-color:#16794A;color:#fff}.pl-in small{color:rgba(255,255,255,.85)}
-.pl-pending{background:#FFF7E6;border-color:#F5D9A6}.pl-waitlisted{background:#EEF3FF;border-color:#C9D7FB}
+.pl-approved{background:var(--green-50);border-color:#BFE3CC}.pl-in{background:#16794A;border-color:#16794A;color:#fff}.pl-in small{color:rgba(255,255,255,.85)}
+.pl-pending{background:var(--amber-50);border-color:#F5D9A6}.pl-waitlisted{background:var(--blue-50);border-color:#C9D7FB}
+.pl-in em{color:#fff;opacity:.9}
 .pl-held{background:repeating-linear-gradient(45deg,#F4F5F7,#F4F5F7 6px,#ECEEF1 6px,#ECEEF1 12px);color:var(--muted);font-weight:600;border-style:dashed}
 .pl-free{background:transparent;border-style:dashed;color:var(--muted);font-weight:500}
+.sbd-p .pl-free,.sbd-p .pl-held{min-height:40px;min-width:64px;justify-content:center;align-items:center}.pl-held{font-weight:500}
 .pl-key{display:flex;flex-wrap:wrap;gap:6px}.pl-key .pl{padding:3px 8px;font-size:11.5px}
 .upg{border-top:1px solid var(--line);padding-top:4px}.upg:first-of-type{border-top:0}
 .upg>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 2px;cursor:pointer}.upg>summary::-webkit-details-marker{display:none}
@@ -402,6 +412,12 @@ body.rg .foot{padding-bottom:96px}
 @keyframes cf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(260px) rotate(540deg)}}
 @media print{body *{visibility:hidden}.printable,.printable *{visibility:visible}.printable{position:absolute;left:0;top:0;width:100%}}
 .sigbox{border:1px solid var(--line);border-radius:10px;background:#fff;color:#14171A;padding:12px 16px;max-width:340px}.sigprev{height:56px;display:flex;align-items:flex-end;padding-left:10px}.sigprev img{max-height:52px;max-width:220px}.sigline{border-top:1px solid #14171A;margin:2px 0 6px;width:240px}.sigbox .muted{color:#5B6470}
+
+/* v2.8 design pass */
+@media(min-width:641px){.apev+#ap_ev{display:none}}
+@media(max-width:640px){.apev{display:none}}
+@media(max-width:640px){.apsum-k{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%}.apsum-k b{font-size:18px}.apsum-k small{font-size:10.5px}}
+@media(max-width:600px){.kpi2 .l{min-height:2.7em}}
 </style>
 </head>
 <body>
@@ -417,7 +433,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.7.4";
+const APP_VERSION = "2.8.0";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -798,7 +814,7 @@ async function renderPass(){
   const p=d.person, s=d.slot, v=d.venue, ev=d.event;
   document.title="Tech Week pass — "+p.full_name;
   if(d.status!=="cancelled") store.set("tw_pass_"+ev.slug, tok);
-  const stMsg={approved:"Confirmed — show this QR at reception",pending:"Your request is under review",waitlisted:"You're on the waitlist",rejected:"We couldn't accommodate this request",cancelled:"This registration is cancelled"}[d.status]||d.status;
+  const stMsg=d.checked_in_at?"You're checked in — enjoy the session":stMsg0(d); function stMsg0(d){ return {approved:"Confirmed — show this QR at reception",pending:"Your request is under review",waitlisted:"You're on the waitlist",rejected:"We couldn't accommodate this request",cancelled:"This registration is cancelled"}[d.status]||d.status }
   themePublic(d.brands);
   app.innerHTML=`
   <div class="hero" style="padding-bottom:72px"><div class="wrap">
@@ -926,7 +942,7 @@ async function renderSelfCheckin(){
     ${me?`<div style="text-align:center"><div class="muted small">Registered on this phone</div><div style="font-size:20px;font-weight:800;margin-top:2px">${esc(me.person.full_name)}</div>
         <div class="muted small">${esc(me.person.organization)}</div></div>
       <button class="btn primary block" id="sc_me" style="min-height:54px;font-size:17px">✓ Check me in</button>
-      <button class="btn ghost block small" id="sc_other">Not you? Check in with email or mobile</button>`:""}
+      <button class="btn ghost block small" id="sc_other" data-ic="1">Not you? Check in with email or mobile</button>`:""}
     <form id="sc_form" class="stack ${me?"hide":""}">
       <div><label class="f" for="sc_id">Entry code, or the email / mobile you registered with</label>
         <input class="in" id="sc_id" autocomplete="email" inputmode="email" placeholder="7F3A9C · name@company.com · 98765 43210" style="min-height:50px;font-size:16px"></div>
@@ -1198,7 +1214,7 @@ function evDates(e){ const sl=(e.slots||[]).filter(s=>s.is_active); if(!sl.lengt
   return a.local_date===b.local_date?f(a):f(a)+" – "+f(b); }
 
 /* ---------------- Dashboard ---------------- */
-const ROLE_NAME={super:"Super admin",approver:"Approver",checkin:"Check-in staff",marketing:"Marketing"};
+const ROLE_NAME={super:"Super admin",approver:"Approver",checkin:"Check-in staff",marketing:"Marketing",brand:"Brand manager",viewer:"Viewer"};
 const initials=n=>String(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("");
 const pendTot=()=>(S.ov&&S.ov.events||[]).reduce((a,e)=>a+(e.counts.pending||0),0);
 const kpiTile=(icon,tone,label,value,sub,extra="")=>`<div class="card kpi2 t-${tone}"><span class="kico">${ico(icon,20)}</span><div class="l">${label}</div><div class="v">${value}</div>${sub?`<div class="tiny muted">${sub}</div>`:""}${extra}</div>`;
@@ -1338,7 +1354,7 @@ function bindEventCards(root){
 }
 async function invitesKit(e){
   const box=modal(`<h3>Invitations — ${esc(e.title)}</h3><div class="stack" id="iv_body"><div class="empty"><span class="spin dark"></span></div></div>`);
-  const ST={new:["New",""],sent:["Invited","waitlisted"],registered:["Registered","approved"],failed:["Failed","rejected"]};
+  const ST={new:["New",""],sent:["Invited","waitlisted"],registered:["Registered","approved"],failed:["Failed","failed"]};
   const draw=async()=>{
     let r; try{ r=await rpc("tw_invites_list",{p_token:S.token,p_event:e.id}) }catch(x){ $("#iv_body").innerHTML=`<div class="banner warn">${esc(x.message)}</div>`; return }
     if(!r.ok){ $("#iv_body").innerHTML=`<div class="banner warn">${esc(r.error)}</div>`; return }
@@ -1430,7 +1446,7 @@ async function doorKit(e){
     <div><label class="f">Option 2 — Still image for a 32:9 display</label>
       <div class="small muted" style="margin-bottom:6px">A 3840 × 1080 picture (32:9) with the QR and check-in steps — play it as a still on the display or BrightSign. It has no live counter, but the QR works for every session and day of this event.</div>
       <img id="dk_wide" alt="32:9 check-in image preview" style="width:100%;border-radius:8px;border:1px solid var(--line);display:block;aspect-ratio:32/9;background:#1A0B0D">
-      <div class="row" style="margin-top:8px"><button class="btn primary" id="dk_wdl">${ico("download",15)} Download 32:9 image</button></div></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="dk_wdl">${ico("download",15)} Download 32:9 image</button></div></div>
     ${can("super")?'<div class="small muted">If a photo of this QR is shared outside the room, you can <a href="#" id="dk_rot">change the code</a>; old screens and images then stop working.</div>':""}
     <div class="row"><button class="btn ghost" data-close>Close</button></div></div>`, ()=>{
     $("#dk_cs").onclick=()=>copy(screen);
@@ -1467,8 +1483,8 @@ function sessionsView(e){
   modal(`<h3>${esc(e.title)} — sessions, trainers & held seats</h3>
     <div class="small muted" style="margin-bottom:8px">The trainer's name shows on the registration page. With an email, they get a briefing the day before with the confirmed attendee list.
       <b>Held</b> seats are kept back for guests you invite yourself — partners can't book them, but you can still approve or add people into them.</div>
-    <div class="tscroll"><table class="t"><thead><tr><th>Session</th><th>Seats</th><th>Held</th><th>Pend.</th><th>In</th><th>Trainer</th></tr></thead><tbody>
-    ${e.slots.filter(s=>s.is_active).map(s=>`<tr><td><b>${esc(s.date_label)}</b><div class="small">${esc(s.label)} · <span class="muted">${esc(s.time_label)}</span></div></td>
+    <div class="tscroll"><table class="t" style="min-width:760px"><thead><tr><th>Session</th><th>Seats</th><th>Held</th><th>Pend.</th><th>In</th><th>Trainer</th></tr></thead><tbody>
+    ${e.slots.filter(s=>s.is_active).map(s=>`<tr><td style="white-space:nowrap"><b>${esc(s.date_label.replace(/^\w+, /,"").replace(/ \d{4}$/,""))}</b><div class="small">${esc(s.label)} · <span class="muted">${esc(s.time_label)}</span></div></td>
       <td><b>${s.approved}</b>/${s.capacity}<div class="bar" style="width:70px;margin-top:4px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%"></i></div></td>
       <td>${ed&&s.is_active?`<input class="in" type="number" min="0" max="${s.capacity}" data-th="${s.id}" value="${s.held||0}" style="width:66px;min-height:34px" aria-label="Held seats">`:(s.held||"—")}</td>
       <td>${s.pending}</td><td>${s.checked_in}</td>
@@ -1517,7 +1533,7 @@ function shareKit(e){
       <input class="in hide" id="sk_custom" placeholder="e.g. mumbai-si-meet" style="margin-top:6px"></div>
     <div><label class="f">Registration link</label><div class="row"><input class="in grow" id="sk_link" readonly><button class="btn" id="sk_copy">Copy</button></div></div>
     <div><label class="f">WhatsApp / email message</label><textarea class="in" id="sk_msg" style="min-height:150px"></textarea>
-      <div class="row" style="margin-top:6px"><button class="btn sm" id="sk_cmsg">Copy message</button><a class="btn sm green" id="sk_wa" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.7 11.7 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg> Send via WhatsApp</a><a class="btn sm" id="sk_mail">Open in email</a></div></div>
+      <div class="row" style="margin-top:6px"><button class="btn sm" id="sk_cmsg">Copy message</button><a class="btn sm green" id="sk_wa" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.7 11.7 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg> Send via WhatsApp</a><a class="btn sm" id="sk_mail" data-ic="1">${ico("mail",15)} Open in email</a></div></div>
     <div class="poster printable" id="sk_poster"><div class="ph"><div class="tiny" style="letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600">Cavitak · Tech Week · ${esc(e.city)}</div>
       <div style="font-size:22px;font-weight:800;margin-top:4px">${esc(e.title)}</div><div style="opacity:.9;margin-top:2px">${esc(evDates(e))} · ${esc(e.venue_name)}</div></div>
       <div class="pb"><div class="qrbox" id="sk_qr" style="border:0"></div><div class="b" style="margin-top:6px">Scan to register</div><div class="tiny muted">Limited seats · approval required</div></div></div>
@@ -1576,8 +1592,8 @@ function shareKit(e){
 function viewEvents(v){
   const ev=S.ov.events||[];
   S.evView=S.evView||"list";
-  v.innerHTML=`${pageHead(ICONS.events,"Events","One event per city / experience center — each with its own room capacity, dates and slots.",can("super")?'<button class="btn primary" id="newev">'+ico("plus",17)+' New event</button>':"")}
-    <div class="seg segi" style="margin-bottom:12px"><button data-ev="list" class="${S.evView==="list"?"on":""}">${ico("list",15)} List</button><button data-ev="cal" class="${S.evView==="cal"?"on":""}">${ico("cal",15)} Calendar</button></div>
+  v.innerHTML=`${pageHead(ICONS.events,"Events","One event per city / experience center — each with its own room capacity, dates and slots.",can("super")?'<button class="btn sm primary" id="newev">'+ico("plus",15)+' New event</button>':"")}
+    <div class="seg segi vsw" style="margin-bottom:12px"><button data-ev="list" class="${S.evView==="list"?"on":""}">${ico("list",15)} List</button><button data-ev="cal" class="${S.evView==="cal"?"on":""}">${ico("cal",15)} Calendar</button></div>
     <div class="stack" id="ev_body">${S.evView==="cal"?"":ev.length?ev.map(eventCard).join(""):`<div class="card">${emptyArt("calendar","No events yet",can("super")?"Tap New event to schedule your first Tech Week.":"Events will appear here once they are scheduled.")}</div>`}</div>`;
   $$("[data-ev]",v).forEach(b=>b.onclick=()=>{ S.evView=b.dataset.ev; viewEvents(v) });
   if(S.evView==="cal") drawCalendar($("#ev_body"));
@@ -1767,19 +1783,19 @@ async function drawApprovals(){
         <div class="tiny muted">${esc(s.date_label.split(",")[0].slice(0,3))}, ${esc(s.date_label.split(",")[1]||"").replace(/ \d{4}$/,"")}</div><div class="b small">${esc(s.label)}</div>
         <div class="tiny"><b>${s.approved}</b>/${s.capacity}${s.held?` · <span style="color:var(--blue);font-weight:700">${s.held} held</span>`:""} · ${s.approved+(s.held||0)>=s.capacity?'<span style="color:var(--green);font-weight:700">Full</span>':`<span style="color:var(--amber)">${s.pending} pend.</span>`}</div>
         <div class="bar" style="margin-top:4px;height:5px"><i style="width:${Math.min(100,s.approved/s.capacity*100)}%;background:${s.approved>=s.capacity?"var(--green)":"var(--red)"}"></i></div></button>`).join("")}</div></div>
-    <div class="row between" style="gap:8px;flex-wrap:wrap"><div class="seg" style="flex:none"><button data-apv="list" class="${S.apView!=="board"?"on":""}">${ico("list",15)} List</button><button data-apv="board" class="${S.apView==="board"?"on":""}">${ico("users",15)} By session</button><button data-apv="activity" class="${S.apView==="activity"?"on":""}">${ico("clock",15)} Activity</button></div>
+    <div class="row between" style="gap:8px;flex-wrap:wrap"><div class="seg segi vsw"><button data-apv="list" class="${!["board","activity"].includes(S.apView)?"on":""}">${ico("list",15)} List</button><button data-apv="board" class="${S.apView==="board"?"on":""}">${ico("users",15)} By session</button><button data-apv="activity" class="${S.apView==="activity"?"on":""}">${ico("clock",15)} Activity</button></div>
       ${can("super","approver")?`<button class="btn sm" id="ap_share">${ico("share",15)} Share "who's coming" link</button>`:""}</div>
     ${S.apView==="activity"?`<div id="ap_act"><div class="card pad"><span class="spin"></span></div></div>`:S.apView==="board"?sessionBoard(e,q):`
-    <div class="seg">${["pending","waitlisted","approved","rejected","cancelled","all"].map(s=>`<button data-st="${s}" class="${s===st?"on":""}">${s==="all"?"All":STATUS_LABEL[s]} ${s==="all"?S.regs.length:(counts[s]||0)}</button>`).join("")}</div>
+    <div class="seg">${["pending","waitlisted","approved","rejected","cancelled","all"].map(s=>`<button data-st="${s}" class="${s===st?"on":""}">${s==="all"?"All":STATUS_LABEL[s]} <span style="opacity:.6;font-weight:500">${s==="all"?S.regs.length:(counts[s]||0)}</span></button>`).join("")}</div>
     <input class="in" id="ap_q" placeholder="Search name, organisation, email, phone" value="${esc(S.apprQ||"")}">
     <div class="card">${rows.length?`<div class="reg" style="background:var(--grey-50)"><input type="checkbox" id="ap_all"><div class="small muted b">Select all (${rows.length})</div></div>`+rows.map(r=>`
       <div class="reg"><input type="checkbox" class="ap_ck" value="${r.id}">
         <div class="grow"><div class="row between" style="align-items:flex-start"><div><span class="nm">${esc(r.full_name)}</span> ${chip(r.status)} ${r.checked_in_at?'<span class="chip in">✓ In</span>':""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
-          <div class="row" style="gap:4px;flex-wrap:nowrap">${can("super","approver")&&waLink(r)?`<a class="btn sm ghost" href="${esc(waLink(r))}" target="_blank" rel="noopener" title="Send on WhatsApp" style="color:#16794A">${WA_SVG}</a>`:""}<button class="btn sm ghost" data-more="${r.id}">•••</button></div></div>
+          <div class="row" style="gap:4px;flex-wrap:nowrap">${can("super","approver")&&waLink(r)?`<a class="btn sm ghost" href="${esc(waLink(r))}" target="_blank" rel="noopener" title="Send on WhatsApp" style="color:#16794A">${WA_SVG}</a>`:""}<button class="btn sm ghost" data-more="${r.id}" title="More actions" aria-label="More actions">${ico("more",16)}</button></div></div>
           <div class="small">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}${r.partner_type?` <span class="muted">(${esc(r.partner_type)})</span>`:""}</div>
           <div class="small muted">${esc(r.email)} · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>${r.participant_city?" · "+esc(r.participant_city):""}</div>
           <div class="tiny muted" style="margin-top:2px">${esc(r.slot_date)} · ${esc(r.slot_label)} · registered ${esc(fmtDT(r.created_at))}${r.source?" · via "+esc(r.source):""}${r.decided_by?" · by "+esc(r.decided_by):""}</div>
-          ${r.interests?`<div class="tiny" style="margin-top:2px">💬 ${esc(r.interests)}</div>`:""}${answersLine(r)}${r.reason&&r.status!=="approved"?`<div class="tiny muted">Note: ${esc(r.reason)}</div>`:""}
+          ${r.interests?`<div class="tiny" style="margin-top:2px">${ico("chat",12)} ${esc(r.interests)}</div>`:""}${answersLine(r)}${r.reason&&r.status!=="approved"?`<div class="tiny muted">Note: ${esc(r.reason)}</div>`:""}
         </div></div>`).join(""):(st==="pending"?emptyArt("inbox","All caught up","No registrations are waiting for approval."):`<div class="empty">Nothing ${st==="all"?"":"in "+STATUS_LABEL[st].toLowerCase()} here.</div>`)}</div>
     <div class="card pad sticky-actions hide" id="ap_bar"><div class="row"><span class="b" id="ap_n"></span><div class="grow"></div>
       <button class="btn sm green" data-act="approve">Approve</button><button class="btn sm" data-act="waitlist">Waitlist</button>
@@ -1949,8 +1965,8 @@ function regMenu(r){
       ${can("super","approver")?'<button class="btn block" id="rm_edit">Edit details</button>':""}
       <button class="btn block" id="rm_resend">Resend latest email</button>
       ${r.pass_token?`<button class="btn block" id="rm_pass">Copy pass link</button>`:""}
-      ${r.status!=="rejected"?'<button class="btn block" data-a="reject">Reject</button>':""}
-      ${r.status!=="cancelled"?'<button class="btn block" data-a="cancel" style="color:var(--red)">Cancel registration</button>':""}
+      <hr style="border:0;border-top:1px solid var(--line);margin:4px 0">${r.status!=="rejected"?'<button class="btn block" data-a="reject">Reject</button>':""}
+      ${r.status!=="cancelled"?'<button class="btn block" data-a="cancel" style="color:var(--red)">${ico("x",15)} Cancel registration</button>':""}
       ${can("super")?'<button class="btn ghost block" id="rm_del" style="color:var(--red)">Delete permanently</button>':""}
       <button class="btn ghost block" data-close>Close</button></div>`, m=>{
     $$("[data-a]",m).forEach(b=>b.onclick=()=>{ closeModal(); decide([r.id], b.dataset.a) });
@@ -1987,7 +2003,7 @@ async function viewCheckin(v){
     <div class="card pad" style="text-align:center"><div id="ci_count" class="b" style="font-size:18px"></div>
       <div id="reader" class="hide" style="margin-top:10px"></div>
       <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="ci_scan" style="min-height:52px;font-size:16px;padding:0 26px">${ico("scan",19)} Start scanning</button></div>
-      <div class="row" style="margin-top:10px;flex-wrap:nowrap"><input class="in" id="ci_code" placeholder="…or type the 6-letter entry code"><button class="btn" id="ci_go">Check</button></div></div>
+      <div class="row" style="margin-top:10px;flex-wrap:nowrap"><input class="in" id="ci_code" placeholder="Entry code (6 letters)"><button class="btn" id="ci_go">Check</button></div></div>
     <div id="ci_res"></div>
     <div class="card"><div class="pad row between" style="padding-bottom:6px"><div class="b">Attendee list</div><input class="in" id="ci_q" placeholder="Search" style="max-width:200px;min-height:36px"></div><div id="ci_list"><div class="empty"><span class="spin dark"></span></div></div></div>
    </div>`;
@@ -2013,7 +2029,7 @@ function drawCiList(){
   $("#ci_count").innerHTML=`<span style="color:var(--green)">${inn}</span> / ${appr.length} checked in`;
   box.innerHTML=list.length?list.map(r=>`<div class="reg"><div class="grow"><div class="nm">${esc(r.full_name)} ${r.status!=="approved"?chip(r.status):""}${r.walk_in?' <span class="chip">Walk-in</span>':""}</div>
       <div class="small muted">${esc([r.designation,r.organization].filter(Boolean).join(" · "))}</div>${r.checked_in_at?`<div class="tiny" style="color:var(--green)">✓ ${esc(fmtDT(r.checked_in_at))}${r.checked_in_by?" · "+esc(r.checked_in_by):""}</div>`:""}</div>
-      ${r.checked_in_at?`<button class="btn sm" data-undo="${r.id}">Undo</button>`:`<button class="btn sm green" data-in="${r.id}" ${r.status!=="approved"&&!can("super","approver")?"disabled":""}>Check in</button>`}</div>`).join("")
+      ${r.checked_in_at?`<button class="btn sm" data-undo="${r.id}">Undo</button>`:(r.status==="approved"?`<button class="btn sm green" data-in="${r.id}">Check in</button>`:`<button class="btn sm" data-in="${r.id}" ${!can("super","approver")?"disabled":""}>Check in anyway</button>`)}</div>`).join("")
     :`<div class="empty">${q?"No match in this session. Try their email or mobile, or check the other sessions — or add them as a walk-in.":"No approved registrations for this session yet."}</div>`;
   $$("[data-in]",box).forEach(b=>b.onclick=()=>setAtt(b.dataset.in,true,b));
   $$("[data-undo]",box).forEach(b=>b.onclick=()=>{ if(confirm("Undo check-in?")) setAtt(b.dataset.undo,false,b) });
@@ -2227,7 +2243,7 @@ async function adUsers(b){
   b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
   const r=await rpc("tw_users_list",{p_token:S.token}).catch(e=>({rows:[],err:e.message}));
   b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Team members who can sign in to this console.</div><button class="btn primary sm" id="nu">+ Add user</button></div>
-    <div class="card">${r.rows.map(u=>`<div class="reg"><div class="grow"><div class="nm">${esc(u.full_name)} <span class="chip">${esc(u.role)}</span>${u.is_active?"":' <span class="chip cancelled">Inactive</span>'}</div>
+    <div class="card">${r.rows.map(u=>`<div class="reg"><div class="grow"><div class="nm">${esc(u.full_name)} <span class="chip">${esc(ROLE_NAME[u.role]||u.role)}</span>${u.is_active?"":' <span class="chip cancelled">Inactive</span>'}</div>
       <div class="small muted">@${esc(u.username)}${u.email?" · "+esc(u.email):""}${u.last_login?" · last login "+esc(fmtDT(u.last_login)):" · never signed in"}</div>
       ${u.role!=="super"&&(u.venue_ids||[]).length?`<div class="tiny" style="color:var(--blue)">📍 ${esc((u.venue_ids||[]).map(id=>((S.ov.venues||[]).find(v=>v.id===id)||{}).city||"").filter(Boolean).join(", "))} only</div>`:""}</div>
       <button class="btn sm" data-u="${u.id}">Edit</button></div>`).join("")}</div>
@@ -2321,7 +2337,7 @@ function adSettings(b){
     <div><label class="f">Signature on the certificate</label>
       <div class="sigbox"><div class="sigprev" id="sg_prev"><span class="tiny muted">Loading…</span></div><div class="sigline"></div><div class="b small" id="sg_nm">${esc(s.cert_signer_name||"")}</div><div class="tiny muted">${esc(s.cert_signer_title||"")}</div></div>
       <div class="row" style="margin-top:8px"><label class="btn sm">${ico("upload",15)} Upload image<input type="file" id="sg_file" accept="image/png,image/jpeg,image/webp" hidden></label><button type="button" class="btn sm" id="sg_draw">${ico("edit",15)} Sign on screen</button><button type="button" class="btn sm ghost hide" id="sg_rm">Remove</button></div>
-      <div class="row" style="margin-top:6px"><button type="button" class="btn sm primary" id="sg_pv">${ico("eye",15)} Preview certificate</button><button type="button" class="btn sm" id="sg_ml">${ico("mail",15)} Email me a sample</button></div>
+      <div class="row" style="margin-top:6px"><button type="button" class="btn sm" id="sg_pv">${ico("eye",15)} Preview certificate</button><button type="button" class="btn sm" id="sg_ml">${ico("mail",15)} Email me a sample</button></div>
       <div class="tiny muted" style="margin-top:4px">Sign on white paper, take a photo and upload it — the white background is removed automatically. It appears above the name on every certificate.</div></div>
     <div class="banner info small"><b>Email schedule (venue time):</b> registration received → instantly · seat confirmed → on approval · reminder → 10:00 AM the day before · entry pass with QR + entry code → 7:30 AM on the day · thank-you → 2 hours after the session ends · certificate PDF → 10:00 AM the day after the session · visitor list to security → 6:00 PM the evening before · missed-you → 11:00 AM the next day.</div>
     <div class="banner ${st.failed?"warn":"info"} small"><b>Email status (30 days):</b> ${st.sent||0} sent · ${st.failed||0} failed · ${st.queued||0} waiting.
@@ -2387,7 +2403,7 @@ async function adEmail(b){
   b.innerHTML=`<div class="row between" style="margin-bottom:10px"><div class="small muted">Every automatic email, newest first. Failed emails retry automatically every 10 minutes (up to 4 tries).</div><button class="btn sm" id="er">Refresh</button></div>
     <div class="card tscroll"><table class="t"><thead><tr><th>When</th><th>Email</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>${r.rows.map(o=>`<tr>
       <td class="small">${esc(fmtDT(o.created_at))}</td><td><b>${esc(KIND_LABEL[o.kind]||o.kind)}</b><div class="tiny muted">${esc(o.full_name||"")}${o.organization?" · "+esc(o.organization):""}</div></td>
-      <td class="small">${esc(o.to_email)}</td><td>${o.status==="sent"?'<span class="chip approved">Sent</span>':o.status==="failed"?'<span class="chip" style="background:#FDECEC;color:#9B1C22">Failed</span>':o.status==="skipped"?'<span class="chip">Skipped</span>':'<span class="chip pending">'+esc(o.status)+'</span>'}
+      <td class="small">${esc(o.to_email)}</td><td>${o.status==="sent"?'<span class="chip approved">Sent</span>':o.status==="failed"?'<span class="chip failed">Failed</span>':o.status==="skipped"?'<span class="chip">Skipped</span>':'<span class="chip pending">'+esc(o.status==="queued"?"Queued":o.status==="sending"?"Sending":o.status)+'</span>'}
       ${o.error?`<div class="tiny muted" style="max-width:260px">${esc(o.error)}</div>`:""}</td><td>${o.status==="failed"||o.status==="queued"?`<button class="btn sm" data-rt="${o.id}">Retry</button>`:""}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No emails yet</td></tr>'}</tbody></table></div>`;
   $("#er").onclick=()=>adEmail(b);
   $$("[data-rt]",b).forEach(x=>x.onclick=async()=>{ busy(x,true); await rpc("tw_outbox_retry",{p_token:S.token,p_id:+x.dataset.rt}).catch(()=>{}); setTimeout(()=>adEmail(b),2500) });
@@ -2451,7 +2467,7 @@ function drawLeads(){
     <datalist id="ld_owners">${owners.map(o=>`<option value="${esc(o)}">`).join("")}</datalist>
     <div class="tscroll">${rows.length?`<table class="t"><thead><tr><th>Attendee</th><th>Session</th><th>Rating</th><th>Lead</th><th>Sales owner</th><th>Next step</th><th>Value (₹)</th></tr></thead><tbody>${rows.map(r=>`<tr>
       <td class="b">${esc(r.full_name)}<div class="tiny muted">${esc(r.organization)}${r.designation?" · "+esc(r.designation):""}</div></td>
-      <td class="small">${esc(r.city)} · ${esc(r.slot_date)}<div class="tiny muted">${esc(r.slot_label)}${(r.brand_ids||[]).length?" · "+esc(brandNames(r.brand_ids)):""}</div></td>
+      <td class="small" style="white-space:nowrap">${esc(r.city)} · ${esc(r.slot_date)}<div class="tiny muted">${esc(r.slot_label)}${(r.brand_ids||[]).length?" · "+esc(brandNames(r.brand_ids)):""}</div></td>
       <td>${r.rating?r.rating+"★":"—"}</td>
       <td><select class="in ldl lead-${esc(r.lead_level||"")}" data-ld="${r.id}" data-k="lead_level" style="min-height:34px;min-width:110px"><option value="">—</option>${Object.entries(LEAD_LABEL).map(([k,l])=>`<option value="${k}" ${r.lead_level===k?"selected":""}>${l}</option>`).join("")}</select></td>
       <td><input class="in" list="ld_owners" data-ld="${r.id}" data-k="lead_owner" value="${esc(r.lead_owner||"")}" style="min-height:34px;min-width:130px"></td>
@@ -2492,7 +2508,7 @@ function drawPartners(){
     ${kpiTile("users","blue","People",all.reduce((a,x)=>a+x.people,0),"")}${kpiTile("scan","green","Companies attended",all.filter(x=>x.attended>0).length,all.length?Math.round(all.filter(x=>x.attended>0).length/all.length*100)+"% of companies":"")}
     ${kpiTile("history","amber","Repeat companies",all.filter(x=>x.events>1).length,"came to 2+ events")}</div>`;
   $("#pt_tbl").innerHTML=rows.length?`<table class="t"><thead><tr><th>Company</th><th>People</th><th>Registered</th><th>Attended</th><th>Events</th><th>Brands</th><th>Last session</th><th>Hot</th></tr></thead><tbody>${rows.map(x=>`<tr class="clk" data-org="${x.id}">
-    <td class="b"><span class="ptn" title="${esc(x.name)}">${esc(x.name)}</span> ${x.targeted?'<span class="chip waitlisted">Target</span>':""}<div class="tiny muted">${esc([x.type,x.city].filter(Boolean).join(" · "))}</div></td>
+    <td class="b"><span class="ptn" title="${esc(x.name)}">${esc(x.name)}</span> ${x.targeted?'<span class="chip target">Target</span>':""}<div class="tiny muted">${esc([x.type,x.city].filter(Boolean).join(" · "))}</div></td>
     <td>${x.people}</td><td>${x.registrations}</td><td>${x.attended?`<span class="chip approved">${x.attended}</span>`:'<span class="muted">0</span>'}</td><td>${x.events}</td>
     <td>${(x.brands||[]).map(n=>`<span class="bchip" style="--bc:${esc(byName(n).color1||"#6B7480")}">${esc(n)}</span>`).join(" ")}</td>
     <td class="small">${x.last_seen?esc(fmtD(x.last_seen)):""}</td><td>${x.hot?`<b style="color:var(--red)">${x.hot}</b>`:""}</td></tr>`).join("")}</tbody>
@@ -2714,7 +2730,7 @@ async function renderErase(){
 }
 
 /* ---------------- Should-haves ---------------- */
-const answersLine=r=>{ const a=Object.entries(r.answers||{}); return a.length?`<div class="tiny" style="margin-top:2px">📝 ${a.map(([k,v])=>`<span class="muted">${esc(k)}:</span> ${esc(v)}`).join(" · ")}</div>`:"" };
+const answersLine=r=>{ const a=Object.entries(r.answers||{}); return a.length?`<div class="tiny" style="margin-top:2px">${ico("edit",12)} ${a.map(([k,v])=>`<span class="muted">${esc(k)}${/[?:]$/.test(k)?"":":"}</span> ${esc(v)}`).join(" · ")}</div>`:"" };
 const BUDGET_KEYS=[["venue","Venue / room"],["food","Food & refreshments"],["travel","Travel & stay"],["kit","Demo kit & logistics"],["marketing","Marketing & printing"],["other","Other"]];
 const inr=n=>"₹"+Math.round(+n||0).toLocaleString("en-IN");
 function budgetTotal(b){ return BUDGET_KEYS.reduce((a,[k])=>a+(+((b||{})[k])||0),0) }
