@@ -204,7 +204,7 @@ function shell(p: any, headline: string, bodyHtml: string, preheader: string) {
   </td></tr>
   <tr><td style="padding:22px 24px;color:${INK};font-size:15px;line-height:1.55">${bodyHtml}</td></tr>
   <tr><td style="padding:14px 24px;border-top:1px solid #EEF0F2;color:${MUTED};font-size:12px;line-height:1.5">
-    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : p.outbox?.kind === "trainer_brief" ? "Sent to the trainer assigned to this session in the Tech Week console." : p.outbox?.kind === "approver_digest" ? "Daily summary for Tech Week approvers. Sent only on days with pending requests." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
+    ${p.outbox?.kind === "invite" ? "You are receiving this invitation as a Cavitak partner. Reply 'unsubscribe' and we won't email you about this event again." : p.outbox?.kind === "trainer_brief" ? "Sent to the trainer assigned to this session in the Tech Week console." : p.outbox?.kind === "approver_digest" ? "Daily summary for Tech Week approvers. Sent only on days with pending requests." : p.outbox?.kind === "visitor_list" ? "Visitor list sent by the Cavitak Tech Week team for building security." : `You are receiving this because you registered for ${esc(p.event.title)}. Your details are used only to manage this training.`}
     ${(p.event?.sales?.email || p.settings?.reply_to) ? `Questions? Reply to this email or write to ${esc(p.event?.sales?.email || p.settings.reply_to)}.` : ""}
     ${privacy || erase ? `<div style="margin-top:6px">${[privacy, erase].filter(Boolean).join(" · ")}</div>` : ""}
   </td></tr>
@@ -435,6 +435,29 @@ async function build(p: any): Promise<Mail> {
           <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2;font-size:13px">${esc(x.session)}</td>
           <td style="padding:6px 8px;border-bottom:1px solid #EEF0F2;font-size:12px;color:${MUTED};white-space:nowrap">${esc(x.age)}</td></tr>`).join("")}</table>`).join("")}
         <p style="margin-top:18px">${btn(cu, "Open approvals")}</p>`;
+      break;
+    }
+    case "visitor_list": {
+      const list = (p.visitors || []) as any[];
+      const withPhone = p.meta?.phone !== false;
+      subject = `Visitor list for ${s.date_label} — ${e.title} · ${list.length} visitor${list.length === 1 ? "" : "s"}`;
+      headline = "Expected visitors";
+      pre = `${list.length} visitor${list.length === 1 ? "" : "s"} at ${v.name} on ${s.date_label}`;
+      const td = `padding:6px 8px;border-bottom:1px solid #EEF0F2;vertical-align:top`;
+      const rows = list.map((a: any, i: number) => `<tr><td style="${td};color:${MUTED}">${i + 1}</td>
+        <td style="${td}"><strong>${esc(a.name)}</strong><div style="font-size:12px;color:${MUTED}">${esc(a.designation || "")}</div></td>
+        <td style="${td}">${esc(a.organization)}</td>${withPhone ? `<td style="${td};white-space:nowrap">${esc(a.phone || "")}</td>` : ""}
+        <td style="${td};white-space:nowrap">${esc(a.session)}<div style="font-size:12px;color:${MUTED}">${esc(a.time)}</div></td></tr>`).join("");
+      body = `<p>Dear Security Team,</p>
+        <p>Please find below the visitors expected at <strong>${esc(v.name)}${v.room_name ? " · " + esc(v.room_name) : ""}</strong> on <strong>${esc(s.date_label)}</strong> for ${esc(e.title)}, hosted by Cavitak. Kindly allow them entry. Each visitor also has a personal QR pass on their phone.</p>
+        ${list.length ? `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;border-collapse:collapse">
+          <tr style="background:#F5F6F8;font-size:12px;color:${MUTED};text-align:left"><th style="padding:6px 8px">#</th><th style="padding:6px 8px">Name</th><th style="padding:6px 8px">Organisation</th>${withPhone ? `<th style="padding:6px 8px">Mobile</th>` : ""}<th style="padding:6px 8px">Session</th></tr>${rows}</table>`
+          : `<p style="color:${MUTED}">No confirmed visitors for this day yet.</p>`}
+        <p style="font-size:13px;color:${MUTED};margin-top:14px">The same list is attached as a spreadsheet (CSV). Walk-in visitors registered at the venue are added by our check-in team.</p>${signoff(p)}`;
+      const q = (x: unknown) => `"${String(x ?? "").replace(/"/g, '""')}"`;
+      const csv = [["#", "Name", "Designation", "Organisation", ...(withPhone ? ["Mobile"] : []), "Session", "Time"].map(q).join(","),
+        ...list.map((a: any, i: number) => [i + 1, a.name, a.designation, a.organization, ...(withPhone ? [a.phone] : []), a.session, a.time].map(q).join(","))].join("\r\n");
+      attachments.push({ filename: `visitors-${p.meta?.date || s.local_date}.csv`, content: btoa(unescape(encodeURIComponent("\ufeff" + csv))), type: "text/csv" });
       break;
     }
     case "admin_new": {
