@@ -346,27 +346,37 @@ async function build(p: any): Promise<Mail> {
       const ext = (p.settings?.feedback_url ?? "").trim();
       const base = (p.settings?.public_url ?? "").trim().split("?")[0];
       const fb = ext || (base ? `${base}?f=${r.pass_token}` : "");
-      const withCert = String(p.settings?.cert_attach || "off").toLowerCase() === "on";
       subject = `Thank you for participating — ${e.title}`;
       headline = "Thank you for your participation";
-      pre = "We appreciate you joining us.";
-      const cert = withCert && r.checked_in ? await certBytes(r.pass_token) : null;
-      if (cert) attachments.push({ filename: "Cavitak-Tech-Week-Certificate.pdf", content: b64(cert), type: "application/pdf" });
+      pre = "We appreciate you joining us today.";
       body = `<p>Dear ${first},</p>
-        <p>Thank you for participating in <strong>${esc(e.title)}</strong> at ${esc(v.name)}, ${esc(v.city)} on ${esc(s.date_label)}. This email confirms your successful participation in the session.</p>
-        <p>We hope the session was valuable for your upcoming projects, and we truly appreciate the time you spent with us.</p>
-        ${cert ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
-          <div style="font-weight:700">Certificate of participation</div>
-          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">Attached as a PDF · Certificate ID ${esc(r.cert_code)}</div>
-          ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : r.checked_in ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
+        <p>Thank you for participating in <strong>${esc(e.title)}</strong> at ${esc(v.name)}, ${esc(v.city)} on ${esc(s.date_label)}. It was a pleasure to host you, and we truly appreciate the time you spent with us.</p>
+        <p>We hope the session was valuable for your upcoming projects.</p>
+        ${r.checked_in ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
           <div style="font-weight:700">Your certificate of participation</div>
-          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${r.cert_code ? `Certificate ID ${esc(r.cert_code)} · ` : ""}Download it as a PDF at any time.</div>
-          ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>` : ""}
+          <div style="font-size:13px;color:${MUTED};margin-top:4px">Your certificate will be emailed to you tomorrow morning.</div></div>` : ""}
         ${contentPack(p) ? `<div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC"><div style="font-weight:700">Session resources</div>
           <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">${esc(contentPack(p)!.note)}</div>${btn(contentPack(p)!.url, "Open resources")}</div>` : ""}
         ${fb ? `<p><strong>Your feedback matters.</strong> Two minutes of your time will help us make the next session even better.</p><p>${btn(fb, "Share feedback")}</p>` : ""}
         ${extraText(p, "thankyou")}
         <p>Should you need a demo, project support or pricing, please simply reply to this email — our team will be glad to assist.</p>${signoff(p)}`;
+      break;
+    }
+    case "certificate": {
+      subject = `Your certificate of participation — ${e.title}`;
+      headline = "Your certificate of participation";
+      pre = `Certificate for ${e.title}, ${s.date_label}.`;
+      const cert = r.checked_in ? await certBytes(r.pass_token) : null;
+      if (!cert) throw new Error("Certificate not available for this registration");
+      attachments.push({ filename: "Cavitak-Tech-Week-Certificate.pdf", content: b64(cert), type: "application/pdf" });
+      body = `<p>Dear ${first},</p>
+        <p>Thank you once again for attending <strong>${esc(e.title)}</strong> at ${esc(v.name)}, ${esc(v.city)} on ${esc(s.date_label)}.</p>
+        <p>Please find your <strong>certificate of participation</strong> attached to this email.</p>
+        <div style="border:1px solid #E6E8EB;border-radius:12px;padding:14px 16px;margin:16px 0;background:#FAFBFC">
+          <div style="font-weight:700">Certificate of participation</div>
+          <div style="font-size:13px;color:${MUTED};margin:4px 0 8px">Attached as a PDF · Certificate ID ${esc(r.cert_code)}</div>
+          ${linkBtn(`${FN_URL}?cert=${r.pass_token}`, "Download certificate")}</div>
+        <p>We look forward to working with you on your upcoming projects.</p>${signoff(p)}`;
       break;
     }
     case "noshow": {
