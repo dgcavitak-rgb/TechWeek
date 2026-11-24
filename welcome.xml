@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Cavitak Tech Week — Welcome</title>
+    <link>https://dgcavitak-rgb.github.io/TechWeek/</link>
+    <description>Welcome ticker for The Bright Experience Week by Cavitak &amp; BrightSign</description>
+    <language>en-in</language>
+    <ttl>15</ttl>
+    <item><title>Welcome to The Bright Experience Week by Cavitak &amp; BrightSign — we're delighted to have you with us at Cav's Bay, Mumbai</title></item>
+    <item><title>Please check in by scanning the QR code on the screen and entering your 6-letter entry code from this morning's email</title></item>
+    <item><title>Today's sessions: Morning 11:00 AM – 1:30 PM  ·  Evening 3:00 PM – 5:30 PM</title></item>
+    <item><title>Explore BrightSign's latest players and digital signage solutions live in our hands-on demo zone</title></item>
+    <item><title>Your certificate of participation will be emailed to you the morning after your session</title></item>
+    <item><title>Need help? Our Cavitak team at the reception desk will be happy to assist you</title></item>
+    <item><title>Thank you for being a valued Cavitak partner — enjoy the session!</title></item>
+  </channel>
+</rss>
