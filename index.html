@@ -434,7 +434,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.8.4";
+const APP_VERSION = "2.8.5";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1937,9 +1937,14 @@ async function decide(ids, act, extra={}){
     const cur=new Set(picked.map(r=>r.slot_id)), single=cur.size===1?[...cur][0]:null;
     const opts=e.slots.filter(s=>s.is_active&&!s.past&&s.id!==single).map(s=>{ const free=s.capacity-s.approved-(s.held||0), full=free<conf;
       return `<option value="${s.id}" ${full?"disabled":""}>${esc(s.date_label.replace(/ \d{4}$/,""))} · ${esc(s.label)} — ${s.approved}/${s.capacity} approved${s.held?`, ${s.held} held`:""}${full?" · FULL":` · ${free} free`}</option>` }).join("");
-    return modal(`<h3>Move ${ids.length} registration${ids.length>1?"s":""} to another session</h3><div class="stack"><select class="in" id="mv_s"><option value="">Choose a session…</option>${opts}</select>
+    // sessions that have started or ended (up to 7 days ago): the person attended there instead — record it
+    const now=Date.now(), came=e.slots.filter(s=>s.is_active&&s.id!==single&&new Date(s.starts_at)<=now&&new Date(s.ends_at)>now-7*864e5).sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
+    const opts2=came.map(s=>`<option value="${s.id}" data-came="1">${esc(s.date_label.replace(/ \d{4}$/,""))} · ${esc(s.label)} — ${new Date(s.ends_at)>now?"happening now":"already held"} (${s.approved}/${s.capacity})</option>`).join("");
+    return modal(`<h3>Move ${ids.length} registration${ids.length>1?"s":""} to another session</h3><div class="stack"><select class="in" id="mv_s"><option value="">Choose a session…</option>${opts2?`<optgroup label="Came to a different session — record attendance">${opts2}</optgroup><optgroup label="Upcoming sessions">${opts}</optgroup>`:opts}</select>
+      <div class="banner info small hide" id="mv_came">They attended this session instead: they're moved there and marked as checked in, their original seat is freed, and no "updated session" email is sent. Their thank-you and certificate will show this session.</div>
       <div class="small muted">${conf?`${conf} confirmed ${conf>1?"people get":"person gets"} an updated confirmation with the new date and time. Sessions without enough free seats are greyed out (held seats are not used — release them first in Sessions).`:"Pending and waitlisted people keep their status in the new session."}</div>
       <div class="row"><button class="btn primary" id="mv_go">Move</button><button class="btn" data-close>Cancel</button></div></div>`, ()=>{
+      $("#mv_s").onchange=()=>{ const o=$("#mv_s").selectedOptions[0]; $("#mv_came").classList.toggle("hide",!(o&&o.dataset.came)) };
       $("#mv_go").onclick=()=>{ const slot=$("#mv_s").value; if(!slot) return toast("Choose a session first",true); closeModal(); decide(ids,"move",{slot}) } });
   }
   try{
