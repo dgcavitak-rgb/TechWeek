@@ -434,7 +434,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.8.3";
+const APP_VERSION = "2.8.4";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -1060,6 +1060,9 @@ async function renderDisplay(){
   clock(); setInterval(clock,10000); tick(); setInterval(tick,8000);
   // fresh reload every 6 hours — but only when the server answers, so an offline moment never leaves a browser error page on the display
   setInterval(async()=>{ try{ const ok=await rpc("tw_door_info",{p_code:code}); if(ok&&ok.ok) location.reload() }catch(_){ } }, 6*3600e3);
+  // pick up a new app version within ~10 minutes (only reloads when the new page is reachable)
+  setInterval(async()=>{ try{ const r=await fetch(location.pathname+"?vchk="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
+    const m=(await r.text()).match(/APP_VERSION = "([^"]+)"/); if(m&&m[1]!==APP_VERSION) location.reload() }catch(_){ } }, 10*60e3);
 }
 
 /* =============================================================
