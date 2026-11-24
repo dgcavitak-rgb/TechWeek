@@ -16,7 +16,8 @@ jobs:
           F=https://nnointygnobmivjaebcr.supabase.co/functions/v1/tw-ticker?d=e1c5a4be1b
           curl -fsS --max-time 30 "$F" -o new.xml && grep -q "<rss" new.xml && mv new.xml welcome.xml
           curl -fsS --max-time 30 "$F&ascii=1" -o new2.xml && grep -q "<rss" new2.xml && mv new2.xml welcome-ascii.xml
-          # ignore timestamp-only changes
-          if git diff --quiet -I'pubDate|lastBuildDate|guid' -- welcome.xml welcome-ascii.xml; then git checkout -- welcome.xml welcome-ascii.xml; echo "no change"; exit 0; fi
+          # commit only when the text changed (ignore timestamps / ids)
+          norm(){ sed -E 's#<(pubDate|lastBuildDate|guid)[^>]*>[^<]*</(pubDate|lastBuildDate|guid)>##g' "$1"; }
+          if [ "$(norm welcome.xml)" = "$(git show HEAD:welcome.xml | sed -E 's#<(pubDate|lastBuildDate|guid)[^>]*>[^<]*</(pubDate|lastBuildDate|guid)>##g')" ]; then git checkout -- welcome.xml welcome-ascii.xml; echo "no change"; exit 0; fi
           git config user.name "ticker-bot"; git config user.email "ticker-bot@users.noreply.github.com"
           git add welcome.xml welcome-ascii.xml && git commit -m "Ticker: refresh attendee names" && git push
