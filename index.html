@@ -434,7 +434,7 @@ body.rg .foot{padding-bottom:96px}
    ============================================================= */
 const SB_URL = "https://nnointygnobmivjaebcr.supabase.co";
 const SB_KEY = "sb_publishable_9-cHSg4bFAULoCUAys9hFg__KuBvmGW";
-const APP_VERSION = "2.8.5";
+const APP_VERSION = "2.8.6";
 const FN_URL = SB_URL + "/functions/v1/tw-mailer";
 
 /* ---------------- helpers ---------------- */
@@ -2244,7 +2244,7 @@ async function uploadTargets(ev){
 
 /* ---------------- Admin ---------------- */
 function viewAdmin(v){
-  const tabs=can("super")?[["users","Users"],["brands","Brands"],["venues","Venues"],["programs","Programs"],["settings","Settings"],["privacy","Privacy & data"],["backup","Backup"],["email","Email log"],["audit","Audit log"]]:[["email","Email log"],["audit","Audit log"]];
+  const tabs=can("super")?[["users","Users"],["brands","Brands"],["venues","Venues"],["programs","Programs"],["settings","Settings"],["privacy","Privacy & data"],["backup","Backup"],["email","Email log"],["audit","Activity log"]]:[["email","Email log"],["audit","Activity log"]];
   if(!tabs.find(t=>t[0]===S.adminTab)) S.adminTab=tabs[0][0];
   const AT_IC={users:"users",brands:"tag",venues:"building",programs:"layers",settings:"key",privacy:"shield",backup:"download",email:"mail",audit:"history"};
   v.innerHTML=`${pageHead(ICONS.admin,"Admin","Team, venues, programs, email settings and logs")}<div class="seg segi" style="margin-bottom:12px">${tabs.map(t=>`<button data-at="${t[0]}" class="${t[0]===S.adminTab?"on":""}">${ico(AT_IC[t[0]],15)} ${t[1]}</button>`).join("")}</div><div id="ad_body"></div>`;
@@ -2421,11 +2421,45 @@ async function adEmail(b){
   $("#er").onclick=()=>adEmail(b);
   $$("[data-rt]",b).forEach(x=>x.onclick=async()=>{ busy(x,true); await rpc("tw_outbox_retry",{p_token:S.token,p_id:+x.dataset.rt}).catch(()=>{}); setTimeout(()=>adEmail(b),2500) });
 }
+const AUDIT_LABEL={login:"Signed in",change_password:"Changed own password",reset_password:"Reset a password",user_role:"Changed a user's access",
+  register:"Registered (public form)",approve:"Approved",reject:"Rejected",waitlist:"Waitlisted",pending:"Set back to pending",cancel:"Cancelled registration",cancel_self:"Cancelled (by attendee)",
+  move:"Moved to another session",edit_registration:"Edited registration",delete_registration:"Deleted registration",promote_waitlist:"Promoted from waitlist",
+  add_guest:"Added a guest",walkin:"Added a walk-in",walkin_move:"Walk-in moved to their session",checkin_manual:"Checked in (desk)",checkin:"Checked in (desk scan)",checkin_undo:"Undid a check-in",
+  self_checkin:"Checked in (self, at the screen)",self_checkin_fail:"Self check-in failed",feedback:"Gave feedback",
+  save_event:"Saved event",event_status:"Changed event status",delete_event:"Deleted event",settings:"Changed settings",
+  cert_signature_set:"Changed certificate signature",cert_signature_clear:"Removed certificate signature",merge_companies:"Merged companies",
+  email_visitor_list:"Emailed visitor list",invites_delete:"Deleted invitations",email_retry:"Retried an email",rotate_door_code:"Changed the door code"};
+const AUDIT_GROUP=a=>/login|password|user_role/.test(a)?"Logins & users":/checkin|walkin/.test(a)?"Check-in":/approve|reject|waitlist|pending|move|guest|cancel|edit_reg|delete_reg|promote|register/.test(a)?"Registrations":"Event & settings";
+function auditDetail(a){ const d=a.detail||{}; const bits=[];
+  if(d.from||d.to) bits.push(`${d.from?esc(d.from)+" → ":""}${esc(d.to||"")}`);
+  if(d.slot) bits.push(esc(d.slot)); if(d.reason) bits.push("Reason: "+esc(d.reason)); if(d.count!=null) bits.push(esc(d.count)+" item(s)");
+  if(d.to&&a.action==="email_visitor_list") bits.push("to "+esc(d.to)); if(d.kind) bits.push(esc(d.kind)+(d.to?" → "+esc(d.to):""));
+  if(d.role) bits.push("Role: "+esc(ROLE_NAME[d.role]||d.role)); if(d.used_held) bits.push("used a held seat");
+  return bits.join(" · ") }
 async function adAudit(b){
   b.innerHTML='<div class="empty"><span class="spin dark"></span></div>';
-  const r=await rpc("tw_audit_list",{p_token:S.token,p_limit:300}).catch(e=>({rows:[]})); if(!b.isConnected) return; r.rows=r.rows||[];
-  b.innerHTML=`<div class="card tscroll"><table class="t"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody>${r.rows.map(a=>`<tr><td class="small">${esc(fmtDT(a.at))}</td><td class="small">${esc(a.actor||"")}</td><td><b>${esc(a.action)}</b><div class="tiny muted">${esc(a.entity||"")}</div></td>
-    <td class="tiny muted" style="max-width:340px">${esc(a.detail?JSON.stringify(a.detail).slice(0,200):"")}</td></tr>`).join("")||'<tr><td colspan="4" class="muted">No activity yet</td></tr>'}</tbody></table></div>`;
+  const r=await rpc("tw_audit_list",{p_token:S.token,p_limit:2000}).catch(e=>({rows:[]})); if(!b.isConnected) return; const rows=r.rows||[];
+  const people=[...new Set(rows.map(a=>a.actor_name||a.actor).filter(Boolean))].sort();
+  const groups=["Registrations","Check-in","Logins & users","Event & settings"];
+  b.innerHTML=`<div class="card"><div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <select class="in" id="au_p" style="max-width:240px"><option value="">Everyone</option>${people.map(p=>`<option>${esc(p)}</option>`).join("")}</select>
+      <select class="in" id="au_g" style="max-width:200px"><option value="">All activity</option>${groups.map(g=>`<option>${g}</option>`).join("")}</select>
+      <input class="in" id="au_q" placeholder="Search name, company, action…" style="max-width:260px">
+      <button class="btn sm" id="au_csv">${ico("download",15)} Download CSV</button></div>
+    <div class="small muted" id="au_n" style="margin-bottom:8px"></div>
+    <div class="tscroll"><table class="t" style="min-width:760px"><thead><tr><th>When</th><th>Who did it</th><th>What</th><th>For</th><th>Details</th></tr></thead><tbody id="au_b"></tbody></table></div></div>`;
+  let shown=[];
+  const draw=()=>{ const p=$("#au_p").value, g=$("#au_g").value, q=$("#au_q").value.trim().toLowerCase();
+    shown=rows.filter(a=>(!p||(a.actor_name||a.actor)===p)&&(!g||AUDIT_GROUP(a.action)===g)&&(!q||[a.actor_name,a.actor,a.action,AUDIT_LABEL[a.action],a.subject,JSON.stringify(a.detail||{})].join(" ").toLowerCase().includes(q)));
+    $("#au_n").textContent=`${shown.length} of ${rows.length} entries`;
+    $("#au_b").innerHTML=shown.slice(0,500).map(a=>`<tr><td class="small" style="white-space:nowrap">${esc(fmtDT(a.at))}</td>
+      <td class="small"><b>${esc(a.actor_name||a.actor||"")}</b>${a.actor_role?`<div class="tiny muted">${esc(ROLE_NAME[a.actor_role]||a.actor_role)}</div>`:""}</td>
+      <td class="small">${esc(AUDIT_LABEL[a.action]||a.action)}</td><td class="small">${esc(a.subject||"")}</td>
+      <td class="tiny muted" style="max-width:300px">${auditDetail(a)}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No matching activity</td></tr>'; };
+  ["#au_p","#au_g"].forEach(id=>$(id).onchange=draw); $("#au_q").oninput=draw; draw();
+  $("#au_csv").onclick=()=>{ const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+    const csv=[["When","Who","Role","What","For","Details"].map(q).join(","),...shown.map(a=>[fmtDT(a.at),a.actor_name||a.actor,ROLE_NAME[a.actor_role]||a.actor_role||"",AUDIT_LABEL[a.action]||a.action,a.subject||"",auditDetail(a).replace(/&[a-z#0-9]+;/g," ")].map(q).join(","))].join("\r\n");
+    const u=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"})); const l=document.createElement("a"); l.href=u; l.download="tech-week-activity-log.csv"; l.click(); setTimeout(()=>URL.revokeObjectURL(u),2000) };
 }
 
 /* ---------------- Multi-brand helpers ---------------- */
